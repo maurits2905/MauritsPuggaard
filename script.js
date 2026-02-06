@@ -717,11 +717,57 @@ const TECH_GROUPS = [
 }
 ];
 
-async function getSimpleIconSvg(slug) {
-  const res = await fetch(`https://cdn.simpleicons.org/${slug}`);
-  if (!res.ok) throw new Error(`Icon not found: ${slug}`);
+// Fallback to Devicon (you already include devicon.min.css in <head>)
+const DEVICON_FALLBACK = {
+  css3: "devicon-css3-plain",
+  microsoftazure: "devicon-azure-plain",
+  visualstudiocode: "devicon-vscode-plain"
+};
+
+async function fetchSvg(url) {
+  const res = await fetch(url);
+  if (!res.ok) return null;
   return await res.text();
 }
+
+async function getIconMarkup(slug) {
+  // 1) Simple Icons CDN
+  const si1 = await fetchSvg(`https://cdn.simpleicons.org/${slug}`);
+  if (si1) return si1;
+
+  // 2) jsDelivr Simple Icons fallback
+  const si2 = await fetchSvg(`https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/${slug}.svg`);
+  if (si2) return si2;
+
+  // 3) OpenAI special fallback (Simple Icons CDN is flaky here)
+  if (slug === "openai") {
+    return `
+      <svg viewBox="0 0 24 24" role="img" aria-label="OpenAI">
+        <rect x="2.5" y="2.5" width="19" height="19" rx="6"
+              fill="none" stroke="currentColor" stroke-width="1.6"/>
+        <text x="12" y="14.2" text-anchor="middle"
+              font-size="7.5"
+              font-family="Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial"
+              fill="currentColor">AI</text>
+      </svg>
+    `;
+  }
+
+  // 4) Devicon fallback
+  const devClass = DEVICON_FALLBACK[slug];
+  if (devClass) {
+    return `<i class="${devClass}"></i>`;
+  }
+
+  // 5) Final fallback
+  return `
+    <svg viewBox="0 0 24 24" role="img" aria-label="${slug}">
+      <circle cx="12" cy="12" r="8" fill="currentColor" opacity="0.35"></circle>
+    </svg>
+  `;
+}
+
+
 
 function tileHTML(item) {
   return `
@@ -754,15 +800,15 @@ async function renderTechStack() {
   await Promise.all(iconHolders.map(async (el) => {
     const slug = el.getAttribute("data-icon");
     try {
-      const svg = await getSimpleIconSvg(slug);
-      el.innerHTML = svg;
-    } catch {
-      // fallback if icon is missing
-      el.innerHTML = `
-        <svg viewBox="0 0 24 24" role="img" aria-label="${slug}">
-          <circle cx="12" cy="12" r="8" fill="currentColor" opacity="0.35"></circle>
-        </svg>`;
-    }
+      const markup = await getIconMarkup(slug);
+      el.innerHTML = markup;
+    } catch (e) {
+    console.warn("Icon failed:", slug, e);
+    el.innerHTML = `
+      <svg viewBox="0 0 24 24" role="img" aria-label="${slug}">
+        <circle cx="12" cy="12" r="8" fill="currentColor" opacity="0.35"></circle>
+      </svg>`;
+  }
   }));
 }
 

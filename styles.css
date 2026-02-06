@@ -1344,7 +1344,7 @@ input {
 
 .emailToggle:hover {
     color: var(--text);
-    background: var(--glass);
+    background: var(--glass2);
     transform: translateY(-1px);
 }
 
@@ -1487,16 +1487,39 @@ input {
     place-items: center;
 }
 
+/* ---- ICON COLOR BEHAVIOR (FIXED) ---- */
+/* Default greyed state for BOTH svg and devicon <i> */
+.tech-icon svg,
+.tech-icon i {
+    filter: grayscale(1) brightness(1.45) contrast(0.9);
+    opacity: 0.85;
+    transition: filter 220ms ease, opacity 220ms ease, transform 220ms ease;
+}
+
+/* keep sizing */
 .tech-icon svg {
     width: 36px;
     height: 36px;
-
-    /* start "greyed out" */
-    filter: grayscale(1) brightness(1.45) contrast(0.9);
-    opacity: 0.85;
-
-    transition: filter 220ms ease, opacity 220ms ease, transform 220ms ease;
 }
+
+.tech-icon i {
+    font-size: 34px;
+    line-height: 1;
+    display: inline-block;
+    color: currentColor;
+}
+
+/* Hover/focus restores color for BOTH */
+.tech-tile:hover .tech-icon svg,
+.tech-tile:focus-visible .tech-icon svg,
+.tech-tile:hover .tech-icon i,
+.tech-tile:focus-visible .tech-icon i {
+    filter: none;
+    opacity: 1;
+    transform: scale(1.03);
+}
+
+/* ---- END ICON COLOR BEHAVIOR ---- */
 
 .tech-label {
     font-size: 11px;
@@ -1516,13 +1539,6 @@ input {
 .tech-tile:hover::after,
 .tech-tile:focus-visible::after {
     opacity: 1;
-}
-
-.tech-tile:hover .tech-icon svg,
-.tech-tile:focus-visible .tech-icon svg {
-    filter: none;
-    opacity: 1;
-    transform: scale(1.03);
 }
 
 /* keyboard focus */
