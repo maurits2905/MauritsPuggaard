@@ -1,0 +1,26 @@
+[
+  {
+    "id": "excel-merger",
+    "name": "Excel Merger",
+    "description": "Client-side tool to merge multiple Excel files into tabs. No uploads, fast workflow.",
+    "tags": ["Tool", "Web", "Productivity"],
+    "date": "2026-02-05",
+    "featured": true,
+    "imageUrl": "assets/projects/excel-merger.jpg",
+    "highlights": ["Browser-only", "Fast workflow", "Safe local processing"],
+    "demoUrl": "https://YOURNAME.github.io/excel-merger/",
+    "repoUrl": "https://github.com/YOURNAME/excel-merger"
+  },
+  {
+    "id": "time-calculator",
+    "name": "Time Registration Calculator",
+    "description": "Clean time calculator UI built for daily use, quick edits, and copy/paste friendliness.",
+    "tags": ["UI", "Tool"],
+    "date": "2026-02-05",
+    "featured": false,
+    "imageUrl": "assets/projects/time-calculator.jpg",
+    "highlights": ["Minimal UI", "Fast inputs", "Easy to extend"],
+    "demoUrl": "https://YOURNAME.github.io/time-calculator/",
+    "repoUrl": "https://github.com/YOURNAME/time-calculator"
+  }
+]
