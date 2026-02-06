@@ -639,3 +639,136 @@ async function init() {
 }
 
 init().catch(console.error);
+
+// ---------------------------
+// Tech Stack tiles (grouped)
+// ---------------------------
+
+const TECH_GROUPS = [
+  {
+    title: "Languages",
+    items: [
+      { name: "Python", slug: "python", url: "https://www.python.org/" },
+      { name: "JavaScript", slug: "javascript", url: "https://developer.mozilla.org/en-US/docs/Web/JavaScript" },
+      { name: ".NET / C#", slug: "dotnet", url: "https://learn.microsoft.com/en-us/dotnet/csharp/" },
+      { name: "ABAP", slug: "sap", url: "https://help.sap.com/docs/abap-platform" }, // uses SAP icon (Simple Icons doesn't have ABAP)
+      { name: "SQL", slug: "postgresql", url: "https://en.wikipedia.org/wiki/SQL" }, // icon fallback; still a valid official explainer
+      { name: "HTML", slug: "html5", url: "https://developer.mozilla.org/en-US/docs/Web/HTML" },
+      { name: "CSS", slug: "css3", url: "https://developer.mozilla.org/en-US/docs/Web/CSS" }
+    ]
+  },
+  {
+    title: "SAP & Enterprise",
+    items: [
+      { name: "SAP S/4HANA", slug: "sap", url: "https://www.sap.com/products/erp/s4hana.html" },
+      { name: "SAP ERP", slug: "sap", url: "https://www.sap.com/products/erp.html" },
+      { name: "SAP Fiori", slug: "sap", url: "https://www.sap.com/products/technology-platform/fiori.html" },
+      { name: "SAP UI5", slug: "sap", url: "https://ui5.sap.com/" },
+      { name: "SAP BTP", slug: "sap", url: "https://www.sap.com/products/technology-platform.html" },
+      { name: "SAP MM", slug: "sap", url: "https://help.sap.com/docs/SAP_ERP" },
+      { name: "SAP SD", slug: "sap", url: "https://help.sap.com/docs/SAP_ERP" }
+    ]
+  },
+  {
+    title: "Frameworks & Machine Learning",
+    items: [
+      { name: "React", slug: "react", url: "https://react.dev/" },
+      { name: "PyTorch", slug: "pytorch", url: "https://pytorch.org/" },
+      { name: "TensorFlow", slug: "tensorflow", url: "https://www.tensorflow.org/" },
+      { name: "scikit-learn", slug: "scikitlearn", url: "https://scikit-learn.org/" },
+      { name: "OpenCV", slug: "opencv", url: "https://opencv.org/" }
+    ]
+  },
+  {
+    title: "Data & Databases",
+    items: [
+      { name: "PostgreSQL", slug: "postgresql", url: "https://www.postgresql.org/" },
+      { name: "MySQL", slug: "mysql", url: "https://www.mysql.com/" },
+      { name: "MongoDB", slug: "mongodb", url: "https://www.mongodb.com/" },
+      { name: "Pandas", slug: "pandas", url: "https://pandas.pydata.org/" },
+      { name: "NumPy", slug: "numpy", url: "https://numpy.org/" }
+    ]
+  },
+  {
+    title: "DevOps & Infrastructure",
+    items: [
+      { name: "Docker", slug: "docker", url: "https://www.docker.com/" },
+      { name: "Azure", slug: "microsoftazure", url: "https://azure.microsoft.com/" },
+      { name: "Linux", slug: "linux", url: "https://www.linux.org/" },
+      { name: "Git", slug: "git", url: "https://git-scm.com/" },
+      { name: "GitHub", slug: "github", url: "https://github.com/" }
+    ]
+  },
+  {
+    title: "Development Tools",
+    items: [
+      { name: "VS Code", slug: "visualstudiocode", url: "https://code.visualstudio.com/" },
+      { name: "IntelliJ", slug: "intellijidea", url: "https://www.jetbrains.com/idea/" },
+      { name: "Jupyter", slug: "jupyter", url: "https://jupyter.org/" },
+      { name: "Postman", slug: "postman", url: "https://www.postman.com/" }
+    ]
+  },
+  {
+  title: "AI & Platforms",
+  items: [
+    { name: "Hugging Face", slug: "huggingface", url: "https://huggingface.co/" },
+    { name: "OpenAI", slug: "openai", url: "https://openai.com/" }
+  ]
+}
+];
+
+async function getSimpleIconSvg(slug) {
+  const res = await fetch(`https://cdn.simpleicons.org/${slug}`);
+  if (!res.ok) throw new Error(`Icon not found: ${slug}`);
+  return await res.text();
+}
+
+function tileHTML(item) {
+  return `
+    <a class="tech-tile" href="${item.url}" target="_blank" rel="noopener noreferrer"
+       aria-label="${item.name} (opens official site)">
+      <div class="tech-tile-inner">
+        <div class="tech-icon" data-icon="${item.slug}" aria-hidden="true"></div>
+        <div class="tech-label">${item.name}</div>
+      </div>
+    </a>
+  `;
+}
+
+async function renderTechStack() {
+  const root = document.getElementById("techGrid");
+  if (!root) return;
+
+  root.innerHTML = TECH_GROUPS.map(group => `
+    <div class="tech-group">
+      <div class="tech-group-title">${group.title}</div>
+      <div class="tech-grid">
+        ${group.items.map(tileHTML).join("")}
+      </div>
+    </div>
+  `).join("");
+
+  // Load icons after HTML is placed
+  const iconHolders = [...root.querySelectorAll(".tech-icon[data-icon]")];
+
+  await Promise.all(iconHolders.map(async (el) => {
+    const slug = el.getAttribute("data-icon");
+    try {
+      const svg = await getSimpleIconSvg(slug);
+      el.innerHTML = svg;
+    } catch {
+      // fallback if icon is missing
+      el.innerHTML = `
+        <svg viewBox="0 0 24 24" role="img" aria-label="${slug}">
+          <circle cx="12" cy="12" r="8" fill="currentColor" opacity="0.35"></circle>
+        </svg>`;
+    }
+  }));
+}
+
+// run when ready
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", renderTechStack);
+} else {
+  renderTechStack();
+}
