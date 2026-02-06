@@ -6,11 +6,12 @@
     "tags": ["Tool", "Web", "Productivity"],
     "date": "2026-02-05",
     "featured": true,
-    "imageUrl": "assets/projects/excel-merger.jpg",
+    "imageUrl": "assets/projects/EXCEL_MERGE.png",
     "highlights": ["Browser-only", "Fast workflow", "Safe local processing"],
-    "demoUrl": "https://YOURNAME.github.io/excel-merger/",
-    "repoUrl": "https://github.com/YOURNAME/excel-merger"
+    "demoUrl": "https://maurits2905.github.io/EXCEL_MERGE/",
+    "repoUrl": "https://github.com/maurits2905/EXCEL_MERGE"
   },
+
   {
     "id": "time-calculator",
     "name": "Time Registration Calculator",
@@ -18,9 +19,100 @@
     "tags": ["UI", "Tool"],
     "date": "2026-02-05",
     "featured": false,
-    "imageUrl": "assets/projects/time-calculator.jpg",
+    "imageUrl": "assets/projects/WTC.png",
     "highlights": ["Minimal UI", "Fast inputs", "Easy to extend"],
-    "demoUrl": "https://YOURNAME.github.io/time-calculator/",
-    "repoUrl": "https://github.com/YOURNAME/time-calculator"
+    "demoUrl": "https://maurits2905.github.io/WORK_TIME_CALCULATOR/",
+    "repoUrl": "https://github.com/maurits2905/time-calculator"
+  },
+
+  {
+    "id": "AI answer and transcript",
+    "name": "AI Answer and Transcript",
+    "description": "x",
+    "tags": ["x", "x"],
+    "date": "x-x-x",
+    "featured": false,
+    "imageUrl": "assets/projects/x.png",
+    "highlights": ["x", "x", "x"],
+    "demoUrl": "https://maurits2905.github.io/x/",
+    "repoUrl": "https://github.com/maurits2905/x"
+  },
+
+  {
+    "id": "Polen Dashboard",
+    "name": "Polen Dashboard",
+    "description": "x",
+    "tags": ["x", "x"],
+    "date": "x-x-x",
+    "featured": false,
+    "imageUrl": "assets/projects/x.png",
+    "highlights": ["x", "x", "x"],
+    "demoUrl": "https://pollen-project.github.io/Dashboard/",
+    "repoUrl": "https://github.com/pollen-project/Dashboard"
+  },
+
+  {
+    "id": "SAP-Multiagent",
+    "name": "SAP Multiagent",
+    "description": "x",
+    "tags": ["x", "x"],
+    "date": "x-x-x",
+    "featured": false,
+    "imageUrl": "assets/projects/x.png",
+    "highlights": ["x", "x", "x"],
+    "demoUrl": "https://maurits2905.github.io/x/",
+    "repoUrl": "https://github.com/maurits2905/x"
+  },
+
+  {
+    "id": "Compare code program",
+    "name": "Compare code program",
+    "description": "x",
+    "tags": ["x", "x"],
+    "date": "x-x-x",
+    "featured": false,
+    "imageUrl": "assets/projects/x.png",
+    "highlights": ["x", "x", "x"],
+    "demoUrl": "https://maurits2905.github.io/x/",
+    "repoUrl": "https://github.com/maurits2905/x"
+  },
+
+  {
+    "id": "MoneyCounter",
+    "name": "MoneyCounter",
+    "description": "x",
+    "tags": ["x", "x"],
+    "date": "x-x-x",
+    "featured": false,
+    "imageUrl": "assets/projects/x.png",
+    "highlights": ["x", "x", "x"],
+    "demoUrl": "https://maurits2905.github.io/x/",
+    "repoUrl": "https://github.com/maurits2905/x"
+  },
+
+  {
+    "id": "Simple Mandelbrot",
+    "name": "Simple Mandelbrot",
+    "description": "x",
+    "tags": ["x", "x"],
+    "date": "x-x-x",
+    "featured": false,
+    "imageUrl": "assets/projects/x.png",
+    "highlights": ["x", "x", "x"],
+    "demoUrl": "https://maurits2905.github.io/x/",
+    "repoUrl": "https://github.com/maurits2905/x"
+  },
+
+  {
+    "id": "Data Hub",
+    "name": "Data Hub",
+    "description": "x",
+    "tags": ["x", "x"],
+    "date": "x-x-x",
+    "featured": false,
+    "imageUrl": "assets/projects/x.png",
+    "highlights": ["x", "x", "x"],
+    "demoUrl": "https://maurits2905.github.io/x/",
+    "repoUrl": "https://pollen-project.github.io/Pollen_Website/"
   }
 ]
