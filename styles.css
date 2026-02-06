@@ -228,6 +228,7 @@ input {
     max-width: 1280px;
     margin: 0 auto;
     padding: 26px 18px 40px;
+    overflow: visible !important;
 }
 
 /* Buttons */
@@ -296,6 +297,7 @@ input {
     position: relative;
     padding: 12px 0 10px;
     min-height: 100vh;
+    overflow: visible !important;
 }
 
 .storyGrid {
@@ -304,6 +306,7 @@ input {
     gap: 18px;
     align-items: center;
     min-height: calc(100vh - 110px);
+    overflow: visible !important;
 }
 
 @media (max-width: 1040px) {
@@ -378,6 +381,35 @@ input {
     gap: 12px;
     flex-wrap: wrap;
     margin-top: 18px;
+}
+
+/* 3D Avatar container */
+#avatar3d {
+    position: absolute;
+    right: 6vw;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 420px;
+    height: 420px;
+    pointer-events: none;
+    z-index: 2;
+}
+
+/* Make sure the hero wrapper can position absolutely-placed children */
+.hero {
+    position: relative;
+    overflow: hidden;
+}
+
+@media (max-width: 900px) {
+    #avatar3d {
+        right: 50%;
+        top: 65%;
+        transform: translate(50%, -50%);
+        width: 320px;
+        height: 320px;
+        opacity: 0.9;
+    }
 }
 
 .stat {
@@ -505,19 +537,41 @@ input {
 .storyCenter {
     display: flex;
     justify-content: center;
+    overflow: visible !important;
 }
 
 .avatarStage {
     position: relative;
-    height: 520px;
-    width: 100%;
-    max-width: 520px;
-    border-radius: var(--r1);
-    border: 1px solid color-mix(in srgb, var(--stroke) 85%, transparent);
-    background: color-mix(in srgb, var(--glass) 75%, transparent);
-    box-shadow: var(--shadow);
-    overflow: hidden;
-    will-change: transform;
+    display: grid;
+    place-items: center;
+
+    aspect-ratio: 1 / 1;
+    width: min(700px, 46vw);
+    max-width: 100%;
+
+    background: none;
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+
+    overflow: visible !important;
+    /* ✅ key */
+}
+
+.avatarStage::before {
+    content: "";
+    position: absolute;
+    inset: -20%;
+    background: radial-gradient(circle at 50% 55%, rgba(120, 120, 255, 0.16), transparent 60%);
+    filter: blur(20px);
+    pointer-events: none;
+    z-index: 0;
+}
+
+#threeMount {
+    position: relative;
+    z-index: 1;
+    overflow: visible !important;
 }
 
 .avatarImg {
@@ -1572,4 +1626,38 @@ input {
     .tech-grid {
         gap: 12px;
     }
+}
+
+/* --- Layering: keep 3D behind left/right text --- */
+.storyLeft,
+.storyRight {
+    position: relative;
+    z-index: 5;
+}
+
+.storyCenter {
+    position: relative;
+    z-index: 1;
+}
+
+/* --- 3D mount overscan without blocking --- */
+#threeMount {
+    position: absolute;
+    /* IMPORTANT: it’s already absolute via .threeMount, but keep it explicit */
+    inset: 0;
+    overflow: visible !important;
+    z-index: 1;
+}
+
+#threeMount canvas {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 160% !important;
+    height: 160% !important;
+    transform: translate(-50%, -50%);
+    display: block;
+    pointer-events: none;
+    z-index: 0;
+    /* behind the text */
 }

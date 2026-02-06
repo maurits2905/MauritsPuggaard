@@ -82,10 +82,24 @@ function initStory() {
     }
   });
 
-  // Phase A: entrance
-  tl.fromTo("#sceneHero", { autoAlpha: 0, y: 18 }, { autoAlpha: 1, y: 0, duration: 0.18 }, 0.02)
-    .fromTo("#sceneRole", { autoAlpha: 0, y: 18 }, { autoAlpha: 1, y: 0, duration: 0.18 }, 0.06)
-    .fromTo("#avatarStage", { scale: 0.985, y: 10 }, { scale: 1.0, y: 0, duration: 0.2 }, 0.04);
+  // --- Start the pinned story "already past" the intro ---
+  // Adjust this number until it lands exactly on your desired start view.
+  const INTRO_SKIP_PX = 420; // try 350-650
+
+  // Run once, after ScrollTrigger has calculated pin spacing
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      const st = tl.scrollTrigger;
+      if (!st) return;
+
+      // Jump the page to "a bit into" the pinned section so intro is already done
+      window.scrollTo(0, st.start + INTRO_SKIP_PX);
+
+      // Ensure GSAP/ScrollTrigger sync immediately
+      st.update();
+    });
+  });
+
 
   // Phase B: avatar moves center -> left, about appears
   tl.to("#avatarStage", { xPercent: -55, scale: 0.92, duration: 0.35, ease: "none" }, 0.28)
@@ -498,11 +512,23 @@ function renderCareer() {
   });
 }
 
+// Always start at top on refresh (prevents browser restoring old scroll position)
+if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+
+function forceTopAndRefresh() {
+  window.scrollTo(0, 0);
+  if (window.ScrollTrigger) ScrollTrigger.refresh();
+}
+
+
 /* ------------------------------
    Init
 ------------------------------ */
 async function init() {
   initTheme();
+
+  forceTopAndRefresh();
+  window.addEventListener("load", forceTopAndRefresh, { once: true });
 
   document.getElementById("year").textContent = new Date().getFullYear();
 
@@ -605,19 +631,6 @@ async function init() {
   }
 
   renderStack();
-
-// Let layout settle then refresh ScrollTrigger so pinned timeline is stable
-    if (window.ScrollTrigger) {
-    requestAnimationFrame(() => {
-        requestAnimationFrame(() => ScrollTrigger.refresh());
-    });
-    }
-
-    // Also refresh after everything (fonts/images) fully loads
-    window.addEventListener("load", () => {
-    if (window.ScrollTrigger) ScrollTrigger.refresh();
-    });
-
 
   // Search
   const searchInput = document.getElementById("searchInput");
