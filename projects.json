@@ -1,118 +1,118 @@
 [
   {
-    "id": "excel-merger",
+    "id": "Excel Merger",
     "name": "Excel Merger",
-    "description": "Client-side tool to merge multiple Excel files into tabs. No uploads, fast workflow.",
+    "description": "Client-side web tool for merging multiple Excel files into a single workbook with separate tabs. Designed for fast, safe workflows without uploads.",
     "tags": ["Tool", "Web", "Productivity"],
-    "date": "2026-02-05",
+    "date": "2026-02-06",
     "featured": true,
     "imageUrl": "assets/projects/EXCEL_MERGE.png",
-    "highlights": ["Browser-only", "Fast workflow", "Safe local processing"],
+    "highlights": ["Runs fully in the browser", "No file uploads or server processing", "Fast and simple workflow"],
     "demoUrl": "https://maurits2905.github.io/EXCEL_MERGE/",
     "repoUrl": "https://github.com/maurits2905/EXCEL_MERGE"
   },
 
   {
-    "id": "time-calculator",
-    "name": "Time Registration Calculator",
-    "description": "Clean time calculator UI built for daily use, quick edits, and copy/paste friendliness.",
-    "tags": ["UI", "Tool"],
+    "id": "Work Time Calculator",
+    "name": "Work Time Calculator",
+    "description": "Lightweight time calculation tool built for everyday use. Optimized for quick edits, keyboard input, and easy copy-paste.",
+    "tags": ["Tool", "UI", "Productivity"],
     "date": "2026-02-05",
     "featured": false,
     "imageUrl": "assets/projects/WTC.png",
-    "highlights": ["Minimal UI", "Fast inputs", "Easy to extend"],
+    "highlights": ["Minimal and distraction-free UI", "Fast input and editing", "Easy to extend and customize"],
     "demoUrl": "https://maurits2905.github.io/WORK_TIME_CALCULATOR/",
-    "repoUrl": "https://github.com/maurits2905/time-calculator"
+    "repoUrl": "https://github.com/maurits2905/WORK_TIME_CALCULATOR"
   },
 
   {
     "id": "AI answer and transcript",
     "name": "AI Answer and Transcript",
-    "description": "x",
-    "tags": ["x", "x"],
-    "date": "x-x-x",
+    "description": "Browser-based tool for capturing audio, generating transcripts, and producing AI-powered answers in real time. Built to explore practical voice-to-AI workflows.",
+    "tags": ["AI", "Web", "Experiment"],
+    "date": "2026-2-04",
     "featured": false,
     "imageUrl": "assets/projects/x.png",
-    "highlights": ["x", "x", "x"],
-    "demoUrl": "https://maurits2905.github.io/x/",
-    "repoUrl": "https://github.com/maurits2905/x"
+    "highlights": ["Live transcription workflow", "AI-generated answers from audio input", "Client-focused, experimental setup"],
+    "demoUrl": "https://maurits2905.github.io/AI_Answer_and_Transcript/",
+    "repoUrl": "https://github.com/maurits2905/AI_Answer_and_Transcript"
   },
 
   {
     "id": "Polen Dashboard",
     "name": "Polen Dashboard",
-    "description": "x",
-    "tags": ["x", "x"],
-    "date": "x-x-x",
+    "description": "Interactive dashboard for visualizing environmental and pollen-related data. Built as part of a larger pollen monitoring and data collection project.",
+    "tags": ["Data", "Dashboard", "Web"],
+    "date": "2015-6-17",
     "featured": false,
     "imageUrl": "assets/projects/x.png",
-    "highlights": ["x", "x", "x"],
+    "highlights": ["Real-time and historical data views", "Clean, readable visualizations", "Built to support sensor-based data pipelines"],
     "demoUrl": "https://pollen-project.github.io/Dashboard/",
     "repoUrl": "https://github.com/pollen-project/Dashboard"
   },
 
   {
-    "id": "SAP-Multiagent",
-    "name": "SAP Multiagent",
-    "description": "x",
-    "tags": ["x", "x"],
-    "date": "x-x-x",
+    "id": "SAP Multiagent",
+    "name": "SAP-Multiagent",
+    "description": "Experimental multi-agent AI system designed to support SAP consulting workflows. Focused on task assistance, analysis, and internal knowledge support.",
+    "tags": ["AI", "SAP", "Automation"],
+    "date": "2026-1-20",
     "featured": false,
     "imageUrl": "assets/projects/x.png",
-    "highlights": ["x", "x", "x"],
-    "demoUrl": "https://maurits2905.github.io/x/",
-    "repoUrl": "https://github.com/maurits2905/x"
+    "highlights": ["Multi-agent architecture", "Designed for consulting use cases", "Focus on practical internal tooling"],
+    "demoUrl": "https://maurits2905.github.io/SAP-Multiagent/",
+    "repoUrl": "https://github.com/maurits2905/SAP-Multiagent"
   },
 
   {
     "id": "Compare code program",
     "name": "Compare code program",
-    "description": "x",
-    "tags": ["x", "x"],
-    "date": "x-x-x",
+    "description": "Local web-based tool for comparing code and structured text files side by side. Built to support review, validation, and change tracking workflows.",
+    "tags": ["Tool", "Web", "Developer"],
+    "date": "2026-1-20",
     "featured": false,
     "imageUrl": "assets/projects/x.png",
-    "highlights": ["x", "x", "x"],
-    "demoUrl": "https://maurits2905.github.io/x/",
-    "repoUrl": "https://github.com/maurits2905/x"
+    "highlights": ["Side-by-side comparison view", "Fast local processing", "Useful for review and validation tasks"],
+    "demoUrl": "https://maurits2905.github.io/Compare_code_program/",
+    "repoUrl": "https://github.com/maurits2905/Compare_code_program"
   },
 
   {
     "id": "MoneyCounter",
     "name": "MoneyCounter",
-    "description": "x",
-    "tags": ["x", "x"],
-    "date": "x-x-x",
+    "description": "Simple visual tool that shows earnings accumulating in real time based on salary input. Built as a motivational and UX-focused experiment.",
+    "tags": ["UI", "Web", "Experiment"],
+    "date": "2025-4-10",
     "featured": false,
     "imageUrl": "assets/projects/x.png",
-    "highlights": ["x", "x", "x"],
-    "demoUrl": "https://maurits2905.github.io/x/",
-    "repoUrl": "https://github.com/maurits2905/x"
+    "highlights": ["Real-time animated counter", "Clean and focused UI", "Built for clarity and motivation"],
+    "demoUrl": "https://maurits2905.github.io/MoneyCounter/",
+    "repoUrl": "https://github.com/maurits2905/MoneyCounter"
   },
 
   {
     "id": "Simple Mandelbrot",
     "name": "Simple Mandelbrot",
-    "description": "x",
-    "tags": ["x", "x"],
-    "date": "x-x-x",
+    "description": "Small project exploring the Mandelbrot set through code. Built to understand mathematical visualization and rendering fundamentals.",
+    "tags": ["Math", "Visualization", "Experiment"],
+    "date": "2022-10-05",
     "featured": false,
     "imageUrl": "assets/projects/x.png",
-    "highlights": ["x", "x", "x"],
-    "demoUrl": "https://maurits2905.github.io/x/",
-    "repoUrl": "https://github.com/maurits2905/x"
+    "highlights": ["Mandelbrot set rendering", "Focus on fundamentals", "Purely exploratory project"],
+    "demoUrl": "",
+    "repoUrl": "https://github.com/maurits2905/Simple_Mandelbrot"
   },
 
   {
     "id": "Data Hub",
     "name": "Data Hub",
-    "description": "x",
-    "tags": ["x", "x"],
-    "date": "x-x-x",
+    "description": "Central web hub for collecting and presenting sensor and environmental data. Part of the broader pollen monitoring system.",
+    "tags": ["Data", "Web", "Dashboard"],
+    "date": "2024-12-04",
     "featured": false,
     "imageUrl": "assets/projects/x.png",
-    "highlights": ["x", "x", "x"],
-    "demoUrl": "https://maurits2905.github.io/x/",
-    "repoUrl": "https://pollen-project.github.io/Pollen_Website/"
+    "highlights": ["Centralized data presentation", "Built to support live sensor input", "Designed as part of a larger system"],
+    "demoUrl": "https://pollen-project.github.io/Pollen_Website/",
+    "repoUrl": "https://github.com/pollen-project/Pollen_Website"
   }
 ]

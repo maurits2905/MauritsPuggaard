@@ -1155,7 +1155,7 @@ input {
 /* Timeline column (grid item in column 3) */
 .careerLineWrap {
     grid-column: 3;
-    grid-row: 1 / 5;
+    grid-row: 1 / 7; /* Change if you add more to time line (Numer of sections + 1) */
     position: relative;
     width: 34px;
     justify-self: center;

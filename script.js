@@ -401,28 +401,40 @@ function renderStack() {
 ------------------------------ */
 const careerData = [
   {
-    role: "Learning Something New",
-    sub: "Self-Development",
+    role: "SAP Technical Consultant",
+    sub: "2BM · Client & internal projects",
     year: "NOW",
-    desc: "Continuously exploring emerging technologies, improving craft, and building better systems."
+    desc: "Working with ABAP, CDS, OData, and SAP Fiori/UI5. Building clean, maintainable SAP solutions close to real business needs. Contributing to internal AI initiatives, SAP Public Cloud setup, and quality assurance."
   },
   {
-    role: "SAP Consultant",
-    sub: "2BM • Client projects",
-    year: "2026",
-    desc: "ABAP, integrations, and UI work. Shipping practical improvements with a clean, maintainable approach."
+    role: "AI & Automation",
+    sub: "Internal projects",
+    year: "2025",
+    desc: "Developing AI-driven tools to support consulting work. Hands-on with LLM-based assistants, multi-agent systems, and practical automation. MSc in Computer Science Completed summer 2025"
   },
   {
-    role: "Full-Stack Builder",
+    role: "Full-Stack Development",
     sub: "Projects & tools",
     year: "2024",
-    desc: "Building web tools and dashboards, focusing on UX, performance, and clarity."
+    desc: "Built complete web applications from frontend to backend. Focused on usability, performance, and clear system design."
   },
   {
-    role: "ML / Automation",
-    sub: "Applied work",
+    role: "Python & Machine Learning",
+    sub: "Self-driven projects",
     year: "2023",
-    desc: "Experimenting with ML and automation, turning ideas into working prototypes and useful utilities."
+    desc: "Worked with Python, data analysis, and machine learning. Built automation, prototypes, and early ML-based solutions."
+  },
+  {
+    role: "Technical & Visual Foundations",
+    sub: "Design & development crossover",
+    year: "2022",
+    desc: "Combined technical thinking with visual design. Developed a strong sense for UX, structure, and clarity."
+  },
+  {
+    role: "Digital Foundations",
+    sub: "Getting started",
+    year: "2021",
+    desc: "First exposure to structured digital tools and software. Sparked a long-term interest in technology and problem-solving."
   }
 ];
 
