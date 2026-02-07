@@ -427,159 +427,159 @@ const careerData = [
 ];
 
 function renderCareer() {
-  const left = document.getElementById("careerLeft");
-  const years = document.getElementById("careerYears");
-  const right = document.getElementById("careerRight");
+  const grid = document.getElementById("careerGrid");
+  const rowsRoot = document.getElementById("careerRows");
+  if (!grid || !rowsRoot) return;
+
+  // Hvis du clear’er #careerRows, sletter du også .careerLineWrap (dot + fill).
+  // Så vi detacher den først, rydder rækkerne, og sætter den tilbage.
+  const keptLineWrap = rowsRoot.querySelector(".careerLineWrap");
+  if (keptLineWrap) keptLineWrap.remove();
+
+  rowsRoot.innerHTML = "";
+
+  if (keptLineWrap) rowsRoot.appendChild(keptLineWrap);
+
+  // Re-grab dot/fill efter lineWrap er tilbage i DOM
   const dot = document.getElementById("careerDot");
   const fill = document.getElementById("careerFill");
+  if (!dot || !fill) return;
 
-  if (!left || !years || !right || !dot || !fill) return;
-
-  left.innerHTML = "";
-  years.innerHTML = "";
-  right.innerHTML = "";
-
+  // Build rows: left | years | right (same row-gap via grid)
   careerData.forEach((item, i) => {
-    // Left column (role + sub)
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "careerItemBtn dim";
-    btn.dataset.index = String(i);
-    btn.innerHTML = `
-      <div class="careerRole">${escapeHtml(item.role)}</div>
-      <div class="careerSub">${escapeHtml(item.sub)}</div>
+    const row = document.createElement("div");
+    row.className = "careerRow";
+    row.dataset.index = String(i);
+
+    row.innerHTML = `
+      <button type="button" class="careerItemBtn dim careerRowLeft" data-index="${i}">
+        <div class="careerRole">${escapeHtml(item.role)}</div>
+        <div class="careerSub">${escapeHtml(item.sub)}</div>
+      </button>
+
+      <div class="careerYear dim careerRowYear" data-index="${i}">
+        ${escapeHtml(item.year)}
+      </div>
+
+      <div class="careerRightItem dim careerRowRight" id="careerRow-${i}" data-index="${i}">
+        <div class="careerDesc">${escapeHtml(item.desc)}</div>
+      </div>
     `;
+
+    rowsRoot.appendChild(row);
+  });
+
+  const leftBtns = Array.from(rowsRoot.querySelectorAll(".careerItemBtn"));
+  const yearEls = Array.from(rowsRoot.querySelectorAll(".careerYear"));
+  const rightEls = Array.from(rowsRoot.querySelectorAll(".careerRightItem"));
+  const lineWrap = grid.querySelector(".careerLineWrap");
+
+  // Click left -> scroll corresponding right item
+  leftBtns.forEach((btn) => {
     btn.addEventListener("click", () => {
-      const anchor = document.getElementById(`careerRow-${i}`);
+      const idx = Number(btn.dataset.index);
+      const anchor = document.getElementById(`careerRow-${idx}`);
       if (anchor) anchor.scrollIntoView({ behavior: "smooth", block: "center" });
     });
-    left.appendChild(btn);
-
-    // Middle column (year)
-    const y = document.createElement("div");
-    y.className = "careerYear dim";
-    y.dataset.index = String(i);
-    y.textContent = item.year;
-    years.appendChild(y);
-
-    // Right column (description)
-    const row = document.createElement("div");
-    row.className = "careerRightItem dim";
-    row.id = `careerRow-${i}`;
-    row.dataset.index = String(i);
-    row.innerHTML = `<div class="careerDesc">${escapeHtml(item.desc)}</div>`;
-    right.appendChild(row);
   });
-
-  const rows = Array.from(document.querySelectorAll(".careerRightItem"));
-  const leftBtns = Array.from(document.querySelectorAll(".careerItemBtn"));
-  const yearEls = Array.from(document.querySelectorAll(".careerYear"));
-  const lineWrap = document.querySelector(".careerLineWrap");
 
   let currentIdx = 0;
+  let raf = 0;
+  let pulseTimeout = 0;
 
-  function positionDotAndFill(idx) {
-    if (!lineWrap) return;
-
-    const desktop = window.matchMedia("(min-width: 1041px)").matches;
-    if (!desktop) {
-      dot.style.top = "6px";
-      fill.style.height = "0px";
-      return;
-    }
-
-    const activeYear = yearEls.find((y) => y.dataset.index === String(idx));
-    if (!activeYear) return;
-
-    const yRect = activeYear.getBoundingClientRect();
-    const wrapRect = lineWrap.getBoundingClientRect();
-
-    const dotTop = (yRect.top + yRect.height * 0.55) - wrapRect.top;
-
-    dot.style.top = `${dotTop}px`;
-
-    // fill from the dot down to the bottom (like image 2)
-    const fillHeight = Math.max(0, wrapRect.height - dotTop);
-    fill.style.top = `${dotTop}px`;
-    fill.style.height = `${fillHeight}px`;
+  function pulseDot() {
+    dot.classList.remove("pulse");
+    void dot.offsetWidth;
+    dot.classList.add("pulse");
   }
 
-  // pulse only while scrolling (cheap + looks nice)
-  let scrollingT = 0;
-  function markScrolling() {
-    document.documentElement.classList.add("isScrolling");
-    clearTimeout(scrollingT);
-    scrollingT = setTimeout(() => {
-      document.documentElement.classList.remove("isScrolling");
-    }, 140);
-  }
-  window.addEventListener("scroll", markScrolling, { passive: true });
-
-
-  function setActive(idx) {
+  function setActive(idx, doPulse = false) {
     currentIdx = idx;
 
-    leftBtns.forEach((b) => {
-      const active = b.dataset.index === String(idx);
-      b.classList.toggle("active", active);
-      b.classList.toggle("dim", !active);
+    leftBtns.forEach(b => {
+      const on = Number(b.dataset.index) === idx;
+      b.classList.toggle("active", on);
+      b.classList.toggle("dim", !on);
     });
 
-    yearEls.forEach((y) => {
-      const active = y.dataset.index === String(idx);
-      y.classList.toggle("dim", !active);
+    yearEls.forEach(y => {
+      const on = Number(y.dataset.index) === idx;
+      y.classList.toggle("active", on);
+      y.classList.toggle("dim", !on);
     });
 
-    rows.forEach((r) => {
-      const active = r.dataset.index === String(idx);
-      r.classList.toggle("dim", !active);
+    rightEls.forEach(r => {
+      const on = Number(r.dataset.index) === idx;
+      r.classList.toggle("active", on);
+      r.classList.toggle("dim", !on);
     });
 
-    positionDotAndFill(idx);
+    if (doPulse) pulseDot();
   }
 
-  // Pick active row closest to viewport center
-  let raf = 0;
-  function updateActiveFromScroll() {
-    raf = 0;
+function updateFromScroll() {
+  raf = 0;
+  if (!lineWrap || !yearEls.length) return;
 
-    const center = window.innerHeight * 0.5;
-    let bestIdx = 0;
-    let bestDist = Infinity;
+  const wrapRect = lineWrap.getBoundingClientRect();
 
-    for (const r of rows) {
-      const rect = r.getBoundingClientRect();
-      const rowCenter = rect.top + rect.height * 0.5;
-      const dist = Math.abs(rowCenter - center);
-      if (dist < bestDist) {
-        bestDist = dist;
-        bestIdx = Number(r.dataset.index);
-      }
+  // Viewport center i wrap-koordinater
+  const centerInWrap = (window.innerHeight * 0.5) - wrapRect.top;
+
+  // Midtpunkter for hver YEAR i wrap-koordinater
+  const mids = yearEls.map((y) => {
+    const r = y.getBoundingClientRect();
+    return (r.top + r.height * 0.5) - wrapRect.top;
+  });
+
+  // 1) Progress baseret på viewport-center mellem første og sidste YEAR
+  const first = mids[0];
+  const last = mids[mids.length - 1];
+  const t = (centerInWrap - first) / Math.max(1, (last - first));
+  const progress = Math.min(1, Math.max(0, t));
+
+  // 2) Map progress til HELE lineWrap (så den kan nå bunden)
+  const dotH = dot.offsetHeight || 10;
+  const minY = dotH / 2;
+  const maxY = Math.max(minY, wrapRect.height - dotH / 2);
+  const dotY = minY + progress * (maxY - minY);
+
+  dot.style.top = `${dotY}px`;
+  fill.style.height = `${dotY}px`;
+
+  // 3) Active row: find YEAR der er tættest på viewport-center (ikke dotY)
+  let bestIdx = 0;
+  let bestDist = Infinity;
+
+  for (let i = 0; i < yearEls.length; i++) {
+    const y = yearEls[i];
+    const dist = Math.abs(mids[i] - centerInWrap);
+    if (dist < bestDist) {
+      bestDist = dist;
+      bestIdx = Number(y.dataset.index);
     }
-
-    setActive(bestIdx);
   }
+
+  const changed = bestIdx !== currentIdx;
+  setActive(bestIdx, changed);
+
+  clearTimeout(pulseTimeout);
+  dot.classList.add("scrolling");
+  pulseTimeout = setTimeout(() => dot.classList.remove("scrolling"), 120);
+}
 
   function onScroll() {
-    if (raf) return;
-    raf = requestAnimationFrame(updateActiveFromScroll);
-  }
+  if (raf) return;
+  raf = requestAnimationFrame(updateFromScroll);
+}
 
-  window.addEventListener("scroll", onScroll, { passive: true });
-  window.addEventListener("resize", () => positionDotAndFill(currentIdx));
+window.addEventListener("scroll", onScroll, { passive: true });
+window.addEventListener("resize", () => updateFromScroll());
 
-  // initial
-  setActive(0);
-
-  // run once after layout settles
-  requestAnimationFrame(() => {
-    updateActiveFromScroll();
-    positionDotAndFill(currentIdx);
-  });
-  window.addEventListener("load", () => {
-    updateActiveFromScroll();
-    positionDotAndFill(currentIdx);
-  });
+requestAnimationFrame(() => {
+  setActive(0, true);
+  updateFromScroll();
+});
 }
 
 

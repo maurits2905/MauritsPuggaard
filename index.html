@@ -164,7 +164,6 @@
             </div>
         </section>
 
-        <!-- 2) CAREER & EXPERIENCE -->
         <section id="career" class="section careerX">
             <div class="careerHead r">
                 <h2 class="careerTitle">
@@ -173,25 +172,19 @@
                 </h2>
             </div>
         
-            <div class="careerGrid r" id="careerGrid">
-                <!-- LEFT -->
-                <div class="careerLeft" id="careerLeft"></div>
-        
-                <!-- MIDDLE (years + line) -->
-                <div class="careerMid">
-                    <div class="careerYears" id="careerYears"></div>
-        
-                    <div class="careerLineWrap">
+            <!-- ADD THIS WRAPPER -->
+            <div id="careerGrid" class="careerGrid">
+                <div id="careerRows" class="careerRows">
+                    <div class="careerLineWrap" aria-hidden="true">
                         <div class="careerLine"></div>
-                        <div class="careerFill" id="careerFill"></div>
-                        <div class="careerDot" id="careerDot"></div>
+                        <div id="careerFill" class="careerFill"></div>
+                        <div id="careerDot" class="careerDot"></div>
                     </div>
+                    <!-- rows bliver injected af JS -->
                 </div>
-        
-                <!-- RIGHT -->
-                <div class="careerRight" id="careerRight"></div>
             </div>
         </section>
+
 
         <!-- 3) PROJECTS -->
         <section id="work" class="section">

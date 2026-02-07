@@ -11,6 +11,11 @@
     --r1: 22px;
     --r2: 16px;
     --font: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+
+    /* Career sizing */
+    --career-gap: 36px;
+    --career-row-gap: 64px;
+    --career-year-size: 38px;
 }
 
 [data-theme="light"] {
@@ -114,11 +119,6 @@ input {
 .brandName {
     font-weight: 850;
     letter-spacing: -.02em;
-}
-
-.topMid {
-    display: flex;
-    justify-content: center;
 }
 
 .topEmailWrap {
@@ -321,7 +321,7 @@ input {
     max-width: 70ch;
 }
 
-/* 1) Story (pinned intro) */
+/* Story */
 .story {
     position: relative;
     padding: 12px 0 10px;
@@ -338,30 +338,11 @@ input {
     overflow: visible !important;
 }
 
-@media (max-width: 1040px) {
-    .topbar {
-        grid-template-columns: 1fr auto;
-    }
-
-    .topMid {
-        display: none;
-    }
-
-    .storyGrid {
-        grid-template-columns: 1fr;
-    }
-
-    .socialRail {
-        display: none;
-    }
-}
-
 .storyLeft,
 .storyRight {
     position: relative;
     min-height: 520px;
     z-index: 5;
-    /* keep text above Vanta + 3D */
 }
 
 .storyCenter {
@@ -379,7 +360,6 @@ input {
     width: 100%;
 }
 
-/* Scene 1: hero */
 .eyebrow {
     display: inline-flex;
     padding: 8px 10px;
@@ -406,6 +386,30 @@ input {
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+}
+
+.roleSmall {
+    color: var(--muted);
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    font-size: 12px;
+}
+
+.roleBig {
+    margin-top: 10px;
+    font-size: clamp(34px, 4.0vw, 56px);
+    line-height: 1.02;
+    letter-spacing: -.05em;
+}
+
+.roleTop {
+    display: block;
+    color: color-mix(in srgb, var(--text) 65%, transparent);
+}
+
+.roleBottom {
+    display: block;
+    color: var(--text);
 }
 
 .heroCtas {
@@ -442,32 +446,6 @@ input {
     margin-top: 2px;
 }
 
-/* Scene 1: role */
-.roleSmall {
-    color: var(--muted);
-    letter-spacing: .18em;
-    text-transform: uppercase;
-    font-size: 12px;
-}
-
-.roleBig {
-    margin-top: 10px;
-    font-size: clamp(34px, 4.0vw, 56px);
-    line-height: 1.02;
-    letter-spacing: -.05em;
-}
-
-.roleTop {
-    display: block;
-    color: color-mix(in srgb, var(--text) 65%, transparent);
-}
-
-.roleBottom {
-    display: block;
-    color: var(--text);
-}
-
-/* Scene 2: about text */
 .aboutText {
     margin-top: 10px;
     color: var(--text);
@@ -483,7 +461,6 @@ input {
     }
 }
 
-/* Scene 3: What I do */
 .whatBig {
     font-weight: 900;
     font-size: clamp(52px, 7vw, 92px);
@@ -577,7 +554,6 @@ input {
     opacity: .95;
 }
 
-/* 3D mount */
 .threeMount {
     position: absolute;
     inset: 0;
@@ -637,251 +613,7 @@ input {
     margin: 0 auto;
 }
 
-/* ------------------------------------------------------------------
-   CAREER (single, clean block — matches the new HTML + JS)
------------------------------------------------------------------- */
-#career {
-    padding-bottom: 80px;
-}
-
-.careerX {
-    padding-top: 64px;
-}
-
-.careerHead {
-    text-align: center;
-    margin-bottom: 22px;
-}
-
-.careerTitle {
-    margin: 0;
-    font-size: clamp(44px, 5vw, 70px);
-    letter-spacing: -.04em;
-    line-height: 1.02;
-    font-weight: 900;
-}
-
-.careerAccent {
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-}
-
-.careerGrid {
-    position: relative;
-    min-height: 75vh;
-    margin-top: 18px;
-
-    display: grid;
-    grid-template-columns: 1.15fr 220px 1.6fr;
-    gap: 36px;
-    align-items: start;
-
-    border: 1px solid color-mix(in srgb, var(--stroke) 75%, transparent);
-    background: color-mix(in srgb, var(--glass2) 55%, transparent);
-    border-radius: var(--r1);
-    box-shadow: var(--shadow);
-    padding: 26px 22px;
-    overflow: hidden;
-}
-
-.careerGrid::before {
-    content: "";
-    position: absolute;
-    inset: -2px;
-    background: radial-gradient(600px 220px at 50% 0%,
-            color-mix(in srgb, var(--accent) 22%, transparent),
-            transparent 60%);
-    filter: blur(10px);
-    opacity: .9;
-    pointer-events: none;
-}
-
-/* All 3 columns share the same vertical rhythm */
-.careerLeft,
-.careerYears,
-.careerRight {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    gap: 22px;
-    z-index: 1;
-    /* above the glow overlay */
-}
-
-/* Left column */
-.careerItemBtn {
-    text-align: left;
-    border: 0;
-    background: transparent;
-    padding: 0;
-    cursor: pointer;
-    text-shadow: 0 0 18px color-mix(in srgb, var(--accent) 35%, transparent);
-}
-
-.careerRole {
-    font-weight: 900;
-    letter-spacing: -.02em;
-    font-size: 22px;
-    color: color-mix(in srgb, var(--text) 88%, transparent);
-}
-
-.careerSub {
-    margin-top: 6px;
-    color: color-mix(in srgb, var(--accent) 80%, var(--muted));
-    font-size: 13px;
-    letter-spacing: .02em;
-}
-
-.careerItemBtn.dim {
-    opacity: .38;
-}
-
-.careerItemBtn.active {
-    opacity: 1;
-}
-
-/* Middle column: years + vertical line */
-.careerMid {
-    position: relative;
-    display: grid;
-    grid-template-columns: 1fr 18px;
-    gap: 18px;
-    align-items: start;
-    z-index: 1;
-}
-
-.careerYears {
-    text-align: right;
-}
-
-.careerYear {
-    font-weight: 950;
-    letter-spacing: -.02em;
-    font-size: 38px;
-    color: color-mix(in srgb, var(--text) 84%, transparent);
-    line-height: 1;
-}
-
-.careerYear.dim {
-    opacity: .35;
-}
-
-.careerLineWrap {
-    position: relative;
-    height: 100%;
-    min-height: 260px;
-}
-
-.careerLine {
-    position: absolute;
-    left: 50%;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    transform: translateX(-50%);
-    background: color-mix(in srgb, var(--stroke) 90%, transparent);
-    opacity: .65;
-}
-
-.careerFill {
-    position: absolute;
-    left: 50%;
-    width: 2px;
-    transform: translateX(-50%);
-    border-radius: 999px;
-    background: linear-gradient(180deg,
-            rgba(120, 160, 255, 0) 0%,
-            rgba(155, 140, 255, .95) 45%,
-            rgba(68, 240, 177, .95) 100%);
-    filter:
-        drop-shadow(0 0 10px rgba(120, 160, 255, .45)) drop-shadow(0 0 24px rgba(80, 240, 200, .20));
-}
-
-.careerDot {
-    position: absolute;
-    left: 50%;
-    width: 10px;
-    height: 10px;
-    transform: translate(-50%, -50%);
-    border-radius: 999px;
-    background: var(--accent);
-    box-shadow:
-        0 0 0 6px color-mix(in srgb, var(--accent) 18%, transparent),
-        0 0 22px color-mix(in srgb, var(--accent) 65%, transparent);
-    will-change: top;
-}
-
-/* Optional “comet tail” look */
-.careerDot::after {
-    content: "";
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    top: 10px;
-    width: 14px;
-    height: 80px;
-    border-radius: 999px;
-    background: linear-gradient(180deg,
-            rgba(170, 200, 255, .35) 0%,
-            rgba(170, 200, 255, .20) 55%,
-            rgba(80, 240, 200, 0) 100%);
-    filter: blur(2px);
-    opacity: .9;
-    pointer-events: none;
-}
-
-/* Right column */
-.careerRightItem {
-    padding-left: 18px;
-    border-left: 1px solid color-mix(in srgb, var(--stroke) 70%, transparent);
-    min-height: 56px;
-    display: flex;
-    align-items: center;
-    transition: opacity .25s ease;
-}
-
-.careerRightItem.dim {
-    opacity: .35;
-}
-
-.careerDesc {
-    color: var(--muted);
-    line-height: 1.6;
-    font-size: 13px;
-    max-width: 62ch;
-}
-
-/* Career responsive */
-@media (max-width: 1040px) {
-    .careerGrid {
-        grid-template-columns: 1fr;
-        gap: 16px;
-    }
-
-    .careerMid {
-        display: none;
-    }
-
-    .careerRightItem {
-        border-left: 0;
-        padding-left: 0;
-        min-height: unset;
-    }
-
-    .careerRole {
-        font-size: 20px;
-    }
-
-    .careerSub {
-        font-size: 12px;
-    }
-}
-
-/* ------------------------------------------------------------------
-   Work / Projects
------------------------------------------------------------------- */
+/* Work */
 .workHead {
     display: grid;
     grid-template-columns: 1fr;
@@ -1010,15 +742,6 @@ input {
     margin-top: 12px;
 }
 
-.tag {
-    font-size: 12px;
-    padding: 6px 10px;
-    border-radius: 999px;
-    border: 1px solid var(--stroke);
-    background: var(--glass2);
-    color: var(--muted);
-}
-
 .workGrid {
     margin-top: 16px;
     display: grid;
@@ -1055,20 +778,16 @@ input {
 }
 
 @media (max-width: 980px) {
-    .projectCard {
-        grid-column: span 6;
-    }
 
+    .projectCard,
     .projectCard.featured {
         grid-column: span 6;
     }
 }
 
 @media (max-width: 640px) {
-    .projectCard {
-        grid-column: span 1;
-    }
 
+    .projectCard,
     .projectCard.featured {
         grid-column: span 1;
     }
@@ -1169,9 +888,16 @@ input {
     margin-top: 6px;
 }
 
-/* ------------------------------------------------------------------
-   Contact
------------------------------------------------------------------- */
+.tag {
+    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--stroke);
+    background: var(--glass2);
+    color: var(--muted);
+}
+
+/* Contact */
 .contactGrid {
     margin-top: 16px;
     display: grid;
@@ -1207,9 +933,7 @@ input {
     color: var(--muted);
 }
 
-/* ------------------------------------------------------------------
-   Footer
------------------------------------------------------------------- */
+/* Footer */
 .footer {
     margin-top: 34px;
     padding-top: 18px;
@@ -1241,9 +965,365 @@ input {
     }
 }
 
-/* ------------------------------------------------------------------
-   TECH STACK (tiles)
------------------------------------------------------------------- */
+/* =========================
+   CAREER (match reference)
+========================= */
+
+#career {
+    padding-bottom: 80px;
+}
+
+.careerX {
+    padding-top: 64px;
+}
+
+.careerHead {
+    text-align: center;
+    margin-bottom: 22px;
+}
+
+.careerTitle {
+    margin: 0;
+    font-size: clamp(44px, 5vw, 70px);
+    letter-spacing: -.04em;
+    line-height: 1.02;
+    font-weight: 900;
+}
+
+.careerAccent {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+/* Outer glass container */
+.careerGrid {
+    position: relative;
+    margin-top: 18px;
+    border: 1px solid color-mix(in srgb, var(--stroke) 75%, transparent);
+    background: color-mix(in srgb, var(--glass2) 55%, transparent);
+    border-radius: var(--r1);
+    box-shadow: var(--shadow);
+    padding: 26px 22px;
+    overflow: hidden;
+}
+
+/* Soft glow */
+.careerGrid::before {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    background: radial-gradient(640px 240px at 50% 0%,
+            color-mix(in srgb, var(--accent) 22%, transparent),
+            transparent 62%);
+    filter: blur(10px);
+    opacity: .9;
+    pointer-events: none;
+}
+
+/*
+  Row grid:
+  [left roles] [years] [line] [right desc]
+*/
+.careerRows {
+  position: relative;
+  display: grid;
+  grid-template-columns:
+    minmax(260px, 1.15fr)
+    120px
+    34px
+    minmax(320px, 1.35fr);
+
+  row-gap: var(--career-row-gap);
+  column-gap: var(--career-gap);
+
+  grid-auto-rows: minmax(72px, auto); /* 👈 VIGTIG */
+  align-items: center;
+}
+
+
+.careerRow {
+    display: contents;
+}
+
+/* Left */
+.careerItemBtn {
+    grid-column: 1;
+    text-align: left;
+    border: 0;
+    background: transparent;
+    padding: 0;
+    cursor: pointer;
+}
+
+.careerRole {
+    font-weight: 900;
+    letter-spacing: -.02em;
+    font-size: 22px;
+    color: color-mix(in srgb, var(--text) 92%, transparent);
+    text-shadow: 0 0 18px color-mix(in srgb, var(--accent) 32%, transparent);
+}
+
+.careerSub {
+    margin-top: 6px;
+    color: color-mix(in srgb, var(--accent) 78%, var(--muted));
+    font-size: 13px;
+    letter-spacing: .02em;
+}
+
+.careerItemBtn.dim .careerRole,
+.careerItemBtn.dim .careerSub {
+    opacity: .34;
+}
+
+/* Active row glow (when dot is near it) */
+.careerItemBtn.active .careerRole,
+.careerItemBtn.active .careerSub {
+    opacity: 1 !important;
+}
+
+.careerYear.active {
+    opacity: 1 !important;
+    color: color-mix(in srgb, var(--text) 96%, transparent);
+    text-shadow:
+        0 0 18px color-mix(in srgb, var(--accent) 28%, transparent),
+        0 0 32px color-mix(in srgb, var(--accent2) 18%, transparent);
+}
+
+.careerRightItem.active {
+    opacity: 1 !important;
+    border-left-color: color-mix(in srgb, var(--accent) 35%, var(--stroke));
+}
+
+.careerRightItem.active .careerDesc {
+    color: color-mix(in srgb, var(--text) 78%, var(--muted));
+}
+
+/* Years */
+.careerYear {
+    grid-column: 2;
+    font-weight: 950;
+    letter-spacing: -.02em;
+    font-size: var(--career-year-size);
+    line-height: 1;
+    color: color-mix(in srgb, var(--text) 86%, transparent);
+    text-align: left;
+    padding: 8px 0;
+}
+
+.careerYear.dim {
+    opacity: .28;
+}
+
+/* Right */
+.careerRightItem {
+    position: relative;
+    grid-column: 4;
+    padding-left: 18px;
+    border-left: 1px solid color-mix(in srgb, var(--stroke) 60%, transparent);
+    min-height: 56px;
+    display: flex;
+    align-items: center;
+    transition: opacity .25s ease;
+}
+
+.careerRightItem.active::before {
+    content: "";
+    position: absolute;
+    left: -18px;
+    top: -10px;
+    bottom: -10px;
+    width: 3px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, var(--accent), var(--accent2));
+    opacity: .55;
+    filter: blur(.2px);
+}
+
+.careerRightItem.dim {
+    opacity: .30;
+}
+
+.careerDesc {
+    color: var(--muted);
+    line-height: 1.6;
+    font-size: 13px;
+    max-width: 62ch;
+}
+
+/* Timeline column (grid item in column 3) */
+.careerLineWrap {
+    grid-column: 3;
+    grid-row: 1 / 5;
+    position: relative;
+    width: 34px;
+    justify-self: center;
+    align-self: stretch;
+    pointer-events: none;
+    z-index: 3;
+}
+
+/* Modern browsers: place overlay exactly at column 3 */
+@supports (selector(:has(*))) {
+    .careerLineWrap {
+        left: auto;
+        right: auto;
+    }
+}
+
+.careerLineWrap {
+    /* We anchor to the grid by using inset and translating from padding:
+     easiest + reliable: absolutely position and then center inside column 3 */
+    left: 0;
+    right: 0;
+    margin: 0 auto;
+    width: 34px;
+    /* We will move it using translate based on known columns */
+    transform: translateX(calc(
+                /* left padding */
+                0px));
+}
+
+/* Actual line */
+.careerLine {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    transform: translateX(-50%);
+    background: color-mix(in srgb, var(--stroke) 92%, transparent);
+    opacity: .35;
+    border-radius: 999px;
+}
+
+/* Fancy gradient fill (TOP -> DOWN) */
+.careerFill {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: 3px;
+    transform: translateX(-50%);
+    height: 0px;
+    border-radius: 999px;
+    background: linear-gradient(180deg,
+            rgba(155, 140, 255, 0.00) 0%,
+            rgba(155, 140, 255, 0.95) 28%,
+            rgba(68, 240, 177, 0.95) 62%,
+            rgba(255, 96, 220, 0.55) 100%);
+    filter:
+        drop-shadow(0 0 10px rgba(155, 140, 255, .35)) drop-shadow(0 0 22px rgba(68, 240, 177, .18));
+    transition: height 120ms linear;
+}
+
+/* Dot */
+.careerDot {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle at 30% 30%, #ffffff, var(--accent));
+    box-shadow:
+        0 0 0 6px color-mix(in srgb, var(--accent) 16%, transparent),
+        0 0 28px color-mix(in srgb, var(--accent2) 28%, transparent);
+    z-index: 4;
+}
+
+/* “Hue blink while scrolling” feel */
+.careerDot.scrolling {
+    filter: hue-rotate(18deg) saturate(1.3);
+    box-shadow:
+        0 0 0 8px rgba(155, 140, 255, .16),
+        0 0 34px rgba(68, 240, 177, .22),
+        0 0 52px rgba(255, 96, 220, .12);
+}
+
+/* Pulse when active changes */
+.careerDot.pulse {
+    animation: dotPulse 520ms ease-out 1;
+}
+
+@keyframes dotPulse {
+    0% {
+        transform: translate(-50%, -50%) scale(1);
+    }
+
+    35% {
+        transform: translate(-50%, -50%) scale(1.55);
+    }
+
+    100% {
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+/* Optional subtle “tail” */
+.careerDot::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 10px;
+    width: 16px;
+    height: 84px;
+    border-radius: 999px;
+    background: linear-gradient(180deg,
+            rgba(155, 140, 255, 0.00) 0%,
+            rgba(155, 140, 255, .22) 35%,
+            rgba(68, 240, 177, .12) 100%);
+    filter: blur(2px);
+    opacity: .95;
+    pointer-events: none;
+}
+
+/* Responsive */
+@media (max-width: 1040px) {
+    .topbar {
+        grid-template-columns: 1fr auto;
+    }
+
+    .socialRail {
+        display: none;
+    }
+
+    .storyGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .careerRows {
+        grid-template-columns: 1fr;
+        row-gap: 18px;
+    }
+
+    .careerItemBtn,
+    .careerYear,
+    .careerRightItem {
+        grid-column: auto;
+    }
+
+    .careerYear {
+        font-size: 28px;
+        opacity: .9;
+    }
+
+    .careerRightItem {
+        border-left: 0;
+        padding-left: 0;
+    }
+
+    .careerLineWrap {
+        display: none;
+    }
+}
+
+/* =========================
+   TECH STACK (your tiles)
+========================= */
+
 .section.tech {
     position: relative;
     padding: clamp(64px, 8vw, 110px) 20px;
@@ -1317,6 +1397,7 @@ input {
     place-items: center;
     text-decoration: none;
     color: inherit;
+    transform: translateZ(0);
     transition: transform 220ms ease, border-color 220ms ease, background 220ms ease, box-shadow 220ms ease;
     cursor: pointer;
     position: relative;
@@ -1415,14 +1496,4 @@ input {
     text-transform: uppercase;
     opacity: 0.7;
     margin: 0 0 12px;
-}
-
-@media (max-width: 650px) {
-    .tech-group {
-        margin-top: 22px;
-    }
-
-    .tech-grid {
-        gap: 12px;
-    }
 }
