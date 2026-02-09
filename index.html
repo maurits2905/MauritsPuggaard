@@ -270,29 +270,56 @@
 
         <!-- 5) CONTACT -->
         <section id="contact" class="section">
-            <div class="centerHead">
-                <div class="kicker r">CONTACT</div>
-                <h2 class="h2 r">Let’s talk</h2>
-                <p class="p r">Email is best. Links are here too.</p>
+            <div class="askHead r">
+                <h2 class="sectionTitle">Ask <span class="gradWord">me</span></h2>
+            </div>
+        
+            <div class="askWrap r askWrap--simple">
+                <div class="askStage">
+                    <div class="askToken">
+                        <img class="askTokenImg" src="assets/me.jpeg" alt="Maurits portrait" />
+                    </div>
+                
+                    <div class="askBubble">
+                        Hi — ask me anything about my projects, SAP work, or tools.
+                    </div>
+                </div>
+
+            
+                <div class="askChat" id="askChat" aria-live="polite"></div>
+            
+                <div class="askInputWrap searchBar">
+                    <span class="searchIcon" aria-hidden="true">⌕</span>
+                
+                    <input id="askInput" type="text" placeholder="Ask me about anything." />
+                
+                    <button id="askSend" class="askSendBtn" type="button">Send</button>
+                </div>
+            
+                <div class="askMeta" id="askMeta" hidden></div>
             </div>
 
-            <div class="contactGrid">
-                <a class="contactCard r" id="workEmailLink" href="#">
-                    <div class="contactTitle">Work email</div>
-                    <div class="contactSub" id="workEmailText">work@email.com</div>
+        
+            <div class="contactHead r">
+                <div class="kicker">CONTACT</div>
+                <h2 class="h2">Contact information</h2>
+                <p class="p">If you’d rather reach me directly.</p>
+            </div>
+        
+            <div class="contactGrid r">
+                <a class="contactCard" id="workEmailLink" href="#">
+                    <div class="contactLabel">Gmail</div>
+                    <div class="contactValue" id="workEmailText">Loading…</div>
                 </a>
-
-                <a class="contactCard r" id="privateEmailLink" href="#">
-                    <div class="contactTitle">Private email</div>
-                    <div class="contactSub" id="privateEmailText">private@email.com</div>
+        
+                <a class="contactCard" id="linkedinLink" href="#" target="_blank" rel="noopener">
+                    <div class="contactLabel">LinkedIn</div>
+                    <div class="contactValue">Open profile</div>
                 </a>
-                <a class="contactCard r" id="githubLink" href="#" target="_blank" rel="noopener">
-                    <div class="contactTitle">GitHub</div>
-                    <div class="contactSub" id="githubText">@yourname</div>
-                </a>
-                <a class="contactCard r" id="linkedinLink" href="#" target="_blank" rel="noopener">
-                    <div class="contactTitle">LinkedIn</div>
-                    <div class="contactSub">Open profile</div>
+        
+                <a class="contactCard" id="githubLink" href="#" target="_blank" rel="noopener">
+                    <div class="contactLabel">GitHub</div>
+                    <div class="contactValue" id="githubText">@...</div>
                 </a>
             </div>
         </section>

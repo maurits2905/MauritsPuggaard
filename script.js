@@ -651,6 +651,75 @@ function forceTopAndRefresh() {
   if (window.ScrollTrigger) ScrollTrigger.refresh();
 }
 
+function initAskMe() {
+  const form = document.getElementById("askForm");
+  const input = document.getElementById("askInput");
+  const chat = document.getElementById("askChat");
+  const meta = document.getElementById("askMeta");
+
+  if (!form || !input || !chat || !meta) return;
+
+  const API_URL = "YOUR_WORKER_URL_HERE"; // e.g. https://yourname.workers.dev/api/chat
+
+  const addMsg = (text, who) => {
+    const el = document.createElement("div");
+    el.className = `askMsg ${who}`;
+    el.textContent = text;
+    chat.appendChild(el);
+    el.scrollIntoView({ behavior: "smooth", block: "end" });
+  };
+
+  const setMeta = (text, show = true) => {
+    meta.textContent = text;
+    meta.hidden = !show;
+  };
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const q = (input.value || "").trim();
+    if (!q) return;
+
+    addMsg(q, "user");
+    input.value = "";
+    input.focus();
+
+    setMeta("Thinking…", true);
+
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: q })
+      });
+
+      if (!res.ok) {
+        // If you enforce daily free limit server-side, return 429 with a friendly message
+        const txt = await res.text().catch(() => "");
+        setMeta("");
+        addMsg(
+          res.status === 429
+            ? "The AI is busy right now. Try again later."
+            : "Something went wrong. Try again.",
+          "bot"
+        );
+        console.warn("AskMe error:", res.status, txt);
+        return;
+      }
+
+      const data = await res.json();
+      setMeta("");
+
+      addMsg(data.reply || "No response.", "bot");
+    } catch (err) {
+      setMeta("");
+      addMsg("Could not reach the AI right now. Try again later.", "bot");
+      console.warn(err);
+    }
+  });
+}
+
+
 /* ------------------------------
    Init
 ------------------------------ */
@@ -906,6 +975,8 @@ syncClearBtn();
   } else {
     state.workEntered = true;
   }
+
+  initAskMe();
 
 }
 

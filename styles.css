@@ -788,17 +788,21 @@ input {
     display: none !important;
 }
 
+/* Icon buttons (works for both .iconBtn and .iconBtn--ghost) */
+.iconBtn,
 .iconBtn--ghost {
     background: transparent;
     border: 1px solid transparent;
     color: var(--muted);
 }
 
-.iconBtn:hover {
+.iconBtn:hover,
+.iconBtn--ghost:hover {
     transform: translateY(-1px);
 }
 
-.iconBtn:active {
+.iconBtn:active,
+.iconBtn--ghost:active {
     transform: translateY(0);
 }
 
@@ -1050,6 +1054,16 @@ input {
 }
 
 .contactSub {
+    margin-top: 6px;
+    color: var(--muted);
+}
+
+.contactLabel {
+    font-weight: 950;
+    letter-spacing: -.02em;
+}
+
+.contactValue {
     margin-top: 6px;
     color: var(--muted);
 }
@@ -1680,4 +1694,509 @@ input {
         width: 46px;
         height: 46px;
     }
+}
+
+
+/* ------------------------------
+   Ask Me (Contact)
+------------------------------ */
+.askHead {
+    text-align: center;
+    margin-bottom: 18px;
+}
+
+.askTitle {
+    font-size: clamp(42px, 6vw, 72px);
+    line-height: 1.02;
+    letter-spacing: -0.035em;
+    margin: 8px 0 6px;
+}
+
+.askSub {
+    margin: 0 auto;
+    max-width: 58ch;
+    color: var(--muted);
+}
+
+.askWrap {
+    max-width: 920px;
+    margin: 18px auto 28px;
+    border: 1px solid var(--stroke);
+    background: var(--glass2);
+    border-radius: var(--r1);
+    box-shadow: var(--shadow);
+    padding: 18px;
+}
+
+.askMeWrap {
+    text-align: center;
+}
+
+.askTop {
+    display: grid;
+    grid-template-columns: 84px 1fr;
+    gap: 14px;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.askAvatar {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: radial-gradient(circle at 30% 30%,
+            rgba(180, 160, 255, 0.25),
+            rgba(80, 70, 140, 0.15));
+    border: 1px solid var(--stroke);
+    box-shadow:
+        0 10px 30px rgba(0, 0, 0, .35),
+        inset 0 0 0 1px rgba(255, 255, 255, .04);
+}
+
+.askAvatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.askAvatar span {
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    opacity: 0.9;
+}
+
+.askAvatar::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle at 25% 20%,
+            rgba(120, 160, 255, 0.25),
+            transparent 55%);
+    pointer-events: none;
+}
+
+.askWrap--simple {
+    max-width: 860px;
+    margin: 18px auto 28px;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+}
+
+.askStage {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    gap: 16px;
+    align-items: center;
+    justify-content: center;
+    margin: 10px auto 18px;
+    perspective: 900px;
+}
+
+.askToken {
+    width: 140px;
+    height: 140px;
+    border-radius: 999px;
+    flex: 0 0 auto;
+    position: relative;
+    display: grid;
+    place-items: center;
+    transform-style: preserve-3d;
+    animation: tokenSway 5.8s ease-in-out infinite;
+    box-shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
+}
+
+.askToken::before {
+    content: "";
+    position: absolute;
+    inset: -8px;
+    border-radius: 999px;
+    background: conic-gradient(from 0deg,
+            rgba(160, 140, 255, 0.85),
+            rgba(120, 240, 190, 0.85),
+            rgba(160, 140, 255, 0.85));
+    filter: blur(10px);
+    opacity: 0.42;
+    transform: translateZ(-30px);
+}
+
+.askToken::after {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: color-mix(in srgb, var(--glass) 40%, transparent);
+}
+
+.askTokenImg {
+    width: 100%;
+    height: 100%;
+    border-radius: 999px;
+    object-fit: cover;
+    border: 1px solid color-mix(in srgb, var(--stroke) 70%, transparent);
+    background: color-mix(in srgb, var(--glass) 70%, transparent);
+    transform: translateZ(18px);
+}
+
+@keyframes tokenSway {
+    0% {
+        transform: rotateY(-10deg) rotateX(6deg) translateY(0px);
+    }
+
+    50% {
+        transform: rotateY(10deg) rotateX(-6deg) translateY(-6px);
+    }
+
+    100% {
+        transform: rotateY(-10deg) rotateX(6deg) translateY(0px);
+    }
+}
+
+.askBubble {
+    position: relative;
+    max-width: 520px;
+    padding: 12px 14px;
+    border-radius: 16px;
+    border: 1px solid color-mix(in srgb, var(--stroke) 85%, transparent);
+    background: color-mix(in srgb, var(--glass2) 86%, transparent);
+    color: color-mix(in srgb, var(--text) 92%, transparent);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 18px 55px rgba(0, 0, 0, .35);
+    text-align: left;
+}
+
+.askBubble::before {
+    content: "";
+    position: absolute;
+    left: -8px;
+    top: 32px;
+    width: 14px;
+    height: 14px;
+    transform: rotate(45deg);
+    border-left: 1px solid var(--stroke);
+    border-bottom: 1px solid var(--stroke);
+    background: color-mix(in srgb, var(--glass) 62%, transparent);
+}
+
+.askBubble::after {
+    content: "";
+    position: absolute;
+    top: 12px;
+    right: -8px;
+    width: 16px;
+    height: 16px;
+    background: color-mix(in srgb, var(--glass2) 86%, transparent);
+    border-right: 1px solid color-mix(in srgb, var(--stroke) 85%, transparent);
+    border-top: 1px solid color-mix(in srgb, var(--stroke) 85%, transparent);
+    transform: rotate(45deg);
+    border-radius: 4px;
+}
+
+.askChat {
+    display: grid;
+    gap: 10px;
+    padding: 0 2px 14px;
+    min-height: 0;
+}
+
+.askMsg {
+    max-width: 78ch;
+    width: fit-content;
+    padding: 12px 14px;
+    border-radius: 16px;
+    border: 1px solid var(--stroke);
+    background: color-mix(in srgb, var(--glass) 76%, transparent);
+    line-height: 1.55;
+}
+
+.askMsg.user {
+    margin-left: auto;
+    border-color: rgba(160, 140, 255, 0.35);
+    background: color-mix(in srgb, var(--glass2) 82%, transparent);
+}
+
+.askForm {
+    display: grid;
+    grid-template-columns: 1fr 110px;
+    gap: 10px;
+    align-items: center;
+}
+
+.askForm--simple {
+    display: grid;
+    grid-template-columns: 1fr 110px;
+    gap: 10px;
+    align-items: center;
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+.askInput {
+    height: 52px;
+    border-radius: 16px;
+    border: 1px solid color-mix(in srgb, var(--stroke) 85%, transparent);
+    background: color-mix(in srgb, var(--glass) 58%, transparent);
+    color: var(--text);
+    padding: 0 14px;
+    outline: none;
+    transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.askInput:focus {
+    border-color: rgba(160, 140, 255, 0.55);
+    box-shadow: 0 0 0 6px rgba(160, 140, 255, 0.12);
+}
+
+.askSend {
+    height: 52px;
+    border-radius: 16px;
+    border: 1px solid rgba(160, 140, 255, 0.35);
+    background: color-mix(in srgb, var(--glass2) 84%, transparent);
+    color: var(--text);
+    cursor: pointer;
+    transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+}
+
+.askSend:hover {
+    transform: translateY(-1px);
+    border-color: rgba(160, 140, 255, 0.55);
+}
+
+.askSend:active {
+    transform: translateY(0px);
+}
+
+.askMeta {
+    margin-top: 10px;
+    color: var(--muted);
+    text-align: center;
+    font-size: 13px;
+}
+
+@media (max-width: 720px) {
+    .askTop {
+        grid-template-columns: 64px 1fr;
+    }
+
+    .askAvatar {
+        width: 64px;
+        height: 64px;
+    }
+
+    .askForm {
+        grid-template-columns: 1fr;
+    }
+
+    .askSend {
+        width: 100%;
+    }
+
+    .askStage {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .askToken {
+        margin: 0 auto;
+    }
+
+    .askBubble {
+        margin: 0 auto;
+    }
+
+    .askBubble::before {
+        left: 50%;
+        top: -8px;
+        transform: translateX(-50%) rotate(45deg);
+        border-left: 0;
+        border-bottom: 0;
+        border-right: 1px solid var(--stroke);
+        border-top: 1px solid var(--stroke);
+    }
+
+    .askForm--simple {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+.askInputWrap {
+    margin: 18px auto 0;
+    max-width: 760px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+
+    border-radius: 18px;
+    padding: 10px 10px;
+    border: 1px solid color-mix(in srgb, var(--stroke) 85%, transparent);
+    background: color-mix(in srgb, var(--glass2) 88%, transparent);
+    backdrop-filter: blur(10px);
+
+    position: relative;
+    overflow: hidden;
+}
+
+#askSend {
+    position: relative;
+    z-index: 1;
+}
+
+/* ------------------------------
+   Ask me – layout polish
+   Paste at the bottom of styles.css
+------------------------------ */
+
+/* Center the whole ask block nicely */
+.askWrap {
+    display: grid;
+    place-items: center;
+    text-align: center;
+}
+
+/* Keep the header aligned like other sections */
+.askHead {
+    text-align: center;
+    margin-bottom: 18px;
+}
+
+/* Token + bubble as one centered unit */
+.askStage {
+    width: min(980px, 92vw);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 18px;
+    margin: 18px auto 20px;
+}
+
+/* Token size + slightly stronger presence */
+.askToken {
+    width: 96px;
+    height: 96px;
+    flex: 0 0 auto;
+}
+
+/* Make the portrait sit perfectly in the token */
+.askTokenImg {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 999px;
+}
+
+/* Bubble: a bit cleaner + slightly smaller */
+.askBubble {
+    position: relative;
+    padding: 12px 16px;
+    border-radius: 16px;
+    max-width: 560px;
+    text-align: left;
+
+    border: 1px solid color-mix(in srgb, var(--stroke) 80%, transparent);
+    background: color-mix(in srgb, var(--glass2) 88%, transparent);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, .35);
+}
+
+/* Bubble tail – top-left of bubble, pointing toward token */
+.askBubble::before {
+    content: "";
+    position: absolute;
+    left: -8px;
+    top: 14px;
+    width: 14px;
+    height: 14px;
+    background: inherit;
+    border-left: 1px solid color-mix(in srgb, var(--stroke) 80%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--stroke) 80%, transparent);
+    transform: rotate(45deg);
+    border-bottom-left-radius: 3px;
+}
+
+/* Make the input feel “AI search”-ish (clean + readable) */
+.askInput {
+    padding-left: 18px;
+    font-size: 16px;
+}
+
+/* Send button: make it match your pill style */
+.askSend {
+    border-radius: 14px;
+    padding: 10px 16px;
+    border: 1px solid color-mix(in srgb, var(--stroke) 80%, transparent);
+    background: color-mix(in srgb, var(--glass2) 92%, transparent);
+    color: var(--text);
+    transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+}
+
+.askSend:hover {
+    transform: translateY(-1px);
+    border-color: rgba(160, 140, 255, 0.45);
+}
+
+.askSend:active {
+    transform: translateY(0);
+}
+
+/* Mobile: stack token above bubble */
+@media (max-width: 720px) {
+    .askStage {
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .askBubble {
+        text-align: center;
+    }
+
+    .askBubble::before {
+        left: 50%;
+        top: -8px;
+        transform: translateX(-50%) rotate(135deg);
+        border-left: 1px solid color-mix(in srgb, var(--stroke) 80%, transparent);
+        border-bottom: 1px solid color-mix(in srgb, var(--stroke) 80%, transparent);
+    }
+}
+
+/* Reuse Projects searchBar glow for Ask input */
+.askInputWrap.searchBar {
+    width: min(980px, 92vw);
+    margin: 18px auto 0;
+}
+
+/* Input should behave like the Projects search input */
+.askInputWrap.searchBar #askInput {
+    flex: 1;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--text);
+    font-size: 16px;
+    padding: 10px 12px;
+}
+
+/* Send button style (so it doesn’t look like a random white box) */
+.askSendBtn {
+    height: 36px;
+    padding: 0 14px;
+    border-radius: 12px;
+    border: 1px solid color-mix(in srgb, var(--stroke) 75%, transparent);
+    background: color-mix(in srgb, var(--glass2) 90%, transparent);
+    color: color-mix(in srgb, var(--text) 88%, transparent);
+    cursor: pointer;
+    transition: transform 180ms ease, border-color 180ms ease, opacity 180ms ease;
+}
+
+.askSendBtn:hover {
+    transform: translateY(-1px);
+    border-color: rgba(160, 140, 255, 0.45);
+}
+
+.askSendBtn:active {
+    transform: translateY(0px);
 }
