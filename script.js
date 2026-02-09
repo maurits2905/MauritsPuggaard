@@ -129,9 +129,46 @@ function initStory() {
 const state = {
   projects: [],
   tags: [],
-  activeTag: "All",
-  query: ""
+  query: "",
+  workEntered: false,
+  activeTag: "All"
 };
+
+function prefersReducedMotion() {
+  return (
+    window.matchMedia &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+}
+
+function animateWorkCards() {
+  if (!window.gsap || prefersReducedMotion()) return;
+
+  const cards = Array.from(
+    document.querySelectorAll("#workGrid .projectCard")
+  );
+  if (!cards.length) return;
+
+  gsap.killTweensOf(cards);
+
+  gsap.fromTo(
+    cards,
+    {
+      opacity: 0,
+      x: 72,
+      y: 6
+    },
+    {
+      opacity: 1,
+      x: 0,
+      y: 0,
+      duration: 0.85,        // ⬅ slower entrance
+      ease: "power3.out",    // ⬅ smoother, less snappy
+      stagger: 0.12,         // ⬅ cards arrive one-by-one
+      clearProps: "transform"
+    }
+  );
+}
 
 function escapeHtml(str) {
   return (str || "")
@@ -320,26 +357,37 @@ function renderWork() {
   list.forEach((p, i) => grid.appendChild(makeProjectCard(p, i)));
   empty.hidden = list.length !== 0;
 
-  // update stats used in pinned story
+  // Always update pinned story stats
   const proj = document.getElementById("statProjects");
   const tags = document.getElementById("statTags");
   if (proj) proj.textContent = String(state.projects.length);
   if (tags) tags.textContent = String(Math.max(0, state.tags.length - 1));
 
-  // reveal injected cards (if user scrolls to them)
-  if (window.gsap && window.ScrollTrigger) {
-    gsap.utils.toArray("#workGrid .r").forEach((el) => {
-      gsap.set(el, { opacity: 0, y: 18 });
-      gsap.to(el, {
-        opacity: 1,
-        y: 0,
-        duration: 0.7,
-        ease: "power2.out",
-        scrollTrigger: { trigger: el, start: "top 90%" }
-      });
-    });
+  const prev = document.getElementById("railPrev");
+  const next = document.getElementById("railNext");
+
+  // If no cards, hide arrows completely
+  if (list.length === 0) {
+    if (prev) prev.hidden = true;
+    if (next) next.hidden = true;
+    return;
+  }
+
+  // Reset scroll so we always start at first card
+  grid.scrollLeft = 0;
+
+  // Force arrow refresh after render + scroll reset
+  requestAnimationFrame(() => {
+    grid.dispatchEvent(new Event("scroll"));
+  });
+
+  // Animate cards only when section has been entered
+  if (state.workEntered) {
+    requestAnimationFrame(() => animateWorkCards());
   }
 }
+
+
 
 /* ------------------------------
    Stack rendering
@@ -674,7 +722,8 @@ async function init() {
   // Contact cards
   const ghText = document.getElementById("githubText");
   const ghLink = document.getElementById("githubLink");
-  if (ghText) ghText.textContent = "@" + (githubProfile.split("/").pop() || "YOURNAME");
+  if (ghText)
+    ghText.textContent = "@" + (githubProfile.split("/").pop() || "YOURNAME");
   if (ghLink) ghLink.href = githubProfile;
 
   // Contact cards - emails
@@ -721,7 +770,15 @@ async function init() {
     const res = await fetch("projects.json", { cache: "no-store" });
     state.projects = await res.json();
     state.tags = uniqueTags(state.projects);
-    renderFeatured();
+    // Update pinned story stats
+    const proj = document.getElementById("statProjects");
+    const tags = document.getElementById("statTags");
+    if (proj) proj.textContent = String(state.projects.length);
+    if (tags) tags.textContent = String(Math.max(0, state.tags.length - 1));
+
+    state.activeTag = "All";
+
+    // NOTE: featured is now part of the rail (no separate featured card)
     renderWork();
   } catch (e) {
     console.warn("projects.json not found or invalid", e);
@@ -732,20 +789,124 @@ async function init() {
   // Search
   const searchInput = document.getElementById("searchInput");
   const clearBtn = document.getElementById("clearSearch");
+
+  const syncClearBtn = () => {
+    if (!clearBtn || !searchInput) return;
+    clearBtn.hidden = !(searchInput.value || "").trim().length;
+  };
+
   if (searchInput) {
     searchInput.addEventListener("input", (e) => {
       state.query = e.target.value || "";
+      syncClearBtn();
       renderWork();
     });
   }
+
   if (clearBtn && searchInput) {
     clearBtn.addEventListener("click", () => {
       searchInput.value = "";
       state.query = "";
+      syncClearBtn();
       renderWork();
       searchInput.focus();
     });
   }
+
+// set initial state (important so it doesn't show on load)
+syncClearBtn();
+
+
+  // Filters (tags) drawer
+  const tagsToggle = document.getElementById("tagsToggle");
+  const tagsDrawer = document.getElementById("tagsDrawer");
+  if (tagsToggle && tagsDrawer) {
+    tagsToggle.addEventListener("click", () => {
+      const isOpen = !tagsDrawer.hasAttribute("hidden");
+      if (isOpen) {
+        tagsDrawer.setAttribute("hidden", "");
+        tagsToggle.setAttribute("aria-expanded", "false");
+      } else {
+        tagsDrawer.removeAttribute("hidden");
+        tagsToggle.setAttribute("aria-expanded", "true");
+      }
+    });
+  }
+
+  // Rail arrows + initial no-flash
+  const rail = document.getElementById("workGrid");
+  const next = document.getElementById("railNext");
+  const prev = document.getElementById("railPrev");
+
+  if (prev) prev.hidden = true;
+  if (next) next.hidden = true;
+
+  const updateRailArrows = () => {
+    if (!rail || !next || !prev) return;
+
+    const empty = document.getElementById("emptyState");
+    const hasCards = rail.children && rail.children.length > 0;
+
+    // If no results are visible, hide both arrows no matter what
+    if ((empty && !empty.hidden) || !hasCards) {
+      prev.hidden = true;
+      next.hidden = true;
+      return;
+    }
+
+    const max = rail.scrollWidth - rail.clientWidth;
+    const x = rail.scrollLeft;
+
+    prev.hidden = x < 10;
+    next.hidden = max - x < 10;
+  };
+
+  if (rail && next) {
+    next.addEventListener("click", () => {
+      rail.scrollBy({ left: rail.clientWidth * 0.9, behavior: "smooth" });
+    });
+  }
+  if (rail && prev) {
+    prev.addEventListener("click", () => {
+      rail.scrollBy({ left: -rail.clientWidth * 0.9, behavior: "smooth" });
+    });
+  }
+  if (rail) {
+    rail.addEventListener("scroll", () =>
+      requestAnimationFrame(updateRailArrows)
+    );
+    window.addEventListener("resize", () =>
+      requestAnimationFrame(updateRailArrows)
+    );
+
+    // Two RAFs helps ensure layout/fonts have settled before measuring widths
+    requestAnimationFrame(() => requestAnimationFrame(updateRailArrows));
+  }
+
+  // Animate projects on first enter
+  const workSection = document.getElementById("work");
+  if (workSection && "IntersectionObserver" in window) {
+    const io = new IntersectionObserver(
+      (entries) => {
+        const ent = entries[0];
+        if (!ent || !ent.isIntersecting) return;
+
+        // ✅ first time only
+        if (!state.workEntered) {
+          state.workEntered = true;
+          animateWorkCards();
+        }
+
+        io.disconnect();
+      },
+      { threshold: 0.2 }
+    );
+
+    io.observe(workSection);
+  } else {
+    state.workEntered = true;
+  }
+
 }
 
 init().catch(console.error);

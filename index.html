@@ -110,21 +110,27 @@
 
                     <div class="scene sceneAbout" id="about">
                         <div class="kicker">ABOUT ME</div>
-                        <p class="aboutText">
-                            I’m a SAP Technical Consultant and full-stack builder based in Denmark.
-                            I work at the intersection of enterprise systems and modern software development, building solutions that are practical,
-                            maintainable, and ready for real use.
-                            
-                            My day-to-day work spans SAP ABAP, CDS, OData, and SAP Fiori/UI5, where I focus on translating business needs into clean
-                            technical solutions. Alongside this, I actively work with full-stack web development, automation, and applied AI through
-                            internal tools and experimental projects.
-                            
-                            I have a background in Computer Science and a strong foundation in Python, data analysis, and machine learning. I’m
-                            especially interested in how AI and automation can support real workflows — not as demos, but as tools people rely on.
-                            
-                            I care deeply about clarity, performance, and finishing things properly.
-                            This site is my space for projects, experiments, and ideas I’m exploring next.
-                        </p>
+
+                        <div class="aboutHeadline">
+                            SAP Technical Consultant building real-world software.
+                        </div>
+
+                        <div class="aboutText">
+                            <p>
+                               I’m a SAP Technical Consultant and full-stack builder based in Denmark,
+                                working where enterprise systems meet modern software development.
+                            </p>
+                        
+                            <p>
+                                My focus is on building practical, maintainable solutions using SAP ABAP,
+                                CDS, OData, SAP Fiori/UI5, and modern web technologies.
+                            </p>
+                        
+                            <p>
+                                I’m especially interested in automation and applied AI as tools that
+                                support real workflows — not demos.
+                            </p>
+                        </div>
 
                         <div class="heroStats">
                             <div class="stat">
@@ -199,41 +205,59 @@
         <!-- 3) PROJECTS -->
         <section id="work" class="section">
             <div class="workHead">
-                <div>
-                    <div class="kicker r">PROJECTS</div>
-                    <h2 class="h2 r">Selected work</h2>
-                    <p class="p r">Live demos first. Code next. Easy to add new projects.</p>
+                <div class="workHeadText r">
+                    <h2 class="sectionTitle">
+                        My <span class="gradWord">Projects</span>
+                    </h2>
+                    <p class="p">
+                        Live demos first. Code next.
+                    </p>
                 </div>
-
+            
                 <div class="workControls r">
-                    <div class="searchWrap">
-                        <input id="searchInput" type="search" placeholder="Search projects…" autocomplete="off" />
-                        <button class="iconBtn" id="clearSearch" type="button" aria-label="Clear search">×</button>
+                    <div class="searchBar" role="search">
+                        <span class="searchIcon" aria-hidden="true">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                <path d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="currentColor"
+                                    stroke-width="1.8" />
+                                <path d="M16.5 16.5 21 21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                            </svg>
+                        </span>
+        
+                        <input id="searchInput" type="text" placeholder="Search projects…" autocomplete="off" />
+                        
+                        <button class="iconBtn" id="clearSearch" type="button" aria-label="Clear search" hidden>×</button>
+                        
+                        <button class="iconBtn iconBtn--ghost" id="tagsToggle" type="button" aria-label="Filters" aria-expanded="false">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                            </svg>
+                        </button>
                     </div>
-                    <div class="tagsBar" id="tagsBar"></div>
+        
+                    <div class="tagsDrawer" id="tagsDrawer" hidden>
+                        <div class="tagsBar" id="tagsBar"></div>
+                    </div>
                 </div>
             </div>
-
-            <div class="featuredWrap r" id="featuredWrap">
-                <div class="featuredCard">
-                    <div class="chipRow">
-                        <span class="chip">Featured</span>
-                        <span class="chip soft" id="featuredMeta">Loading…</span>
-                    </div>
-                    <div class="featuredTitle" id="featuredTitle">Loading…</div>
-                    <div class="featuredDesc" id="featuredDesc">Fetching projects…</div>
-                    <div class="tagRow" id="featuredTags"></div>
-                    <div class="btnRow" id="featuredBtns"></div>
+        
+            <!-- rail wrapper -->
+            <div class="railWrap r">
+                <div class="railViewport">
+                    <div class="workGrid rail" id="workGrid" aria-live="polite"></div>
                 </div>
+        
+                <button class="railArrow railArrow--left" id="railPrev" type="button" aria-label="Previous projects" hidden>‹</button>
+                <button class="railArrow railArrow--right" id="railNext" type="button" aria-label="More projects" hidden>›</button>
+
             </div>
-
-            <div class="workGrid" id="workGrid" aria-live="polite"></div>
-
+        
             <div class="empty" id="emptyState" hidden>
                 <div class="emptyTitle">No matches</div>
                 <div class="emptyText">Try clearing search or changing tags.</div>
             </div>
         </section>
+
 
         <!-- 4) TECH STACK -->
         <section id="tech" class="section tech">

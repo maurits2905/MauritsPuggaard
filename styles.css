@@ -302,10 +302,10 @@ input {
 
 /* Headings */
 .kicker {
-    color: var(--muted);
-    font-size: 12px;
-    letter-spacing: .18em;
+    letter-spacing: 0.22em;
     text-transform: uppercase;
+    font-size: 12px;
+    opacity: 0.75;
 }
 
 .h2 {
@@ -446,18 +446,52 @@ input {
     margin-top: 2px;
 }
 
-.aboutText {
-    margin-top: 10px;
-    color: var(--text);
-    font-size: 22px;
-    line-height: 1.45;
-    letter-spacing: -.01em;
-    max-width: 42ch;
+.aboutHeadline {
+    font-size: clamp(30px, 3.2vw, 42px);
+    font-weight: 750;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+    max-width: 20ch;
+    margin: 8px 0 10px;
 }
 
+.aboutText {
+    margin-top: 14px;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 15px;
+    line-height: 1.7;
+    letter-spacing: -0.005em;
+    max-width: 44ch;
+
+    /* Clamp so it doesn't feel like the next page */
+    max-height: 280px;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Fade-out so it ends cleanly */
+.aboutText::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 72px;
+    pointer-events: none;
+    background: linear-gradient(to bottom,
+            rgba(6, 7, 17, 0),
+            rgba(6, 7, 17, 0.85));
+}
+
+.aboutText p {
+    margin-bottom: 14px;
+}
+
+/* Mobile tweak */
 @media (max-width: 1040px) {
     .aboutText {
-        font-size: 18px;
+        font-size: 16px;
+        max-height: 240px;
     }
 }
 
@@ -615,56 +649,170 @@ input {
 
 /* Work */
 .workHead {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 14px;
-}
-
-.workControls {
-    border: 1px solid var(--stroke);
-    background: var(--glass2);
-    border-radius: var(--r1);
-    padding: 14px;
-}
-
-.searchWrap {
     display: flex;
-    gap: 10px;
+    flex-direction: column;
     align-items: center;
+    text-align: center;
 }
 
-.searchWrap input {
-    flex: 1;
-    border: 1px solid var(--stroke);
-    background: color-mix(in srgb, var(--bg) 65%, transparent);
-    color: var(--text);
-    padding: 12px 14px;
-    border-radius: 14px;
-    outline: none;
+.workHeadText {
+    max-width: 60ch;
+    margin-bottom: 18px;
 }
 
-.searchWrap input::placeholder {
-    color: color-mix(in srgb, var(--muted) 88%, transparent);
+.workHead .kicker {
+    margin-bottom: 8px;
 }
 
-.iconBtn {
-    border: 1px solid var(--stroke);
-    background: var(--glass2);
-    color: var(--text);
+.workHead .sectionTitle {
+    margin-bottom: 10px;
+}
+
+.workHead .p {
+    opacity: 0.72;
+    margin-top: 6px;
+}
+
+/* ===== Projects: minimal search + hidden tags ===== */
+.workControls {
+    margin-top: 14px;
+    display: grid;
+    gap: 10px;
+}
+
+.searchBar {
+    position: relative;
+    overflow: visible;
+    display: flex;
+    align-items: center;
+    margin-top: 22px;
+    gap: 10px;
     padding: 10px 12px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--glass) 92%, transparent);
+    border: 1px solid color-mix(in srgb, var(--stroke) 55%, transparent);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .35);
+}
+
+.searchBar::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+
+    background: linear-gradient(90deg,
+            rgba(155, 140, 255, 0.55),
+            rgba(68, 240, 177, 0.45),
+            rgba(155, 140, 255, 0.55));
+    background-size: 220% 100%;
+    animation: searchBorderShift 4.5s linear infinite;
+
+    /* show only as border */
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+
+    opacity: 0.95;
+    filter: blur(0px) drop-shadow(0 0 14px rgba(155, 140, 255, .22)) drop-shadow(0 0 18px rgba(68, 240, 177, .14));
+    pointer-events: none;
+}
+
+.searchBar:focus-within {
+    border-color: transparent;
+}
+
+.searchBar:focus-within::before {
+    opacity: 1;
+    filter: drop-shadow(0 0 18px rgba(155, 140, 255, .30)) drop-shadow(0 0 22px rgba(68, 240, 177, .18));
+}
+
+.searchBar input {
+    flex: 1;
+    background: transparent;
+    border: 0;
+    outline: 0;
+    color: var(--text);
+    font-size: 14px;
+}
+
+.searchBar input::placeholder {
+    color: color-mix(in srgb, var(--muted) 75%, transparent);
+}
+
+@keyframes searchBorderShift {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    100% {
+        background-position: 220% 50%;
+    }
+}
+
+.searchIcon {
+    color: color-mix(in srgb, var(--muted) 85%, transparent);
+    display: inline-flex;
+}
+
+/* Clear (x) button – cleaner */
+#clearSearch {
+    width: 36px;
+    height: 36px;
     border-radius: 12px;
-    cursor: pointer;
+    display: grid;
+    place-items: center;
+
+    border: 1px solid color-mix(in srgb, var(--stroke) 75%, transparent);
+    background: color-mix(in srgb, var(--glass2) 90%, transparent);
+    color: color-mix(in srgb, var(--text) 88%, transparent);
+
+    font-size: 20px;
+    line-height: 1;
+    padding: 0;
+    opacity: 0.9;
+    transition: transform 180ms ease, background 180ms ease, border-color 180ms ease, opacity 180ms ease;
+}
+
+#clearSearch:hover {
+    transform: translateY(-1px);
+    border-color: rgba(160, 140, 255, 0.45);
+    opacity: 1;
+}
+
+#clearSearch:active {
+    transform: translateY(0px);
+}
+
+#clearSearch[hidden] {
+    display: none !important;
+}
+
+.iconBtn--ghost {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--muted);
 }
 
 .iconBtn:hover {
     transform: translateY(-1px);
 }
 
+.iconBtn:active {
+    transform: translateY(0);
+}
+
+.tagsDrawer {
+    border: 1px solid color-mix(in srgb, var(--stroke) 70%, transparent);
+    background: color-mix(in srgb, var(--glass) 92%, transparent);
+    border-radius: var(--r1);
+    padding: 10px;
+}
+
 .tagsBar {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
-    margin-top: 12px;
 }
 
 .tagsBar button {
@@ -684,85 +832,48 @@ input {
     color: var(--text);
 }
 
-.featuredWrap {
+/* ===== Projects: rail layout ===== */
+.railWrap {
     margin-top: 16px;
+    position: relative;
 }
 
-.featuredCard {
-    border: 1px solid var(--stroke);
-    background: color-mix(in srgb, var(--glass2) 86%, transparent);
+.railViewport {
+    overflow: visible;
+    /* don't clip cards/shadows */
     border-radius: var(--r1);
-    box-shadow: var(--shadow);
-    padding: 14px;
+    /* keep rounding visually */
 }
 
-.chipRow {
+/* Horizontal rail */
+.workGrid.rail {
     display: flex;
-    justify-content: space-between;
-    gap: 10px;
-    align-items: center;
-}
-
-.chip {
-    font-size: 12px;
-    color: var(--muted);
-    border: 1px solid var(--stroke);
-    background: var(--glass2);
-    padding: 6px 10px;
-    border-radius: 999px;
-}
-
-.chip.soft {
-    opacity: .9;
-}
-
-.featuredTitle {
-    margin-top: 10px;
-    font-weight: 900;
-    letter-spacing: -.02em;
-}
-
-.featuredDesc {
-    margin-top: 8px;
-    color: var(--muted);
-    line-height: 1.5;
-}
-
-.tagRow {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-top: 10px;
-}
-
-.btnRow {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin-top: 12px;
-}
-
-.workGrid {
-    margin-top: 16px;
-    display: grid;
-    grid-template-columns: repeat(12, 1fr);
     gap: 14px;
+    padding: 10px 2px 16px; /* top + bottom room for shadows/hover */
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
 }
 
-@media (max-width: 980px) {
-    .workGrid {
-        grid-template-columns: repeat(6, 1fr);
-    }
+/* hide scrollbar */
+.workGrid.rail::-webkit-scrollbar {
+    height: 0;
 }
 
-@media (max-width: 640px) {
-    .workGrid {
-        grid-template-columns: repeat(1, 1fr);
-    }
+.workGrid.rail {
+    scrollbar-width: none;
 }
 
+.workGrid:hover .railArrow {
+    opacity: 1;
+}
+
+/* ===== Uniform cards ===== */
 .projectCard {
-    grid-column: span 4;
+    flex: 0 0 clamp(260px, 24vw, 340px);
+    scroll-snap-align: start;
+
     border: 1px solid var(--stroke);
     background: color-mix(in srgb, var(--glass) 86%, transparent);
     border-radius: var(--r1);
@@ -773,24 +884,45 @@ input {
     will-change: transform;
 }
 
+/* Featured cards are no longer bigger — badge only */
 .projectCard.featured {
-    grid-column: span 6;
+    flex: 0 0 clamp(260px, 24vw, 340px);
 }
 
-@media (max-width: 980px) {
-
-    .projectCard,
-    .projectCard.featured {
-        grid-column: span 6;
-    }
+/* Project card tag spacing */
+.projectCard .tagRow {
+    margin-top: 12px;
+    gap: 8px;
 }
 
-@media (max-width: 640px) {
+.projectCard .tagRow .tag {
+    padding: 6px 10px;
+    /* slightly roomier */
+}
 
-    .projectCard,
-    .projectCard.featured {
-        grid-column: span 1;
-    }
+/* Clamp description so height stays uniform */
+.pDesc {
+    margin-top: 8px;
+    color: var(--muted);
+    line-height: 1.5;
+    font-size: 14px;
+
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Push meta to bottom */
+.projectBody {
+    padding: 12px 14px 14px;
+    display: flex;
+    flex-direction: column;
+    min-height: 170px;
+}
+
+.pMeta {
+    margin-top: auto;
 }
 
 .projectTop {
@@ -841,21 +973,10 @@ input {
     pointer-events: none;
 }
 
-.projectBody {
-    padding: 12px 14px 14px;
-}
-
 .pTitle {
     font-weight: 950;
     letter-spacing: -.02em;
     font-size: 16px;
-}
-
-.pDesc {
-    margin-top: 8px;
-    color: var(--muted);
-    line-height: 1.5;
-    font-size: 14px;
 }
 
 .pMeta {
@@ -988,6 +1109,27 @@ input {
     letter-spacing: -.04em;
     line-height: 1.02;
     font-weight: 900;
+}
+
+/* Big section title like Career */
+.sectionTitle {
+    font-size: clamp(44px, 6vw, 86px);
+    line-height: 0.92;
+    letter-spacing: -0.035em;
+    margin: 10px 0 14px;
+    font-weight: 850;
+}
+
+/* Limit width of Projects header text (matches Career section) */
+.workHead>div:first-child {
+    max-width: 60ch;
+}
+
+.gradWord {
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
 }
 
 .careerAccent {
@@ -1496,4 +1638,46 @@ input {
     text-transform: uppercase;
     opacity: 0.7;
     margin: 0 0 12px;
+}
+
+
+/* ===== Rail arrows ===== */
+.railArrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 52px;
+    height: 52px;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--stroke) 75%, transparent);
+    background: color-mix(in srgb, var(--glass) 86%, transparent);
+    color: var(--text);
+    cursor: pointer;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, .45);
+    display: grid;
+    place-items: center;
+    font-size: 22px;
+    line-height: 1;
+    z-index: 5;
+    opacity: 0;
+    transition: opacity .25s ease, transform .25s ease;
+}
+
+.railArrow--right {
+    right: 10px;
+}
+
+.railArrow--left {
+    left: 10px;
+}
+
+.railArrow:hover {
+    transform: translateY(-50%) translateY(-1px);
+}
+
+@media (max-width: 640px) {
+    .railArrow {
+        width: 46px;
+        height: 46px;
+    }
 }
