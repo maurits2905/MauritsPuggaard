@@ -659,7 +659,11 @@ function initAskMe() {
 
   if (!form || !input || !chat || !meta) return;
 
-  const API_URL = "YOUR_WORKER_URL_HERE"; // e.g. https://yourname.workers.dev/api/chat
+  // ✅ Put your real Cloudflare Worker endpoint here:
+  // Example: https://maurits-askme.workers.dev/api/ask
+  const API_URL = "https://maurits-askme.maurits-pug.workers.dev/api/ask";
+
+  let history = []; // { role: "user"|"assistant", content: string }
 
   const addMsg = (text, who) => {
     const el = document.createElement("div");
@@ -681,6 +685,9 @@ function initAskMe() {
     if (!q) return;
 
     addMsg(q, "user");
+    history.push({ role: "user", content: q });
+    history = history.slice(-8);
+
     input.value = "";
     input.focus();
 
@@ -690,35 +697,37 @@ function initAskMe() {
       const res = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: q })
+        body: JSON.stringify({ message: q, history })
       });
 
+      const data = await res.json().catch(() => ({}));
+
       if (!res.ok) {
-        // If you enforce daily free limit server-side, return 429 with a friendly message
-        const txt = await res.text().catch(() => "");
-        setMeta("");
+        setMeta("", false);
         addMsg(
-          res.status === 429
-            ? "The AI is busy right now. Try again later."
-            : "Something went wrong. Try again.",
+          data?.message ||
+            (res.status === 429
+              ? "AI is busy right now. Try again later."
+              : "Something went wrong. Try again."),
           "bot"
         );
-        console.warn("AskMe error:", res.status, txt);
+        console.warn("AskMe error:", res.status, data);
         return;
       }
 
-      const data = await res.json();
-      setMeta("");
+      const reply = (data.reply || "No response.").toString();
+      setMeta("", false);
 
-      addMsg(data.reply || "No response.", "bot");
+      addMsg(reply, "bot");
+      history.push({ role: "assistant", content: reply });
+      history = history.slice(-8);
     } catch (err) {
-      setMeta("");
+      setMeta("", false);
       addMsg("Could not reach the AI right now. Try again later.", "bot");
       console.warn(err);
     }
   });
 }
-
 
 /* ------------------------------
    Init
