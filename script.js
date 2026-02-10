@@ -81,6 +81,15 @@ function initStory() {
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (reduced) return;
 
+  const isMobile = window.matchMedia && window.matchMedia("(max-width: 900px)").matches;
+  const storyEl = document.getElementById("story");
+  if (isMobile) {
+    if (storyEl) storyEl.classList.add("storyStatic");
+    return;
+  } else {
+    if (storyEl) storyEl.classList.remove("storyStatic");
+  }
+
   gsap.registerPlugin(ScrollTrigger);
 
   // Scene start states
