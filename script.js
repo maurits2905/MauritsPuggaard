@@ -4,18 +4,55 @@
 function setTheme(next) {
   document.documentElement.setAttribute("data-theme", next);
   localStorage.setItem("theme", next);
+
   const btn = document.getElementById("themeBtn");
   if (btn) btn.textContent = next === "light" ? "☀" : "☾";
+
+  applyThemeToBackground(next);
+  applyThemeToFx(next);
+}
+
+function applyThemeToBackground(theme) {
+  if (!vantaEffect) return;
+
+  const isLight = theme === "light";
+
+  // Darker net lines in light mode so they don’t disappear
+  const options = {
+    color: isLight ? 0x5c55ff : 0x9b8cff,
+    backgroundColor: isLight ? 0xf0f2ff : 0x060711
+  };
+
+  if (typeof vantaEffect.setOptions === "function") {
+    vantaEffect.setOptions(options);
+  } else {
+    // Fallback: rebuild Vanta if setOptions isn't available
+    if (typeof vantaEffect.destroy === "function") vantaEffect.destroy();
+    vantaEffect = window.VANTA.NET({
+      el: "#bg",
+      mouseControls: true,
+      touchControls: true,
+      gyroControls: false,
+      minHeight: 200,
+      minWidth: 200,
+      scale: 1.0,
+      scaleMobile: 1.0,
+      points: 7.0,
+      maxDistance: 24.0,
+      spacing: 18.0,
+      ...options
+    });
+  }
 }
 
 function initTheme() {
   const saved = localStorage.getItem("theme");
   if (saved) return setTheme(saved);
-  const prefersLight =
-    window.matchMedia &&
-    window.matchMedia("(prefers-color-scheme: light)").matches;
-  setTheme(prefersLight ? "light" : "dark");
+
+  // First visit = always dark (your intended default)
+  setTheme("dark");
 }
+
 
 /* ------------------------------
    Background (Vanta NET)
@@ -28,6 +65,9 @@ function initBackground() {
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (reduced) return;
 
+  const theme = document.documentElement.getAttribute("data-theme") || "dark";
+  const isLight = theme === "light";
+
   vantaEffect = window.VANTA.NET({
     el: "#bg",
     mouseControls: true,
@@ -38,14 +78,188 @@ function initBackground() {
     scale: 1.0,
     scaleMobile: 1.0,
 
-    // Subtle premium motion
-    color: 0x9b8cff,
-    backgroundColor: 0x060711,
+    color: isLight ? 0x5c55ff : 0x9b8cff,
+    backgroundColor: isLight ? 0xf0f2ff : 0x060711,
     points: 7.0,
     maxDistance: 24.0,
     spacing: 18.0
   });
 }
+
+let fx = null;
+
+function initFx() {
+  const reduced =
+    window.matchMedia &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduced) return;
+
+  const canvas = document.getElementById("fx");
+  if (!canvas) return;
+
+  const ctx = canvas.getContext("2d", { alpha: true });
+  const dpr = Math.max(1, window.devicePixelRatio || 1);
+
+  const state = {
+    canvas,
+    ctx,
+    dpr,
+    w: 0,
+    h: 0,
+    points: [],
+    shots: [],
+    maxDist: 170,
+    count: 70,
+    theme: document.documentElement.getAttribute("data-theme") || "dark"
+  };
+
+  function resize() {
+    state.w = Math.floor(window.innerWidth);
+    state.h = Math.floor(window.innerHeight);
+    canvas.width = Math.floor(state.w * dpr);
+    canvas.height = Math.floor(state.h * dpr);
+    canvas.style.width = state.w + "px";
+    canvas.style.height = state.h + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function rand(min, max) { return min + Math.random() * (max - min); }
+
+  function makePoints() {
+    state.points = Array.from({ length: state.count }, () => ({
+      x: rand(0, state.w),
+      y: rand(0, state.h),
+      vx: rand(-0.18, 0.18),
+      vy: rand(-0.18, 0.18),
+      phase: rand(0, Math.PI * 2),
+      hue: rand(190, 285) // blue/purple family
+    }));
+  }
+
+  function themeParams() {
+    const isLight = state.theme === "light";
+    return {
+      baseAlpha: isLight ? 0.22 : 0.30,
+      dotAlpha: isLight ? 0.55 : 0.75,
+      lineAlpha: isLight ? 0.16 : 0.20,
+      bgFade: isLight ? "rgba(240,242,255,0.10)" : "rgba(6,7,17,0.10)"
+    };
+  }
+
+  function maybeSpawnShot(ax, ay, bx, by) {
+    // small probability so it’s not constant spam
+    if (Math.random() > 0.996) return;
+
+    state.shots.push({
+      ax, ay, bx, by,
+      t: 0,
+      speed: rand(0.010, 0.020),
+      hue: rand(160, 310),
+      width: rand(1.2, 2.2)
+    });
+    if (state.shots.length > 60) state.shots.shift();
+  }
+
+  function step() {
+    const { ctx } = state;
+    const P = themeParams();
+
+    // soft fade (keeps motion trails subtle)
+    ctx.fillStyle = P.bgFade;
+    ctx.fillRect(0, 0, state.w, state.h);
+
+    // move points
+    for (const p of state.points) {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.phase += 0.02;
+
+      if (p.x < -20) p.x = state.w + 20;
+      if (p.x > state.w + 20) p.x = -20;
+      if (p.y < -20) p.y = state.h + 20;
+      if (p.y > state.h + 20) p.y = -20;
+    }
+
+    // draw connections + spawn shots
+    for (let i = 0; i < state.points.length; i++) {
+      const a = state.points[i];
+      for (let j = i + 1; j < state.points.length; j++) {
+        const b = state.points[j];
+        const dx = a.x - b.x;
+        const dy = a.y - b.y;
+        const d = Math.hypot(dx, dy);
+
+        if (d > state.maxDist) continue;
+
+        const t = 1 - d / state.maxDist;
+        const hue = (a.hue + b.hue) * 0.5;
+
+        ctx.strokeStyle = `hsla(${hue}, 90%, 70%, ${P.lineAlpha * t})`;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+        ctx.stroke();
+
+        maybeSpawnShot(a.x, a.y, b.x, b.y);
+      }
+    }
+
+    // draw dots (pulsing)
+    for (const p of state.points) {
+      const pulse = 0.5 + 0.5 * Math.sin(p.phase);
+      const r = 1.2 + pulse * 1.6;
+
+      ctx.fillStyle = `hsla(${p.hue + pulse * 35}, 95%, 70%, ${P.dotAlpha * (0.55 + 0.45 * pulse)})`;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // animate shots (little colored segment traveling along a line)
+    for (let i = state.shots.length - 1; i >= 0; i--) {
+      const s = state.shots[i];
+      s.t += s.speed;
+
+      if (s.t >= 1) {
+        state.shots.splice(i, 1);
+        continue;
+      }
+
+      const x = s.ax + (s.bx - s.ax) * s.t;
+      const y = s.ay + (s.by - s.ay) * s.t;
+
+      ctx.fillStyle = `hsla(${s.hue}, 95%, 70%, ${P.baseAlpha})`;
+      ctx.beginPath();
+      ctx.arc(x, y, 2.2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    fx.raf = requestAnimationFrame(step);
+  }
+
+  resize();
+  makePoints();
+
+  fx = { ...state, raf: 0 };
+  window.addEventListener("resize", () => {
+    resize();
+    makePoints();
+  });
+
+  fx.raf = requestAnimationFrame(step);
+}
+
+function applyThemeToFx(theme) {
+  if (!fx) return;
+  fx.theme = theme;
+
+  // tweak visibility per theme
+  const canvas = document.getElementById("fx");
+  if (canvas) canvas.style.opacity = theme === "light" ? "0.55" : "0.70";
+}
+
+initFx();
 
 /* ------------------------------
    Scroll story (pinned)

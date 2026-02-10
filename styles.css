@@ -58,19 +58,41 @@ input {
 #bg {
     position: fixed;
     inset: 0;
-    z-index: -3;
+    z-index: -4;
 }
 
 .bgOverlay {
     position: fixed;
     inset: 0;
-    z-index: -2;
+    z-index: -3;
     background:
         radial-gradient(1100px 560px at 18% 20%, rgba(155, 140, 255, .16), transparent 55%),
         radial-gradient(900px 520px at 78% 40%, rgba(68, 240, 177, .09), transparent 58%),
         radial-gradient(900px 740px at 58% 90%, rgba(255, 96, 220, .07), transparent 60%),
         linear-gradient(180deg, rgba(0, 0, 0, .38), rgba(0, 0, 0, .64));
     pointer-events: none;
+}
+
+#fx {
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    pointer-events: none;
+    opacity: .65;
+    mix-blend-mode: screen;
+}
+
+/* Light theme background overlay */
+[data-theme="light"] .bgOverlay {
+    background:
+        radial-gradient(1100px 560px at 18% 20%, rgba(155, 140, 255, .18), transparent 55%),
+        radial-gradient(900px 520px at 78% 40%, rgba(68, 240, 177, .10), transparent 58%),
+        radial-gradient(900px 740px at 58% 90%, rgba(255, 96, 220, .06), transparent 60%),
+        linear-gradient(180deg, rgba(240, 242, 255, .78), rgba(245, 246, 251, .92));
+}
+
+[data-theme="light"] .bgNoise {
+    opacity: .06;
 }
 
 .bgNoise {
@@ -457,7 +479,7 @@ input {
 
 .aboutText {
     margin-top: 14px;
-    color: rgba(255, 255, 255, 0.78);
+    color: color-mix(in srgb, var(--text) 82%, transparent);
     font-size: 15px;
     line-height: 1.7;
     letter-spacing: -0.005em;
@@ -479,8 +501,8 @@ input {
     height: 72px;
     pointer-events: none;
     background: linear-gradient(to bottom,
-            rgba(6, 7, 17, 0),
-            rgba(6, 7, 17, 0.85));
+                color-mix(in srgb, var(--bg) 0%, transparent),
+                color-mix(in srgb, var(--bg) 85%, transparent));
 }
 
 .aboutText p {
