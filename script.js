@@ -801,6 +801,8 @@ async function init() {
 
   // Header email (private only)
   const topEmail = document.getElementById("topEmail");
+
+  // Always use private email in the header
   if (topEmail) {
     topEmail.textContent = emailPrivate;
     topEmail.href = `mailto:${emailPrivate}`;

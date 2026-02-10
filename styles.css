@@ -2214,48 +2214,6 @@ input {
     transform: translateY(0px);
 }
 
-
-/* =========================
-   Mobile layout fixes
-========================= */
-@media (max-width: 760px) {
-    .careerRows {
-        grid-template-columns: 26px 1fr;
-        column-gap: 14px;
-        row-gap: 22px;
-        align-items: start;
-    }
-
-    /* Keep the timeline column on mobile */
-    .careerLineWrap {
-        display: block !important;
-        grid-column: 1;
-        grid-row: 1 / -1;
-        width: 26px;
-    }
-
-    .careerItemBtn,
-    .careerYear,
-    .careerRightItem {
-        grid-column: 2;
-    }
-
-    .careerYear {
-        font-size: 22px;
-        padding: 0;
-    }
-
-    .careerRole {
-        font-size: 18px;
-    }
-
-    .careerRightItem {
-        border-left: 0;
-        padding-left: 0;
-        min-height: 0;
-    }
-}
-
 /* Static story mode for mobile (ONLY when JS adds #story.storyStatic) */
 @media (max-width: 900px) {
     #story.storyStatic {
@@ -2325,4 +2283,71 @@ input {
 .noReveal .r {
     opacity: 1 !important;
     transform: none !important;
+}
+
+/* =========================
+   Career timeline - phone fix
+   (keeps the timeline, but makes it fit)
+========================= */
+@media (max-width: 760px) {
+
+    /* Make the career section fill the phone and avoid the “two column” feel */
+    #career.section {
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    #career .r {
+        width: 100%;
+    }
+
+    /* Main timeline grid: tiny left rail for the line + full-width content */
+    #career .careerRows {
+        display: grid;
+        grid-template-columns: 22px 1fr;
+        column-gap: 14px;
+        row-gap: 14px;
+        align-items: start;
+    }
+
+    /* Keep the vertical line visible on mobile */
+    #career .careerLineWrap {
+        display: block;
+        grid-column: 1;
+        grid-row: 1 / -1;
+        justify-self: center;
+    }
+
+    /* Everything else lives in the content column */
+    #career .careerItemBtn,
+    #career .careerYear,
+    #career .careerRightItem {
+        grid-column: 2;
+        width: 100%;
+    }
+
+    /* Tighten typography so it doesn’t overflow */
+    #career .sectionTitle,
+    #career .h2,
+    #career .careerTitle {
+        font-size: clamp(28px, 7vw, 38px);
+        line-height: 1.05;
+    }
+
+    #career .careerRowYear {
+        font-size: 22px;
+        opacity: 0.92;
+        margin-top: 6px;
+    }
+
+    /* Remove any “split” styling that assumes desktop columns */
+    #career .careerRowRight {
+        padding-left: 0 !important;
+        border-left: 0 !important;
+    }
+
+    /* Make the left “role card” tap target full width */
+    #career .careerItemBtn {
+        width: 100%;
+    }
 }
