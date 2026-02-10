@@ -2219,48 +2219,40 @@ input {
    Mobile layout fixes
 ========================= */
 @media (max-width: 760px) {
-
-    /* Topbar: stack instead of 3-col grid */
-    .topbar {
-        display: flex;
-        flex-direction: column;
-        align-items: stretch;
-        gap: 10px;
-        padding: 12px 14px;
+    .careerRows {
+        grid-template-columns: 26px 1fr;
+        column-gap: 14px;
+        row-gap: 22px;
+        align-items: start;
     }
 
-    .topLeft {
-        justify-content: center;
+    /* Keep the timeline column on mobile */
+    .careerLineWrap {
+        display: block !important;
+        grid-column: 1;
+        grid-row: 1 / -1;
+        width: 26px;
     }
 
-    .topEmailWrap {
-        justify-content: center;
-        flex-wrap: wrap;
-        gap: 8px;
+    .careerItemBtn,
+    .careerYear,
+    .careerRightItem {
+        grid-column: 2;
     }
 
-    .topEmail {
-        max-width: 92vw;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+    .careerYear {
+        font-size: 22px;
+        padding: 0;
     }
 
-    .topNav {
-        justify-content: center;
-        flex-wrap: wrap;
-        gap: 8px;
+    .careerRole {
+        font-size: 18px;
     }
 
-    .topNav a {
-        padding: 7px 9px;
-        font-size: 12px;
-        letter-spacing: .10em;
-    }
-
-    /* Floating resume button tends to cover content on phones */
-    .resumeBtn {
-        display: none;
+    .careerRightItem {
+        border-left: 0;
+        padding-left: 0;
+        min-height: 0;
     }
 }
 
@@ -2319,4 +2311,18 @@ input {
         width: 120% !important;
         height: 120% !important;
     }
+}
+
+/* If reduced motion is on (common on iPhone), don't hide reveal elements */
+@media (prefers-reduced-motion: reduce) {
+    .r {
+        opacity: 1 !important;
+        transform: none !important;
+    }
+}
+
+/* JS fallback when GSAP reveal isn't running */
+.noReveal .r {
+    opacity: 1 !important;
+    transform: none !important;
 }

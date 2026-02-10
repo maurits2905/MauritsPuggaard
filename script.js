@@ -100,17 +100,6 @@ function initStory() {
   gsap.set("#sceneHero", { autoAlpha: 1, y: 0 });
   gsap.set("#sceneRole", { autoAlpha: 1, y: 0 });
 
-  // Reveal animation baseline for other sections
-  gsap.utils.toArray(".section .r").forEach((el) => {
-    gsap.to(el, {
-      autoAlpha: 1,
-      y: 0,
-      duration: 0.75,
-      ease: "power2.out",
-      scrollTrigger: { trigger: el, start: "top 85%" }
-    });
-  });
-
   const tl = gsap.timeline({
     scrollTrigger: {
       trigger: "#story",
@@ -174,6 +163,31 @@ function prefersReducedMotion() {
     window.matchMedia("(prefers-reduced-motion: reduce)").matches
   );
 }
+
+function initReveals() {
+  const els = Array.from(document.querySelectorAll(".section .r, .careerHead.r, .workHead .r"));
+  if (!els.length) return;
+
+  // If reduced motion OR GSAP not available: show everything immediately
+  if (prefersReducedMotion() || !window.gsap || !window.ScrollTrigger) {
+    document.documentElement.classList.add("noReveal");
+    return;
+  }
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  // Reveal on scroll
+  els.forEach((el) => {
+    gsap.to(el, {
+      autoAlpha: 1,
+      y: 0,
+      duration: 0.75,
+      ease: "power2.out",
+      scrollTrigger: { trigger: el, start: "top 85%" }
+    });
+  });
+}
+
 
 function animateWorkCards() {
   if (!window.gsap || prefersReducedMotion()) return;
@@ -785,41 +799,11 @@ async function init() {
   const xProfile = "https://x.com/maurits2905";
   const igProfile = "https://www.instagram.com/maurits2905/";
 
-  // Header email toggle (Work/Private) + click to mail + click toggle to copy
-  let emailMode = "work";
+  // Header email (private only)
   const topEmail = document.getElementById("topEmail");
-  const emailToggle = document.getElementById("emailToggle");
-
-  function setTopEmail(mode) {
-    emailMode = mode;
-    const email = mode === "work" ? emailWork : emailPrivate;
-
-    if (topEmail) {
-      topEmail.textContent = email;
-      topEmail.href = `mailto:${email}`;
-    }
-
-    if (emailToggle) {
-      emailToggle.textContent = mode === "work" ? "Work" : "Private";
-    }
-  }
-
-  setTopEmail("work");
-
-  if (emailToggle) {
-    emailToggle.addEventListener("click", async () => {
-      setTopEmail(emailMode === "work" ? "private" : "work");
-
-      const email = emailMode === "work" ? emailWork : emailPrivate;
-      try {
-        await navigator.clipboard.writeText(email);
-        emailToggle.textContent =
-          (emailMode === "work" ? "Work" : "Private") + " ✓";
-        setTimeout(() => setTopEmail(emailMode), 900);
-      } catch {
-        // ignore if clipboard blocked
-      }
-    });
+  if (topEmail) {
+    topEmail.textContent = emailPrivate;
+    topEmail.href = `mailto:${emailPrivate}`;
   }
 
   const ghIcon = document.getElementById("ghIcon");
@@ -872,6 +856,7 @@ async function init() {
     });
   }
 
+  initReveals();
   initStory();
 
   // Career
