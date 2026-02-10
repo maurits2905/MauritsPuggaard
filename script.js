@@ -165,6 +165,15 @@ function prefersReducedMotion() {
 }
 
 function initReveals() {
+  const isMobile = window.matchMedia("(max-width: 900px)").matches;
+
+  // On mobile Safari, scroll/reveal triggers can fail and leave sections invisible.
+  // So: disable reveal animations on mobile and force everything visible.
+  if (isMobile) {
+    document.querySelectorAll(".r").forEach((el) => el.classList.add("noReveal"));
+    return;
+  }
+  
   const els = Array.from(document.querySelectorAll(".section .r, .careerHead.r, .workHead .r"));
   if (!els.length) return;
 
@@ -801,8 +810,6 @@ async function init() {
 
   // Header email (private only)
   const topEmail = document.getElementById("topEmail");
-
-  // Always use private email in the header
   if (topEmail) {
     topEmail.textContent = emailPrivate;
     topEmail.href = `mailto:${emailPrivate}`;
