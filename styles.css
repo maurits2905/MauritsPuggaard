@@ -33,8 +33,17 @@
   box-sizing: border-box;
 }
 
+:root {
+  --navH: 84px; /* adjust if header height changes */
+}
+
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--navH) + 12px);
+}
+
+section[id] {
+  scroll-margin-top: calc(var(--navH) + 12px);
 }
 
 body {
