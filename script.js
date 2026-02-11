@@ -824,6 +824,124 @@ function initAskMe() {
   });
 }
 
+function initCustomScrollbar() {
+  const wrap = document.getElementById("cScroll");
+  const thumb = document.getElementById("cScrollThumb");
+  if (!wrap || !thumb) return;
+
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+
+  function getDocHeight() {
+    return Math.max(
+      document.body.scrollHeight,
+      document.documentElement.scrollHeight,
+    );
+  }
+
+  function getMaxScroll() {
+    return Math.max(0, getDocHeight() - window.innerHeight);
+  }
+
+  function layoutThumb() {
+    // fixed cap size (matches CSS)
+    thumb.style.height = "28px";
+  }
+
+  function syncThumb() {
+    const maxScroll = getMaxScroll();
+    const trackH = wrap.clientHeight;
+    const thumbH = thumb.offsetHeight || 28;
+
+    const fillEl = document.getElementById("cScrollFill");
+
+    if (maxScroll <= 0) {
+      if (fillEl) fillEl.style.height = "0%";
+      thumb.style.top = `0px`;
+      return;
+    }
+
+    const progress = Math.max(0, Math.min(1, window.scrollY / maxScroll));
+
+    // fill grows DOWN from top
+    if (fillEl) fillEl.style.height = `${(progress * 100).toFixed(3)}%`;
+
+    // cap sits at the bottom of the fill
+    const y = progress * (trackH - thumbH);
+    thumb.style.top = `${y}px`;
+  }
+
+  function scrollToPosition(clientY) {
+    const rect = wrap.getBoundingClientRect();
+    const trackH = rect.height;
+    const thumbH = thumb.offsetHeight || 28;
+
+    const y = clamp(clientY - rect.top - thumbH / 2, 0, trackH - thumbH);
+
+    // ✅ normal direction: top=0%, bottom=100%
+    const progress = y / Math.max(1, trackH - thumbH);
+
+    const maxScroll = getMaxScroll();
+    window.scrollTo({ top: progress * maxScroll, behavior: "auto" });
+  }
+
+  // Click on track
+  wrap.addEventListener("pointerdown", (e) => {
+    if (e.target === thumb) return;
+    scrollToPosition(e.clientY);
+  });
+
+  // Dragging
+  let dragging = false;
+  let startY = 0;
+  let startScroll = 0;
+
+  thumb.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    dragging = true;
+    startY = e.clientY;
+    startScroll = window.scrollY;
+    thumb.setPointerCapture(e.pointerId);
+  });
+
+  thumb.addEventListener("pointermove", (e) => {
+    if (!dragging) return;
+
+    const maxScroll = getMaxScroll();
+    const rect = wrap.getBoundingClientRect();
+    const trackH = wrap.clientHeight;
+    const thumbH = thumb.offsetHeight || 28;
+
+    const y = clamp(e.clientY - rect.top - thumbH / 2, 0, trackH - thumbH);
+
+    const progress = y / Math.max(1, trackH - thumbH);
+    const p = Math.max(0, Math.min(1, progress));
+
+    window.scrollTo({ top: p * maxScroll, behavior: "auto" });
+  });
+
+  thumb.addEventListener("pointerup", () => {
+    dragging = false;
+  });
+
+  thumb.addEventListener("pointercancel", () => {
+    dragging = false;
+  });
+
+  window.addEventListener("scroll", syncThumb, { passive: true });
+  window.addEventListener("resize", () => {
+    layoutThumb();
+    syncThumb();
+  });
+
+  window.addEventListener("load", () => {
+    layoutThumb();
+    syncThumb();
+  });
+
+  layoutThumb();
+  syncThumb();
+}
+
 /* ------------------------------
    Init
 ------------------------------ */
@@ -831,6 +949,8 @@ async function init() {
   initTheme();
   initBackground();
   initDeepFade();
+
+  initCustomScrollbar();
 
   forceTopAndRefresh();
   window.addEventListener("load", forceTopAndRefresh, { once: true });

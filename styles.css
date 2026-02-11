@@ -45,6 +45,97 @@ body {
   overflow-x: hidden;
 }
 
+/* =========================
+   Custom Page Scrollbar (progress rail)
+========================= */
+
+/* Hide native scrollbar */
+html,
+body {
+  scrollbar-width: none;
+} /* Firefox */
+body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+/* Tune */
+:root {
+  --cscroll-hit: 22px; /* bigger invisible hit-area */
+  --cscroll-rail: 6px; /* ✅ thicker track + fill */
+  --cscroll-pad: 10px;
+
+  --cscroll-track: rgba(255, 255, 255, 0.12);
+  --cscroll-fill: var(--accent2); /* ✅ solid green like pic 2 */
+  --cscroll-glow: color-mix(in srgb, var(--accent2) 55%, transparent);
+}
+
+/* invisible hit-area */
+.cScroll {
+  position: fixed;
+  top: 50%;
+  right: 14px; /* ⬅ more inset (matches pic 2) */
+  height: 12.5vh;
+  width: var(--cscroll-hit);
+  z-index: 999;
+  user-select: none;
+  touch-action: none;
+  transform: translateY(-50%);
+}
+
+/* thin track line */
+.cScrollTrack {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: var(--cscroll-rail);
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: var(--cscroll-track);
+  opacity: 0.55;
+}
+
+/* fill grows from bottom */
+.cScrollFill {
+  position: absolute;
+  left: 50%;
+  top: 0; /* ✅ start at top */
+  width: var(--cscroll-rail);
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: var(--cscroll-fill);
+  height: 0%; /* JS updates this */
+  box-shadow: 0 0 14px var(--cscroll-glow);
+  opacity: 0.95;
+}
+
+/* the little bright “cap” */
+.cScrollThumb {
+  position: absolute;
+  left: 50%;
+  width: calc(var(--cscroll-rail) + 1px);
+  height: 34px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: var(--cscroll-fill);
+  box-shadow: 0 0 12px var(--cscroll-glow);
+  opacity: 0.98;
+}
+
+/* optional hover/drag emphasis */
+.cScroll:hover .cScrollThumb,
+.cScroll.isDragging .cScrollThumb {
+  opacity: 1;
+}
+
+/* hide on mobile */
+@media (max-width: 768px) {
+  .cScroll {
+    display: none;
+  }
+}
+
 a {
   color: inherit;
   text-decoration: none;
