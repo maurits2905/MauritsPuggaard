@@ -499,8 +499,8 @@ html.noReveal .r,
     height: 72px;
     pointer-events: none;
     background: linear-gradient(to bottom,
-                color-mix(in srgb, var(--bg) 0%, transparent),
-                color-mix(in srgb, var(--bg) 85%, transparent));
+            color-mix(in srgb, var(--bg) 0%, transparent),
+            color-mix(in srgb, var(--bg) 85%, transparent));
 }
 
 .aboutText p {
@@ -714,6 +714,95 @@ html.noReveal .r,
     box-shadow: 0 10px 30px rgba(0, 0, 0, .35);
 }
 
+/* ==============================
+   Search bar (reference style)
+   Apply by adding: class="searchBar searchNeo"
+============================== */
+.searchBar.searchNeo {
+    margin-top: 22px;
+    gap: 12px;
+    padding: 16px 18px;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, #7aa8ff 40%, transparent);
+    background: color-mix(in srgb, #000 46%, var(--bg));
+    box-shadow:
+        0 26px 80px rgba(0, 0, 0, .62),
+        inset 0 0 0 1px rgba(255, 255, 255, .04);
+    backdrop-filter: blur(18px);
+}
+
+/* Stronger glowing rim like the reference */
+.searchBar.searchNeo::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+
+    /* This is the visible outline */
+    box-shadow:
+        inset 0 0 0 1px color-mix(in srgb, #7aa8ff 70%, transparent),
+        0 0 0 1px color-mix(in srgb, #7aa8ff 40%, transparent),
+        0 0 34px color-mix(in srgb, #7aa8ff 22%, transparent);
+
+    opacity: 0.95;
+}
+
+.searchBar.searchNeo:focus-within {
+    border-color: color-mix(in srgb, #7aa8ff 72%, transparent);
+}
+
+.searchBar.searchNeo:focus-within::after {
+    opacity: 1;
+    box-shadow:
+        inset 0 0 0 1px color-mix(in srgb, #7aa8ff 85%, transparent),
+        0 0 0 1px color-mix(in srgb, #7aa8ff 55%, transparent),
+        0 0 46px color-mix(in srgb, #7aa8ff 28%, transparent);
+}
+
+/* Light theme: keep it readable (white-ish pill, same outline vibe) */
+[data-theme="light"] .searchBar.searchNeo {
+    background: color-mix(in srgb, #fff 74%, var(--bg));
+    border-color: color-mix(in srgb, #5f8cff 38%, transparent);
+    box-shadow:
+        0 22px 70px rgba(16, 26, 60, .22),
+        inset 0 0 0 1px rgba(10, 18, 40, .04);
+}
+
+[data-theme="light"] .searchBar.searchNeo::after {
+    box-shadow:
+        0 0 0 1px color-mix(in srgb, #5f8cff 48%, transparent),
+        0 0 32px color-mix(in srgb, #5f8cff 16%, transparent);
+}
+
+.searchBar.searchNeo input {
+    font-size: 16px;
+}
+
+.searchBar.searchNeo .searchIcon {
+    opacity: .85;
+}
+
+/* Buttons inside the Neo search bar: a bit cleaner */
+.searchBar.searchNeo .iconBtn,
+.searchBar.searchNeo .iconBtn--ghost,
+.searchBar.searchNeo #clearSearch,
+.searchBar.searchNeo .askSendBtn {
+    height: 38px;
+    min-width: 38px;
+    border-radius: 999px;
+}
+
+.searchBar.searchNeo #clearSearch {
+    border-color: color-mix(in srgb, var(--stroke) 55%, transparent);
+    background: color-mix(in srgb, var(--glass2) 82%, transparent);
+}
+
+.searchBar.searchNeo .askSendBtn {
+    padding: 0 16px;
+    min-width: auto;
+}
+
 .searchBar::before {
     content: "";
     position: absolute;
@@ -873,7 +962,8 @@ html.noReveal .r,
 .workGrid.rail {
     display: flex;
     gap: 14px;
-    padding: 10px 2px 16px; /* top + bottom room for shadows/hover */
+    padding: 10px 2px 16px;
+    /* top + bottom room for shadows/hover */
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     scroll-behavior: smooth;
@@ -1203,19 +1293,17 @@ html.noReveal .r,
   [left roles] [years] [line] [right desc]
 */
 .careerRows {
-  position: relative;
-  display: grid;
-  grid-template-columns:
-    minmax(260px, 1.15fr)
-    120px
-    34px
-    minmax(320px, 1.35fr);
+    position: relative;
+    display: grid;
+    grid-template-columns:
+        minmax(260px, 1.15fr) 120px 34px minmax(320px, 1.35fr);
 
-  row-gap: var(--career-row-gap);
-  column-gap: var(--career-gap);
+    row-gap: var(--career-row-gap);
+    column-gap: var(--career-gap);
 
-  grid-auto-rows: minmax(72px, auto); /* 👈 VIGTIG */
-  align-items: center;
+    grid-auto-rows: minmax(72px, auto);
+    /* 👈 VIGTIG */
+    align-items: center;
 }
 
 
@@ -1331,7 +1419,8 @@ html.noReveal .r,
 /* Timeline column (grid item in column 3) */
 .careerLineWrap {
     grid-column: 3;
-    grid-row: 1 / 7; /* Change if you add more to time line (Numer of sections + 1) */
+    grid-row: 1 / 7;
+    /* Change if you add more to time line (Numer of sections + 1) */
     position: relative;
     width: 34px;
     justify-self: center;
@@ -1459,17 +1548,17 @@ html.noReveal .r,
 /* Responsive */
 @media (max-width: 1040px) {
     .topbar {
-            grid-template-columns: 1fr auto 1fr;
-        }
-    
+        grid-template-columns: 1fr auto 1fr;
+    }
+
     .socialRail {
         display: none;
     }
-    
+
     .storyGrid {
         grid-template-columns: 1fr;
     }
-    
+
     .careerRows {
         grid-template-columns: 1fr;
         row-gap: 18px;
