@@ -1187,7 +1187,7 @@ const TECH_GROUPS = [
       {
         name: "JavaScript",
         slug: "javascript",
-        url: "https://developer.mozilla.org/en-US/docs/Web/JavaScript",
+        url: "https://www.javascript.com/",
       },
       {
         name: ".NET / C#",
@@ -1197,12 +1197,12 @@ const TECH_GROUPS = [
       {
         name: "ABAP",
         slug: "sap",
-        url: "https://help.sap.com/docs/abap-platform",
+        url: "https://learning.sap.com/products/business-technology-platform/development/abap",
       },
       {
         name: "SQL",
         slug: "postgresql",
-        url: "https://en.wikipedia.org/wiki/SQL",
+        url: "https://www.w3schools.com/sql/",
       },
       {
         name: "HTML",
@@ -1234,21 +1234,41 @@ const TECH_GROUPS = [
         slug: "sap",
         url: "https://www.sap.com/products/technology-platform/fiori.html",
       },
-      { name: "SAP UI5", slug: "sap", url: "https://ui5.sap.com/" },
+      {
+        name: "SAP UI5",
+        slug: "sap",
+        url: "https://ui5.sap.com/",
+      },
       {
         name: "SAP BTP",
         slug: "sap",
         url: "https://www.sap.com/products/technology-platform.html",
       },
-      { name: "SAP MM", slug: "sap", url: "https://help.sap.com/docs/SAP_ERP" },
-      { name: "SAP SD", slug: "sap", url: "https://help.sap.com/docs/SAP_ERP" },
+      {
+        name: "SAP MM",
+        slug: "sap",
+        url: "https://help.sap.com/docs/SAP_ERP",
+      },
+      {
+        name: "SAP SD",
+        slug: "sap",
+        url: "https://help.sap.com/docs/SAP_ERP",
+      },
     ],
   },
   {
     title: "Frameworks & Machine Learning",
     items: [
-      { name: "React", slug: "react", url: "https://react.dev/" },
-      { name: "PyTorch", slug: "pytorch", url: "https://pytorch.org/" },
+      {
+        name: "React",
+        slug: "react",
+        url: "https://react.dev/",
+      },
+      {
+        name: "PyTorch",
+        slug: "pytorch",
+        url: "https://pytorch.org/",
+      },
       {
         name: "TensorFlow",
         slug: "tensorflow",
@@ -1259,7 +1279,11 @@ const TECH_GROUPS = [
         slug: "scikitlearn",
         url: "https://scikit-learn.org/",
       },
-      { name: "OpenCV", slug: "opencv", url: "https://opencv.org/" },
+      {
+        name: "OpenCV",
+        slug: "opencv",
+        url: "https://opencv.org/",
+      },
     ],
   },
   {
@@ -1270,24 +1294,52 @@ const TECH_GROUPS = [
         slug: "postgresql",
         url: "https://www.postgresql.org/",
       },
-      { name: "MySQL", slug: "mysql", url: "https://www.mysql.com/" },
-      { name: "MongoDB", slug: "mongodb", url: "https://www.mongodb.com/" },
-      { name: "Pandas", slug: "pandas", url: "https://pandas.pydata.org/" },
-      { name: "NumPy", slug: "numpy", url: "https://numpy.org/" },
+      {
+        name: "MySQL",
+        slug: "mysql",
+        url: "https://www.mysql.com/",
+      },
+
+      {
+        name: "MongoDB",
+        slug: "mongodb",
+        url: "https://www.mongodb.com/",
+      },
+      {
+        name: "Pandas",
+        slug: "pandas",
+        url: "https://pandas.pydata.org/",
+      },
+      {
+        name: "NumPy",
+        slug: "numpy",
+        url: "https://numpy.org/",
+      },
     ],
   },
   {
     title: "DevOps & Infrastructure",
     items: [
-      { name: "Docker", slug: "docker", url: "https://www.docker.com/" },
+      {
+        name: "Docker",
+        slug: "docker",
+        url: "https://www.docker.com/",
+      },
       {
         name: "Azure",
         slug: "microsoftazure",
         url: "https://azure.microsoft.com/",
       },
-      { name: "Linux", slug: "linux", url: "https://www.linux.org/" },
-      { name: "Git", slug: "git", url: "https://git-scm.com/" },
-      { name: "GitHub", slug: "github", url: "https://github.com/" },
+      {
+        name: "Git",
+        slug: "git",
+        url: "https://git-scm.com/",
+      },
+      {
+        name: "GitHub",
+        slug: "github",
+        url: "https://github.com/",
+      },
     ],
   },
   {
@@ -1303,8 +1355,16 @@ const TECH_GROUPS = [
         slug: "intellijidea",
         url: "https://www.jetbrains.com/idea/",
       },
-      { name: "Jupyter", slug: "jupyter", url: "https://jupyter.org/" },
-      { name: "Postman", slug: "postman", url: "https://www.postman.com/" },
+      {
+        name: "Jupyter",
+        slug: "jupyter",
+        url: "https://jupyter.org/",
+      },
+      {
+        name: "Postman",
+        slug: "postman",
+        url: "https://www.postman.com/",
+      },
     ],
   },
   {
@@ -1315,7 +1375,11 @@ const TECH_GROUPS = [
         slug: "huggingface",
         url: "https://huggingface.co/",
       },
-      { name: "OpenAI", slug: "openai", url: "https://openai.com/" },
+      {
+        name: "OpenAI",
+        slug: "openai",
+        url: "https://openai.com/",
+      },
     ],
   },
 ];
