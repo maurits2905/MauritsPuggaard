@@ -11,6 +11,7 @@ function setTheme(next) {
   if (btn) btn.textContent = next === "light" ? "☀" : "☾";
 
   applyThemeToBackground(next);
+  window.dispatchEvent(new Event("themechange"));
 }
 
 function initTheme() {
@@ -27,8 +28,8 @@ function applyThemeToBackground(theme) {
   // ✅ SAME line color in both modes
   // ✅ Only the background changes
   const options = {
-    color: 0x9b8cff,                    // purple lines always
-    backgroundColor: isLight ? 0xf5f6fb : 0x060711
+    color: 0x9b8cff, // purple lines always
+    backgroundColor: isLight ? 0xf5f6fb : 0x060711,
   };
 
   // If Vanta exists, try updating it
@@ -54,7 +55,7 @@ function applyThemeToBackground(theme) {
     points: 7.0,
     maxDistance: 24.0,
     spacing: 18.0,
-    ...options // ⚠️ make sure this is ...options (not ".options")
+    ...options, // ⚠️ make sure this is ...options (not ".options")
   });
 }
 
@@ -71,6 +72,43 @@ function initBackground() {
   applyThemeToBackground(theme);
 }
 
+/* ------------------------------
+   Background Fade
+------------------------------ */
+
+function initDeepFade() {
+  const career = document.getElementById("career");
+  if (!career) return;
+
+  let raf = 0;
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+
+  function update() {
+    raf = 0;
+
+    const r = career.getBoundingClientRect();
+
+    const start = window.innerHeight * 0.95;
+    const end = window.innerHeight * 0.25;
+    const t = (start - r.top) / (start - end);
+
+    const progress = clamp(t, 0, 1);
+    document.documentElement.style.setProperty("--deep", progress.toFixed(3));
+  }
+
+  function onScroll() {
+    if (raf) return;
+    raf = requestAnimationFrame(update);
+  }
+
+  window.addEventListener("scroll", onScroll, { passive: true });
+  window.addEventListener("resize", onScroll);
+
+  // Also update when theme toggles (so it switches instantly)
+  window.addEventListener("themechange", update);
+
+  update();
+}
 
 /* ------------------------------
    Scroll story (pinned)
@@ -81,7 +119,8 @@ function initStory() {
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (reduced) return;
 
-  const isMobile = window.matchMedia && window.matchMedia("(max-width: 900px)").matches;
+  const isMobile =
+    window.matchMedia && window.matchMedia("(max-width: 900px)").matches;
   const storyEl = document.getElementById("story");
   if (isMobile) {
     if (storyEl) storyEl.classList.add("storyStatic");
@@ -107,8 +146,8 @@ function initStory() {
       end: "+=2200",
       scrub: true,
       pin: true,
-      anticipatePin: 1
-    }
+      anticipatePin: 1,
+    },
   });
 
   // --- Start the pinned story "already past" the intro ---
@@ -128,9 +167,9 @@ function initStory() {
   tl.to(
     "#avatarStage",
     { xPercent: -55, scale: 0.92, duration: 0.35, ease: "none" },
-    0.28
+    0.28,
   )
-    .to("#sceneRole", { autoAlpha: 0, y: -10, duration: 0.18 }, 0.30)
+    .to("#sceneRole", { autoAlpha: 0, y: -10, duration: 0.18 }, 0.3)
     .to("#about", { autoAlpha: 1, y: 0, duration: 0.28 }, 0.34)
     .to("#sceneHero", { autoAlpha: 0.85, duration: 0.2 }, 0.36);
 
@@ -142,7 +181,7 @@ function initStory() {
     .to(
       "#avatarStage",
       { xPercent: -62, scale: 0.88, duration: 0.25, ease: "none" },
-      0.64
+      0.64,
     );
 }
 
@@ -154,7 +193,7 @@ const state = {
   tags: [],
   query: "",
   workEntered: false,
-  activeTag: "All"
+  activeTag: "All",
 };
 
 function prefersReducedMotion() {
@@ -170,11 +209,15 @@ function initReveals() {
   // On mobile Safari, scroll/reveal triggers can fail and leave sections invisible.
   // So: disable reveal animations on mobile and force everything visible.
   if (isMobile) {
-    document.querySelectorAll(".r").forEach((el) => el.classList.add("noReveal"));
+    document
+      .querySelectorAll(".r")
+      .forEach((el) => el.classList.add("noReveal"));
     return;
   }
-  
-  const els = Array.from(document.querySelectorAll(".section .r, .careerHead.r, .workHead .r"));
+
+  const els = Array.from(
+    document.querySelectorAll(".section .r, .careerHead.r, .workHead .r"),
+  );
   if (!els.length) return;
 
   // If reduced motion OR GSAP not available: show everything immediately
@@ -192,18 +235,15 @@ function initReveals() {
       y: 0,
       duration: 0.75,
       ease: "power2.out",
-      scrollTrigger: { trigger: el, start: "top 85%" }
+      scrollTrigger: { trigger: el, start: "top 85%" },
     });
   });
 }
 
-
 function animateWorkCards() {
   if (!window.gsap || prefersReducedMotion()) return;
 
-  const cards = Array.from(
-    document.querySelectorAll("#workGrid .projectCard")
-  );
+  const cards = Array.from(document.querySelectorAll("#workGrid .projectCard"));
   if (!cards.length) return;
 
   gsap.killTweensOf(cards);
@@ -213,17 +253,17 @@ function animateWorkCards() {
     {
       opacity: 0,
       x: 72,
-      y: 6
+      y: 6,
     },
     {
       opacity: 1,
       x: 0,
       y: 0,
-      duration: 0.85,        // ⬅ slower entrance
-      ease: "power3.out",    // ⬅ smoother, less snappy
-      stagger: 0.12,         // ⬅ cards arrive one-by-one
-      clearProps: "transform"
-    }
+      duration: 0.85, // ⬅ slower entrance
+      ease: "power3.out", // ⬅ smoother, less snappy
+      stagger: 0.12, // ⬅ cards arrive one-by-one
+      clearProps: "transform",
+    },
   );
 }
 
@@ -268,7 +308,7 @@ function filteredProjects() {
   list.sort(
     (a, b) =>
       (b.featured === true) - (a.featured === true) ||
-      (b.date || "").localeCompare(a.date || "")
+      (b.date || "").localeCompare(a.date || ""),
   );
 
   return list;
@@ -354,7 +394,7 @@ function makeProjectCard(p, index) {
     const x = (e.clientX - r.left) / r.width - 0.5;
     const y = (e.clientY - r.top) / r.height - 0.5;
     el.style.transform = `perspective(800px) rotateX(${(-y * 5).toFixed(
-      2
+      2,
     )}deg) rotateY(${(x * 6).toFixed(2)}deg) translateY(-2px)`;
   });
   el.addEventListener("mouseleave", reset);
@@ -393,11 +433,11 @@ function renderFeatured() {
   const out = [];
   if (featured.demoUrl)
     out.push(
-      `<a class="btn primary" href="${featured.demoUrl}" target="_blank" rel="noopener">Live demo</a>`
+      `<a class="btn primary" href="${featured.demoUrl}" target="_blank" rel="noopener">Live demo</a>`,
     );
   if (featured.repoUrl)
     out.push(
-      `<a class="btn" href="${featured.repoUrl}" target="_blank" rel="noopener">Code</a>`
+      `<a class="btn" href="${featured.repoUrl}" target="_blank" rel="noopener">Code</a>`,
     );
   btns.innerHTML = out.join("");
 }
@@ -444,8 +484,6 @@ function renderWork() {
   }
 }
 
-
-
 /* ------------------------------
    Stack rendering
 ------------------------------ */
@@ -462,7 +500,7 @@ function renderStack() {
     { name: "GitHub", icon: "devicon-github-original" },
     { name: "Docker", icon: "devicon-docker-plain" },
     { name: "PostgreSQL", icon: "devicon-postgresql-plain" },
-    { name: "SAP", icon: "devicon-sap-plain" }
+    { name: "SAP", icon: "devicon-sap-plain" },
   ];
 
   const grid = document.getElementById("stackGrid");
@@ -492,7 +530,7 @@ function renderStack() {
         repeat: -1,
         yoyo: true,
         ease: "sine.inOut",
-        delay: i * 0.05
+        delay: i * 0.05,
       });
     });
   }
@@ -509,38 +547,38 @@ const careerData = [
     role: "SAP Technical Consultant",
     sub: "2BM · Client & internal projects",
     year: "NOW",
-    desc: "Working with ABAP, CDS, OData, and SAP Fiori/UI5. Building clean, maintainable SAP solutions close to real business needs. Contributing to internal AI initiatives, SAP Public Cloud setup, and quality assurance."
+    desc: "Working with ABAP, CDS, OData, and SAP Fiori/UI5. Building clean, maintainable SAP solutions close to real business needs. Contributing to internal AI initiatives, SAP Public Cloud setup, and quality assurance.",
   },
   {
     role: "AI & Automation",
     sub: "Internal projects",
     year: "2025",
-    desc: "Developing AI-driven tools to support consulting work. Hands-on with LLM-based assistants, multi-agent systems, and practical automation. MSc in Computer Science Completed summer 2025"
+    desc: "Developing AI-driven tools to support consulting work. Hands-on with LLM-based assistants, multi-agent systems, and practical automation. MSc in Computer Science Completed summer 2025",
   },
   {
     role: "Full-Stack Development",
     sub: "Projects & tools",
     year: "2024",
-    desc: "Built complete web applications from frontend to backend. Focused on usability, performance, and clear system design."
+    desc: "Built complete web applications from frontend to backend. Focused on usability, performance, and clear system design.",
   },
   {
     role: "Python & Machine Learning",
     sub: "Self-driven projects",
     year: "2023",
-    desc: "Worked with Python, data analysis, and machine learning. Built automation, prototypes, and early ML-based solutions."
+    desc: "Worked with Python, data analysis, and machine learning. Built automation, prototypes, and early ML-based solutions.",
   },
   {
     role: "Technical & Visual Foundations",
     sub: "Design & development crossover",
     year: "2022",
-    desc: "Combined technical thinking with visual design. Developed a strong sense for UX, structure, and clarity."
+    desc: "Combined technical thinking with visual design. Developed a strong sense for UX, structure, and clarity.",
   },
   {
     role: "Digital Foundations",
     sub: "Getting started",
     year: "2021",
-    desc: "First exposure to structured digital tools and software. Sparked a long-term interest in technology and problem-solving."
-  }
+    desc: "First exposure to structured digital tools and software. Sparked a long-term interest in technology and problem-solving.",
+  },
 ];
 
 function renderCareer() {
@@ -596,7 +634,8 @@ function renderCareer() {
     btn.addEventListener("click", () => {
       const idx = Number(btn.dataset.index);
       const anchor = document.getElementById(`careerRow-${idx}`);
-      if (anchor) anchor.scrollIntoView({ behavior: "smooth", block: "center" });
+      if (anchor)
+        anchor.scrollIntoView({ behavior: "smooth", block: "center" });
     });
   });
 
@@ -613,19 +652,19 @@ function renderCareer() {
   function setActive(idx, doPulse = false) {
     currentIdx = idx;
 
-    leftBtns.forEach(b => {
+    leftBtns.forEach((b) => {
       const on = Number(b.dataset.index) === idx;
       b.classList.toggle("active", on);
       b.classList.toggle("dim", !on);
     });
 
-    yearEls.forEach(y => {
+    yearEls.forEach((y) => {
       const on = Number(y.dataset.index) === idx;
       y.classList.toggle("active", on);
       y.classList.toggle("dim", !on);
     });
 
-    rightEls.forEach(r => {
+    rightEls.forEach((r) => {
       const on = Number(r.dataset.index) === idx;
       r.classList.toggle("active", on);
       r.classList.toggle("dim", !on);
@@ -634,71 +673,70 @@ function renderCareer() {
     if (doPulse) pulseDot();
   }
 
-function updateFromScroll() {
-  raf = 0;
-  if (!lineWrap || !yearEls.length) return;
+  function updateFromScroll() {
+    raf = 0;
+    if (!lineWrap || !yearEls.length) return;
 
-  const wrapRect = lineWrap.getBoundingClientRect();
+    const wrapRect = lineWrap.getBoundingClientRect();
 
-  // Viewport center i wrap-koordinater
-  const centerInWrap = (window.innerHeight * 0.5) - wrapRect.top;
+    // Viewport center i wrap-koordinater
+    const centerInWrap = window.innerHeight * 0.5 - wrapRect.top;
 
-  // Midtpunkter for hver YEAR i wrap-koordinater
-  const mids = yearEls.map((y) => {
-    const r = y.getBoundingClientRect();
-    return (r.top + r.height * 0.5) - wrapRect.top;
-  });
+    // Midtpunkter for hver YEAR i wrap-koordinater
+    const mids = yearEls.map((y) => {
+      const r = y.getBoundingClientRect();
+      return r.top + r.height * 0.5 - wrapRect.top;
+    });
 
-  // 1) Progress baseret på viewport-center mellem første og sidste YEAR
-  const first = mids[0];
-  const last = mids[mids.length - 1];
-  const t = (centerInWrap - first) / Math.max(1, (last - first));
-  const progress = Math.min(1, Math.max(0, t));
+    // 1) Progress baseret på viewport-center mellem første og sidste YEAR
+    const first = mids[0];
+    const last = mids[mids.length - 1];
+    const t = (centerInWrap - first) / Math.max(1, last - first);
+    const progress = Math.min(1, Math.max(0, t));
 
-  // 2) Map progress til HELE lineWrap (så den kan nå bunden)
-  const dotH = dot.offsetHeight || 10;
-  const minY = dotH / 2;
-  const maxY = Math.max(minY, wrapRect.height - dotH / 2);
-  const dotY = minY + progress * (maxY - minY);
+    // 2) Map progress til HELE lineWrap (så den kan nå bunden)
+    const dotH = dot.offsetHeight || 10;
+    const minY = dotH / 2;
+    const maxY = Math.max(minY, wrapRect.height - dotH / 2);
+    const dotY = minY + progress * (maxY - minY);
 
-  dot.style.top = `${dotY}px`;
-  fill.style.height = `${dotY}px`;
+    dot.style.top = `${dotY}px`;
+    fill.style.height = `${dotY}px`;
 
-  // 3) Active row: find YEAR der er tættest på viewport-center (ikke dotY)
-  let bestIdx = 0;
-  let bestDist = Infinity;
+    // 3) Active row: find YEAR der er tættest på viewport-center (ikke dotY)
+    let bestIdx = 0;
+    let bestDist = Infinity;
 
-  for (let i = 0; i < yearEls.length; i++) {
-    const y = yearEls[i];
-    const dist = Math.abs(mids[i] - centerInWrap);
-    if (dist < bestDist) {
-      bestDist = dist;
-      bestIdx = Number(y.dataset.index);
+    for (let i = 0; i < yearEls.length; i++) {
+      const y = yearEls[i];
+      const dist = Math.abs(mids[i] - centerInWrap);
+      if (dist < bestDist) {
+        bestDist = dist;
+        bestIdx = Number(y.dataset.index);
+      }
     }
+
+    const changed = bestIdx !== currentIdx;
+    setActive(bestIdx, changed);
+
+    clearTimeout(pulseTimeout);
+    dot.classList.add("scrolling");
+    pulseTimeout = setTimeout(() => dot.classList.remove("scrolling"), 120);
   }
 
-  const changed = bestIdx !== currentIdx;
-  setActive(bestIdx, changed);
-
-  clearTimeout(pulseTimeout);
-  dot.classList.add("scrolling");
-  pulseTimeout = setTimeout(() => dot.classList.remove("scrolling"), 120);
-}
-
   function onScroll() {
-  if (raf) return;
-  raf = requestAnimationFrame(updateFromScroll);
+    if (raf) return;
+    raf = requestAnimationFrame(updateFromScroll);
+  }
+
+  window.addEventListener("scroll", onScroll, { passive: true });
+  window.addEventListener("resize", () => updateFromScroll());
+
+  requestAnimationFrame(() => {
+    setActive(0, true);
+    updateFromScroll();
+  });
 }
-
-window.addEventListener("scroll", onScroll, { passive: true });
-window.addEventListener("resize", () => updateFromScroll());
-
-requestAnimationFrame(() => {
-  setActive(0, true);
-  updateFromScroll();
-});
-}
-
 
 // Always start at top on refresh (prevents browser restoring old scroll position)
 if ("scrollRestoration" in history) history.scrollRestoration = "manual";
@@ -754,7 +792,7 @@ function initAskMe() {
       const res = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: q, history })
+        body: JSON.stringify({ message: q, history }),
       });
 
       const data = await res.json().catch(() => ({}));
@@ -766,7 +804,7 @@ function initAskMe() {
             (res.status === 429
               ? "AI is busy right now. Try again later."
               : "Something went wrong. Try again."),
-          "bot"
+          "bot",
         );
         console.warn("AskMe error:", res.status, data);
         return;
@@ -792,6 +830,7 @@ function initAskMe() {
 async function init() {
   initTheme();
   initBackground();
+  initDeepFade();
 
   forceTopAndRefresh();
   window.addEventListener("load", forceTopAndRefresh, { once: true });
@@ -919,9 +958,8 @@ async function init() {
     });
   }
 
-// set initial state (important so it doesn't show on load)
-syncClearBtn();
-
+  // set initial state (important so it doesn't show on load)
+  syncClearBtn();
 
   // Filters (tags) drawer
   const tagsToggle = document.getElementById("tagsToggle");
@@ -979,10 +1017,10 @@ syncClearBtn();
   }
   if (rail) {
     rail.addEventListener("scroll", () =>
-      requestAnimationFrame(updateRailArrows)
+      requestAnimationFrame(updateRailArrows),
     );
     window.addEventListener("resize", () =>
-      requestAnimationFrame(updateRailArrows)
+      requestAnimationFrame(updateRailArrows),
     );
 
     // Two RAFs helps ensure layout/fonts have settled before measuring widths
@@ -1005,7 +1043,7 @@ syncClearBtn();
 
         io.disconnect();
       },
-      { threshold: 0.2 }
+      { threshold: 0.2 },
     );
 
     io.observe(workSection);
@@ -1014,7 +1052,6 @@ syncClearBtn();
   }
 
   initAskMe();
-
 }
 
 init().catch(console.error);
@@ -1027,79 +1064,147 @@ const TECH_GROUPS = [
     title: "Languages",
     items: [
       { name: "Python", slug: "python", url: "https://www.python.org/" },
-      { name: "JavaScript", slug: "javascript", url: "https://developer.mozilla.org/en-US/docs/Web/JavaScript" },
-      { name: ".NET / C#", slug: "dotnet", url: "https://learn.microsoft.com/en-us/dotnet/csharp/" },
-      { name: "ABAP", slug: "sap", url: "https://help.sap.com/docs/abap-platform" },
-      { name: "SQL", slug: "postgresql", url: "https://en.wikipedia.org/wiki/SQL" },
-      { name: "HTML", slug: "html5", url: "https://developer.mozilla.org/en-US/docs/Web/HTML" },
-      { name: "CSS", slug: "css3", url: "https://developer.mozilla.org/en-US/docs/Web/CSS" }
-    ]
+      {
+        name: "JavaScript",
+        slug: "javascript",
+        url: "https://developer.mozilla.org/en-US/docs/Web/JavaScript",
+      },
+      {
+        name: ".NET / C#",
+        slug: "dotnet",
+        url: "https://learn.microsoft.com/en-us/dotnet/csharp/",
+      },
+      {
+        name: "ABAP",
+        slug: "sap",
+        url: "https://help.sap.com/docs/abap-platform",
+      },
+      {
+        name: "SQL",
+        slug: "postgresql",
+        url: "https://en.wikipedia.org/wiki/SQL",
+      },
+      {
+        name: "HTML",
+        slug: "html5",
+        url: "https://developer.mozilla.org/en-US/docs/Web/HTML",
+      },
+      {
+        name: "CSS",
+        slug: "css3",
+        url: "https://developer.mozilla.org/en-US/docs/Web/CSS",
+      },
+    ],
   },
   {
     title: "SAP & Enterprise",
     items: [
-      { name: "SAP S/4HANA", slug: "sap", url: "https://www.sap.com/products/erp/s4hana.html" },
-      { name: "SAP ERP", slug: "sap", url: "https://www.sap.com/products/erp.html" },
-      { name: "SAP Fiori", slug: "sap", url: "https://www.sap.com/products/technology-platform/fiori.html" },
+      {
+        name: "SAP S/4HANA",
+        slug: "sap",
+        url: "https://www.sap.com/products/erp/s4hana.html",
+      },
+      {
+        name: "SAP ERP",
+        slug: "sap",
+        url: "https://www.sap.com/products/erp.html",
+      },
+      {
+        name: "SAP Fiori",
+        slug: "sap",
+        url: "https://www.sap.com/products/technology-platform/fiori.html",
+      },
       { name: "SAP UI5", slug: "sap", url: "https://ui5.sap.com/" },
-      { name: "SAP BTP", slug: "sap", url: "https://www.sap.com/products/technology-platform.html" },
+      {
+        name: "SAP BTP",
+        slug: "sap",
+        url: "https://www.sap.com/products/technology-platform.html",
+      },
       { name: "SAP MM", slug: "sap", url: "https://help.sap.com/docs/SAP_ERP" },
-      { name: "SAP SD", slug: "sap", url: "https://help.sap.com/docs/SAP_ERP" }
-    ]
+      { name: "SAP SD", slug: "sap", url: "https://help.sap.com/docs/SAP_ERP" },
+    ],
   },
   {
     title: "Frameworks & Machine Learning",
     items: [
       { name: "React", slug: "react", url: "https://react.dev/" },
       { name: "PyTorch", slug: "pytorch", url: "https://pytorch.org/" },
-      { name: "TensorFlow", slug: "tensorflow", url: "https://www.tensorflow.org/" },
-      { name: "scikit-learn", slug: "scikitlearn", url: "https://scikit-learn.org/" },
-      { name: "OpenCV", slug: "opencv", url: "https://opencv.org/" }
-    ]
+      {
+        name: "TensorFlow",
+        slug: "tensorflow",
+        url: "https://www.tensorflow.org/",
+      },
+      {
+        name: "scikit-learn",
+        slug: "scikitlearn",
+        url: "https://scikit-learn.org/",
+      },
+      { name: "OpenCV", slug: "opencv", url: "https://opencv.org/" },
+    ],
   },
   {
     title: "Data & Databases",
     items: [
-      { name: "PostgreSQL", slug: "postgresql", url: "https://www.postgresql.org/" },
+      {
+        name: "PostgreSQL",
+        slug: "postgresql",
+        url: "https://www.postgresql.org/",
+      },
       { name: "MySQL", slug: "mysql", url: "https://www.mysql.com/" },
       { name: "MongoDB", slug: "mongodb", url: "https://www.mongodb.com/" },
       { name: "Pandas", slug: "pandas", url: "https://pandas.pydata.org/" },
-      { name: "NumPy", slug: "numpy", url: "https://numpy.org/" }
-    ]
+      { name: "NumPy", slug: "numpy", url: "https://numpy.org/" },
+    ],
   },
   {
     title: "DevOps & Infrastructure",
     items: [
       { name: "Docker", slug: "docker", url: "https://www.docker.com/" },
-      { name: "Azure", slug: "microsoftazure", url: "https://azure.microsoft.com/" },
+      {
+        name: "Azure",
+        slug: "microsoftazure",
+        url: "https://azure.microsoft.com/",
+      },
       { name: "Linux", slug: "linux", url: "https://www.linux.org/" },
       { name: "Git", slug: "git", url: "https://git-scm.com/" },
-      { name: "GitHub", slug: "github", url: "https://github.com/" }
-    ]
+      { name: "GitHub", slug: "github", url: "https://github.com/" },
+    ],
   },
   {
     title: "Development Tools",
     items: [
-      { name: "VS Code", slug: "visualstudiocode", url: "https://code.visualstudio.com/" },
-      { name: "IntelliJ", slug: "intellijidea", url: "https://www.jetbrains.com/idea/" },
+      {
+        name: "VS Code",
+        slug: "visualstudiocode",
+        url: "https://code.visualstudio.com/",
+      },
+      {
+        name: "IntelliJ",
+        slug: "intellijidea",
+        url: "https://www.jetbrains.com/idea/",
+      },
       { name: "Jupyter", slug: "jupyter", url: "https://jupyter.org/" },
-      { name: "Postman", slug: "postman", url: "https://www.postman.com/" }
-    ]
+      { name: "Postman", slug: "postman", url: "https://www.postman.com/" },
+    ],
   },
   {
     title: "AI & Platforms",
     items: [
-      { name: "Hugging Face", slug: "huggingface", url: "https://huggingface.co/" },
-      { name: "OpenAI", slug: "openai", url: "https://openai.com/" }
-    ]
-  }
+      {
+        name: "Hugging Face",
+        slug: "huggingface",
+        url: "https://huggingface.co/",
+      },
+      { name: "OpenAI", slug: "openai", url: "https://openai.com/" },
+    ],
+  },
 ];
 
 // Fallback to Devicon
 const DEVICON_FALLBACK = {
   css3: "devicon-css3-plain",
   microsoftazure: "devicon-azure-plain",
-  visualstudiocode: "devicon-vscode-plain"
+  visualstudiocode: "devicon-vscode-plain",
 };
 
 async function fetchSvg(url) {
@@ -1115,7 +1220,7 @@ async function getIconMarkup(slug) {
 
   // 2) jsDelivr Simple Icons fallback
   const si2 = await fetchSvg(
-    `https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/${slug}.svg`
+    `https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/${slug}.svg`,
   );
   if (si2) return si2;
 
@@ -1169,7 +1274,7 @@ async function renderTechStack() {
         ${group.items.map(tileHTML).join("")}
       </div>
     </div>
-  `
+  `,
   ).join("");
 
   const iconHolders = [...root.querySelectorAll(".tech-icon[data-icon]")];
@@ -1187,7 +1292,7 @@ async function renderTechStack() {
             <circle cx="12" cy="12" r="8" fill="currentColor" opacity="0.35"></circle>
           </svg>`;
       }
-    })
+    }),
   );
 }
 

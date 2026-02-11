@@ -1,341 +1,458 @@
 <!doctype html>
 <html lang="en">
-
-<head>
+  <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Maurits — Portfolio</title>
     <meta name="description" content="Maurits Puggaard — Portfolio" />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
-        rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
 
     <!-- Devicon for stack icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/devicon.min.css">
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/devicon.min.css"
+    />
 
     <link rel="stylesheet" href="styles.css" />
-</head>
+  </head>
 
-<body>
+  <body>
     <!-- Background -->
     <div id="bg"></div>
     <div class="bgOverlay"></div>
+
+    <!-- deep dark layer (fades in from Career and down) -->
+    <div class="bgDeep" aria-hidden="true"></div>
+
     <div class="bgNoise" aria-hidden="true"></div>
 
     <!-- Social rail (left) -->
     <aside class="socialRail" aria-label="Social links">
-        <a class="sIcon" href="#" id="ghIcon" target="_blank" rel="noopener" aria-label="GitHub">GH</a>
-        <a class="sIcon" href="#" id="liIcon" target="_blank" rel="noopener" aria-label="LinkedIn">in</a>
-        <a class="sIcon" href="#" id="xIcon" target="_blank" rel="noopener" aria-label="X">x</a>
-        <a class="sIcon" href="#" id="igIcon" target="_blank" rel="noopener" aria-label="Instagram">ig</a>
+      <a
+        class="sIcon"
+        href="#"
+        id="ghIcon"
+        target="_blank"
+        rel="noopener"
+        aria-label="GitHub"
+        >GH</a
+      >
+      <a
+        class="sIcon"
+        href="#"
+        id="liIcon"
+        target="_blank"
+        rel="noopener"
+        aria-label="LinkedIn"
+        >in</a
+      >
+      <a
+        class="sIcon"
+        href="#"
+        id="xIcon"
+        target="_blank"
+        rel="noopener"
+        aria-label="X"
+        >x</a
+      >
+      <a
+        class="sIcon"
+        href="#"
+        id="igIcon"
+        target="_blank"
+        rel="noopener"
+        aria-label="Instagram"
+        >ig</a
+      >
     </aside>
 
     <!-- Resume button (bottom right) -->
     <a class="resumeBtn" id="resumeBtn" href="#" target="_blank" rel="noopener">
-        RESUME <span class="resumeMark">▦</span>
+      RESUME <span class="resumeMark">▦</span>
     </a>
 
     <!-- Top nav -->
     <header class="topbar">
-        <div class="topLeft">
-            <a class="brand" href="#top" aria-label="Go to top">
-                <span class="brandDot"></span>
-                <span class="brandName">Maurits Puggaard</span>
-            </a>
-        </div>
+      <div class="topLeft">
+        <a class="brand" href="#top" aria-label="Go to top">
+          <span class="brandDot"></span>
+          <span class="brandName">Maurits Puggaard</span>
+        </a>
+      </div>
 
-        <div class="topEmailWrap">
-            <a class="topEmail" id="topEmail" href="mailto:maurits.pug@gmail.com">maurits.pug@gmail.com</a>
-        </div>
+      <div class="topEmailWrap">
+        <a class="topEmail" id="topEmail" href="mailto:maurits.pug@gmail.com"
+          >maurits.pug@gmail.com</a
+        >
+      </div>
 
-        <nav class="topNav" aria-label="Primary">
-            <a href="#about">ABOUT</a>
-            <a href="#career">CAREER</a>
-            <a href="#work">PROJECTS</a>
-            <a href="#stack">TECH</a>
-            <a href="#contact">CONTACT</a>
-            <button class="themeBtn" id="themeBtn" type="button" aria-label="Toggle theme">☾</button>
-        </nav>
+      <nav class="topNav" aria-label="Primary">
+        <a href="#about">ABOUT</a>
+        <a href="#career">CAREER</a>
+        <a href="#work">PROJECTS</a>
+        <a href="#stack">TECH</a>
+        <a href="#contact">CONTACT</a>
+        <button
+          class="themeBtn"
+          id="themeBtn"
+          type="button"
+          aria-label="Toggle theme"
+        >
+          ☾
+        </button>
+      </nav>
     </header>
 
     <main class="wrap" id="top">
+      <!-- 1) PINNED INTRO STORY -->
+      <section class="story" id="story">
+        <div class="storyGrid">
+          <!-- LEFT column -->
+          <div class="storyLeft">
+            <div class="scene sceneHero" id="sceneHero">
+              <div class="roleSmall">Hello! I'm</div>
+              <h1 class="heroName">
+                <span class="heroLine">MAURITS</span>
+                <span class="heroLine glow">PUGGAARD</span>
+              </h1>
+            </div>
 
-        <!-- 1) PINNED INTRO STORY -->
-        <section class="story" id="story">
-            <div class="storyGrid">
-                <!-- LEFT column -->
-                <div class="storyLeft">
-                    <div class="scene sceneHero" id="sceneHero">
-                        <div class="roleSmall">Hello! I'm</div>
-                        <h1 class="heroName">
-                            <span class="heroLine">MAURITS</span>
-                            <span class="heroLine glow">PUGGAARD</span>
-                        </h1>
-                    </div>
+            <div class="scene sceneWhat" id="sceneWhat">
+              <div class="whatBig">WHAT I DO</div>
+            </div>
+          </div>
 
-                    <div class="scene sceneWhat" id="sceneWhat">
-                        <div class="whatBig">WHAT I DO</div>
-                    </div>
+          <!-- CENTER illustration (moves left on scroll) -->
+          <div class="storyCenter">
+            <div class="avatarStage" id="avatarStage" aria-label="Illustration">
+              <!-- Keep your existing 2D image as fallback -->
+              <img
+                class="avatarImg"
+                src="assets/avatar.png"
+                alt=""
+                onerror="this.style.display = 'none'"
+              />
+
+              <!-- ✅ 3D mount (we will render the helmet into this element) -->
+              <div class="threeMount" id="threeMount" aria-hidden="true"></div>
+            </div>
+          </div>
+
+          <!-- RIGHT column -->
+          <div class="storyRight">
+            <div class="scene sceneRole" id="sceneRole">
+              <div class="roleSmall">An</div>
+              <div class="roleBig">
+                <span class="roleTop">SAP CONSULTANT</span>
+                <span class="roleBottom">FULL-STACK BUILDER</span>
+              </div>
+
+              <div class="heroCtas">
+                <a class="btn primary" href="#work">View projects</a>
+                <a class="btn" href="#contact">Contact</a>
+              </div>
+            </div>
+
+            <div class="scene sceneAbout" id="about">
+              <div class="kicker">ABOUT ME</div>
+
+              <div class="aboutHeadline">
+                SAP Technical Consultant building real-world software.
+              </div>
+
+              <div class="aboutText">
+                <p>
+                  I’m a SAP Technical Consultant and full-stack builder based in
+                  Denmark, working where enterprise systems meet modern software
+                  development.
+                </p>
+
+                <p>
+                  My focus is on building practical, maintainable solutions
+                  using SAP ABAP, CDS, OData, SAP Fiori/UI5, and modern web
+                  technologies.
+                </p>
+
+                <p>
+                  I’m especially interested in automation and applied AI as
+                  tools that support real workflows — not demos.
+                </p>
+              </div>
+
+              <div class="heroStats">
+                <div class="stat">
+                  <div class="statNum" id="statProjects">—</div>
+                  <div class="statLab">projects</div>
                 </div>
-
-                <!-- CENTER illustration (moves left on scroll) -->
-                <div class="storyCenter">
-                    <div class="avatarStage" id="avatarStage" aria-label="Illustration">
-                        <!-- Keep your existing 2D image as fallback -->
-                        <img class="avatarImg" src="assets/avatar.png" alt="" onerror="this.style.display='none'">
-
-                        <!-- ✅ 3D mount (we will render the helmet into this element) -->
-                        <div class="threeMount" id="threeMount" aria-hidden="true"></div>
-                    </div>
+                <div class="stat">
+                  <div class="statNum" id="statTags">—</div>
+                  <div class="statLab">tags</div>
                 </div>
-
-                <!-- RIGHT column -->
-                <div class="storyRight">
-                    <div class="scene sceneRole" id="sceneRole">
-                        <div class="roleSmall">An</div>
-                        <div class="roleBig">
-                            <span class="roleTop">SAP CONSULTANT</span>
-                            <span class="roleBottom">FULL-STACK BUILDER</span>
-                        </div>
-
-                        <div class="heroCtas">
-                            <a class="btn primary" href="#work">View projects</a>
-                            <a class="btn" href="#contact">Contact</a>
-                        </div>
-                    </div>
-
-                    <div class="scene sceneAbout" id="about">
-                        <div class="kicker">ABOUT ME</div>
-
-                        <div class="aboutHeadline">
-                            SAP Technical Consultant building real-world software.
-                        </div>
-
-                        <div class="aboutText">
-                            <p>
-                                I’m a SAP Technical Consultant and full-stack builder based in Denmark,
-                                working where enterprise systems meet modern software development.
-                            </p>
-
-                            <p>
-                                My focus is on building practical, maintainable solutions using SAP ABAP,
-                                CDS, OData, SAP Fiori/UI5, and modern web technologies.
-                            </p>
-
-                            <p>
-                                I’m especially interested in automation and applied AI as tools that
-                                support real workflows — not demos.
-                            </p>
-                        </div>
-
-                        <div class="heroStats">
-                            <div class="stat">
-                                <div class="statNum" id="statProjects">—</div>
-                                <div class="statLab">projects</div>
-                            </div>
-                            <div class="stat">
-                                <div class="statNum" id="statTags">—</div>
-                                <div class="statLab">tags</div>
-                            </div>
-                            <div class="stat">
-                                <div class="statNum">DK</div>
-                                <div class="statLab">based</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="scene sceneDoCards" id="sceneDoCards">
-                        <div class="doCard">
-                            <div class="doTitle">SAP & Integration</div>
-                            <div class="doSub">Building solid solutions around SAP</div>
-                            <ul class="doList">
-                                <li>ABAP and backend logic</li>
-                                <li>SAP Fiori / UI5 applications</li>
-                                <li>OData services, APIs, and system integrations</li>
-                            </ul>
-                            <button class="miniBtn" type="button" aria-label="Expand">▾</button>
-                        </div>
-
-                        <div class="doCard">
-                            <div class="doTitle">Web Tools & UI</div>
-                            <div class="doSub">Modern web tools with a focus on usability</div>
-                            <ul class="doList">
-                                <li>Fast, readable user interfaces</li>
-                                <li>Client-side tools and utilities</li>
-                                <li>Animation and interaction where it adds value</li>
-                            </ul>
-                            <button class="miniBtn" type="button" aria-label="Expand">▾</button>
-                        </div>
-                    </div>
+                <div class="stat">
+                  <div class="statNum">DK</div>
+                  <div class="statLab">based</div>
                 </div>
+              </div>
             </div>
 
-            <div class="scrollHint" aria-hidden="true">
-                <div class="scrollLine"></div>
-                <div class="scrollText">Scroll</div>
-            </div>
-        </section>
+            <div class="scene sceneDoCards" id="sceneDoCards">
+              <div class="doCard">
+                <div class="doTitle">SAP & Integration</div>
+                <div class="doSub">Building solid solutions around SAP</div>
+                <ul class="doList">
+                  <li>ABAP and backend logic</li>
+                  <li>SAP Fiori / UI5 applications</li>
+                  <li>OData services, APIs, and system integrations</li>
+                </ul>
+                <button class="miniBtn" type="button" aria-label="Expand">
+                  ▾
+                </button>
+              </div>
 
-        <section id="career" class="section careerX">
-            <div class="careerHead r">
-                <h2 class="careerTitle">
-                    My career &<br />
-                    <span class="careerAccent">experience</span>
-                </h2>
-            </div>
-
-            <!-- ADD THIS WRAPPER -->
-            <div id="careerGrid" class="careerGrid">
-                <div id="careerRows" class="careerRows">
-                    <div class="careerLineWrap" aria-hidden="true">
-                        <div class="careerLine"></div>
-                        <div id="careerFill" class="careerFill"></div>
-                        <div id="careerDot" class="careerDot"></div>
-                    </div>
-                    <!-- rows bliver injected af JS -->
+              <div class="doCard">
+                <div class="doTitle">Web Tools & UI</div>
+                <div class="doSub">
+                  Modern web tools with a focus on usability
                 </div>
+                <ul class="doList">
+                  <li>Fast, readable user interfaces</li>
+                  <li>Client-side tools and utilities</li>
+                  <li>Animation and interaction where it adds value</li>
+                </ul>
+                <button class="miniBtn" type="button" aria-label="Expand">
+                  ▾
+                </button>
+              </div>
             </div>
-        </section>
+          </div>
+        </div>
 
+        <div class="scrollHint" aria-hidden="true">
+          <div class="scrollLine"></div>
+          <div class="scrollText">Scroll</div>
+        </div>
+      </section>
 
-        <!-- 3) PROJECTS -->
-        <section id="work" class="section">
-            <div class="workHead">
-                <div class="workHeadText r">
-                    <h2 class="sectionTitle">
-                        My <span class="gradWord">Projects</span>
-                    </h2>
-                    <p class="p">
-                        Live demos first. Code next.
-                    </p>
-                </div>
+      <section id="career" class="section careerX">
+        <div class="careerHead r">
+          <h2 class="careerTitle">
+            My career &<br />
+            <span class="careerAccent">experience</span>
+          </h2>
+        </div>
 
-                <div class="workControls r">
-                    <div class="searchBar searchNeo" role="search">
-                        <span class="searchIcon" aria-hidden="true">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                                <path d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="currentColor"
-                                    stroke-width="1.8" />
-                                <path d="M16.5 16.5 21 21" stroke="currentColor" stroke-width="1.8"
-                                    stroke-linecap="round" />
-                            </svg>
-                        </span>
-
-                        <input id="searchInput" type="text" placeholder="Search projects…" autocomplete="off" />
-
-                        <button class="iconBtn" id="clearSearch" type="button" aria-label="Clear search"
-                            hidden>×</button>
-
-                        <button class="iconBtn iconBtn--ghost" id="tagsToggle" type="button" aria-label="Filters"
-                            aria-expanded="false">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                                <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="1.8"
-                                    stroke-linecap="round" />
-                            </svg>
-                        </button>
-                    </div>
-
-                    <div class="tagsDrawer" id="tagsDrawer" hidden>
-                        <div class="tagsBar" id="tagsBar"></div>
-                    </div>
-                </div>
+        <!-- ADD THIS WRAPPER -->
+        <div id="careerGrid" class="careerGrid">
+          <div id="careerRows" class="careerRows">
+            <div class="careerLineWrap" aria-hidden="true">
+              <div class="careerLine"></div>
+              <div id="careerFill" class="careerFill"></div>
+              <div id="careerDot" class="careerDot"></div>
             </div>
+            <!-- rows bliver injected af JS -->
+          </div>
+        </div>
+      </section>
 
-            <!-- rail wrapper -->
-            <div class="railWrap r">
-                <div class="railViewport">
-                    <div class="workGrid rail" id="workGrid" aria-live="polite"></div>
-                </div>
+      <!-- 3) PROJECTS -->
+      <section id="work" class="section">
+        <div class="workHead">
+          <div class="workHeadText r">
+            <h2 class="sectionTitle">
+              My <span class="gradWord">Projects</span>
+            </h2>
+            <p class="p">Live demos first. Code next.</p>
+          </div>
 
-                <button class="railArrow railArrow--left" id="railPrev" type="button" aria-label="Previous projects"
-                    hidden>‹</button>
-                <button class="railArrow railArrow--right" id="railNext" type="button" aria-label="More projects"
-                    hidden>›</button>
+          <div class="workControls r">
+            <div class="searchBar searchNeo" role="search">
+              <span class="searchIcon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                  />
+                  <path
+                    d="M16.5 16.5 21 21"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                  />
+                </svg>
+              </span>
 
-            </div>
+              <input
+                id="searchInput"
+                type="text"
+                placeholder="Search projects…"
+                autocomplete="off"
+              />
 
-            <div class="empty" id="emptyState" hidden>
-                <div class="emptyTitle">No matches</div>
-                <div class="emptyText">Try clearing search or changing tags.</div>
-            </div>
-        </section>
+              <button
+                class="iconBtn"
+                id="clearSearch"
+                type="button"
+                aria-label="Clear search"
+                hidden
+              >
+                ×
+              </button>
 
-
-        <!-- 4) TECH STACK -->
-        <section id="tech" class="section tech">
-            <div class="section-head tech-stack-head">
-                <h2 class="section-title">TECH <span>STACK</span></h2>
-            </div>
-
-            <div id="techGrid" class="tech-groups" aria-label="Tech stack"></div>
-        </section>
-
-        <!-- 5) CONTACT -->
-        <section id="contact" class="section">
-            <div class="askHead r">
-                <h2 class="sectionTitle">Ask <span class="gradWord">me</span></h2>
-            </div>
-
-            <div class="askWrap r askWrap--simple">
-                <div class="askStage">
-                    <div class="askToken">
-                        <img class="askTokenImg" src="assets/me.jpeg" alt="Maurits portrait" />
-                    </div>
-
-                    <div class="askBubble">
-                        Hi — ask me anything about my projects, SAP work, or tools.
-                    </div>
-                </div>
-
-
-                <div class="askChat" id="askChat" aria-live="polite"></div>
-
-                <form class="askInputWrap searchBar searchNeo" id="askForm">
-                    <span class="searchIcon" aria-hidden="true">⌕</span>
-
-                    <input id="askInput" type="text" placeholder="Ask me about anything." />
-
-                    <button id="askSend" class="askSendBtn" type="submit">Send</button>
-                </form>
-
-                <div class="askMeta" id="askMeta" hidden></div>
+              <button
+                class="iconBtn iconBtn--ghost"
+                id="tagsToggle"
+                type="button"
+                aria-label="Filters"
+                aria-expanded="false"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M4 7h16M4 12h16M4 17h16"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                  />
+                </svg>
+              </button>
             </div>
 
+            <div class="tagsDrawer" id="tagsDrawer" hidden>
+              <div class="tagsBar" id="tagsBar"></div>
+            </div>
+          </div>
+        </div>
 
-            <div class="contactHead r">
-                <div class="kicker">CONTACT</div>
-                <h2 class="h2">Contact information</h2>
-                <p class="p">If you’d rather reach me directly.</p>
+        <!-- rail wrapper -->
+        <div class="railWrap r">
+          <div class="railViewport">
+            <div class="workGrid rail" id="workGrid" aria-live="polite"></div>
+          </div>
+
+          <button
+            class="railArrow railArrow--left"
+            id="railPrev"
+            type="button"
+            aria-label="Previous projects"
+            hidden
+          >
+            ‹
+          </button>
+          <button
+            class="railArrow railArrow--right"
+            id="railNext"
+            type="button"
+            aria-label="More projects"
+            hidden
+          >
+            ›
+          </button>
+        </div>
+
+        <div class="empty" id="emptyState" hidden>
+          <div class="emptyTitle">No matches</div>
+          <div class="emptyText">Try clearing search or changing tags.</div>
+        </div>
+      </section>
+
+      <!-- 4) TECH STACK -->
+      <section id="tech" class="section tech">
+        <div class="section-head tech-stack-head">
+          <h2 class="section-title">TECH <span>STACK</span></h2>
+        </div>
+
+        <div id="techGrid" class="tech-groups" aria-label="Tech stack"></div>
+      </section>
+
+      <!-- 5) CONTACT -->
+      <section id="contact" class="section">
+        <div class="askHead r">
+          <h2 class="sectionTitle">Ask <span class="gradWord">me</span></h2>
+        </div>
+
+        <div class="askWrap r askWrap--simple">
+          <div class="askStage">
+            <div class="askToken">
+              <img
+                class="askTokenImg"
+                src="assets/me.jpeg"
+                alt="Maurits portrait"
+              />
             </div>
 
-            <div class="contactGrid r">
-                <a class="contactCard" id="workEmailLink" href="#">
-                    <div class="contactLabel">Gmail</div>
-                    <div class="contactValue" id="workEmailText">Loading…</div>
-                </a>
-
-                <a class="contactCard" id="linkedinLink" href="#" target="_blank" rel="noopener">
-                    <div class="contactLabel">LinkedIn</div>
-                    <div class="contactValue">Open profile</div>
-                </a>
-
-                <a class="contactCard" id="githubLink" href="#" target="_blank" rel="noopener">
-                    <div class="contactLabel">GitHub</div>
-                    <div class="contactValue" id="githubText">@...</div>
-                </a>
+            <div class="askBubble">
+              Hi — ask me anything about my projects, SAP work, or tools.
             </div>
-        </section>
+          </div>
 
-        <footer class="footer">
-            <div>© <span id="year"></span> Maurits</div>
-            <div class="footerRight">
-                <span class="mutedSmall">Built for GitHub Pages</span>
-                <button class="btn tiny" id="backTop" type="button">Back to top</button>
-            </div>
-        </footer>
+          <div class="askChat" id="askChat" aria-live="polite"></div>
 
+          <form class="askInputWrap searchBar searchNeo" id="askForm">
+            <span class="searchIcon" aria-hidden="true">⌕</span>
+
+            <input
+              id="askInput"
+              type="text"
+              placeholder="Ask me about anything."
+            />
+
+            <button id="askSend" class="askSendBtn" type="submit">Send</button>
+          </form>
+
+          <div class="askMeta" id="askMeta" hidden></div>
+        </div>
+
+        <div class="contactHead r">
+          <div class="kicker">CONTACT</div>
+          <h2 class="h2">Contact information</h2>
+          <p class="p">If you’d rather reach me directly.</p>
+        </div>
+
+        <div class="contactGrid r">
+          <a class="contactCard" id="workEmailLink" href="#">
+            <div class="contactLabel">Gmail</div>
+            <div class="contactValue" id="workEmailText">Loading…</div>
+          </a>
+
+          <a
+            class="contactCard"
+            id="linkedinLink"
+            href="#"
+            target="_blank"
+            rel="noopener"
+          >
+            <div class="contactLabel">LinkedIn</div>
+            <div class="contactValue">Open profile</div>
+          </a>
+
+          <a
+            class="contactCard"
+            id="githubLink"
+            href="#"
+            target="_blank"
+            rel="noopener"
+          >
+            <div class="contactLabel">GitHub</div>
+            <div class="contactValue" id="githubText">@...</div>
+          </a>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <div>© <span id="year"></span> Maurits</div>
+        <div class="footerRight">
+          <span class="mutedSmall">Built for GitHub Pages</span>
+          <button class="btn tiny" id="backTop" type="button">
+            Back to top
+          </button>
+        </div>
+      </footer>
     </main>
 
     <!-- Libraries -->
@@ -348,6 +465,5 @@
 
     <script src="script.js"></script>
     <script src="avatar.js"></script>
-</body>
-
+  </body>
 </html>
