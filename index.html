@@ -78,37 +78,33 @@
     </a>
 
     <!-- Top nav -->
-    <header class="topbar">
-      <div class="topLeft">
-        <a class="brand" href="#top" aria-label="Go to top">
-          <span class="brandDot"></span>
-          <span class="brandName">Maurits Puggaard</span>
-        </a>
-      </div>
+    <header class="topbar" id="topbar">
+      <button
+        class="topIconBtn"
+        id="themeBtn"
+        type="button"
+        aria-label="Toggle theme"
+      >
+        ☾
+      </button>
 
-      <div class="topEmailWrap">
-        <a class="topEmail" id="topEmail" href="mailto:maurits.pug@gmail.com"
-          >maurits.pug@gmail.com</a
-        >
-      </div>
+      <nav class="pillNav" id="pillNav" aria-label="Primary">
+        <div class="pillTrack" aria-hidden="true">
+          <span class="pillActive" id="pillActive"></span>
+        </div>
 
-      <nav class="topNav" aria-label="Primary">
-        <a href="#top">ABOUT</a>
-        <a href="#career">CAREER</a>
-        <a href="#work">PROJECTS</a>
-        <a href="#tech">TECH</a>
-        <a href="#ask">ASK</a>
-        <a href="#contact">CONTACT</a>
-
-        <button
-          class="themeBtn"
-          id="themeBtn"
-          type="button"
-          aria-label="Toggle theme"
-        >
-          ☾
-        </button>
+        <a class="pillLink" href="#top" data-target="top">Home</a>
+        <a class="pillLink" href="#about" data-target="about">About</a>
+        <a class="pillLink" href="#career" data-target="career">Career</a>
+        <a class="pillLink" href="#work" data-target="work">Projects</a>
+        <a class="pillLink" href="#tech" data-target="tech">Skills</a>
+        <a class="pillLink" href="#ask" data-target="ask">Other</a>
       </nav>
+
+      <button class="topActionBtn" id="statsBtn" type="button">
+        <span class="topActionIcon" aria-hidden="true">▦</span>
+        <span>Stats</span>
+      </button>
     </header>
 
     <main class="wrap" id="top">
@@ -413,51 +409,100 @@
 
       <!-- 6) CONTACT -->
       <section id="contact" class="section">
-        <div class="contactHead r">
-          <div class="kicker">CONTACT</div>
-          <h2 class="h2">Contact information</h2>
-          <p class="p">If you’d rather reach me directly.</p>
-        </div>
+        <div class="contactPanel r">
+          <div class="contactPanelInner">
+            <!-- Left brand/summary -->
+            <div class="contactBrand">
+              <div class="contactLogo">MP</div>
+              <p class="contactBrandText">
+                Building practical software where enterprise systems meet modern
+                web. If you want to reach out, these are the fastest ways.
+              </p>
 
-        <div class="contactGrid r">
-          <a class="contactCard" id="workEmailLink" href="#">
-            <div class="contactLabel">Gmail</div>
-            <div class="contactValue" id="workEmailText">Loading…</div>
-          </a>
+              <div class="contactQuick">
+                <a class="contactPill" id="workEmailLink" href="#">
+                  <span class="contactPillTop">Email</span>
+                  <span class="contactPillBot" id="workEmailText"
+                    >Loading…</span
+                  >
+                </a>
+              </div>
+            </div>
 
-          <a
-            class="contactCard"
-            id="linkedinLink"
-            href="#"
-            target="_blank"
-            rel="noopener"
-          >
-            <div class="contactLabel">LinkedIn</div>
-            <div class="contactValue">Open profile</div>
-          </a>
+            <!-- Right columns -->
+            <div class="contactCols" aria-label="Contact links">
+              <div class="contactCol">
+                <div class="contactColTitle">General</div>
+                <a class="contactLink" href="#top">Home</a>
+                <a class="contactLink" href="#about">About</a>
+                <a class="contactLink" href="#work">Projects</a>
+                <a class="contactLink" href="#tech">Skills</a>
+              </div>
 
-          <a
-            class="contactCard"
-            id="githubLink"
-            href="#"
-            target="_blank"
-            rel="noopener"
-          >
-            <div class="contactLabel">GitHub</div>
-            <div class="contactValue" id="githubText">@.</div>
-          </a>
+              <div class="contactCol">
+                <div class="contactColTitle">More</div>
+                <a class="contactLink" href="#career">Career</a>
+                <a class="contactLink" href="#ask">Ask me</a>
+                <a class="contactLink" href="#contact">Contact</a>
+              </div>
+
+              <div class="contactCol">
+                <div class="contactColTitle">Social</div>
+                <a
+                  class="contactLink"
+                  id="linkedinLink"
+                  href="#"
+                  target="_blank"
+                  rel="noopener"
+                >
+                  LinkedIn
+                </a>
+                <a
+                  class="contactLink"
+                  id="githubLink"
+                  href="#"
+                  target="_blank"
+                  rel="noopener"
+                >
+                  GitHub <span class="contactHint" id="githubText">@…</span>
+                </a>
+                <a
+                  class="contactLink"
+                  href="#"
+                  id="xLink"
+                  target="_blank"
+                  rel="noopener"
+                  >X</a
+                >
+                <a
+                  class="contactLink"
+                  href="#"
+                  id="igLink"
+                  target="_blank"
+                  rel="noopener"
+                  >Instagram</a
+                >
+              </div>
+
+              <div class="contactCol">
+                <div class="contactColTitle">Legal</div>
+                <a class="contactLink" href="#">Privacy Policy</a>
+                <a class="contactLink" href="#">Terms</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="contactBottom">
+            <div>© <span id="year"></span> Maurits</div>
+            <div class="contactBottomRight">
+              <span class="mutedSmall">Built for GitHub Pages</span>
+              <button class="btn tiny" id="backTop" type="button">
+                Back to top
+              </button>
+            </div>
+          </div>
         </div>
       </section>
-
-      <footer class="footer">
-        <div>© <span id="year"></span> Maurits</div>
-        <div class="footerRight">
-          <span class="mutedSmall">Built for GitHub Pages</span>
-          <button class="btn tiny" id="backTop" type="button">
-            Back to top
-          </button>
-        </div>
-      </footer>
     </main>
 
     <!-- Custom Scrollbar (right side) -->

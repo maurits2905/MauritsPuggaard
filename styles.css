@@ -13,6 +13,8 @@
   --font:
     "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 
+  --navH: 92px;
+
   /* Career sizing */
   --career-gap: 36px;
   --career-row-gap: 64px;
@@ -34,7 +36,7 @@
 }
 
 :root {
-  --navH: 84px; /* adjust if header height changes */
+  --navH: 92px; /* adjust if header height changes */
 }
 
 html {
@@ -279,115 +281,208 @@ input {
   filter: contrast(1.15) saturate(1.15);
 }
 
-/* Topbar */
+/* =========================
+   Header (pill nav like ref)
+========================= */
+
+:root {
+  /* JS uses this for scroll offset. Keep it in sync with header height-ish */
+  --navH: 92px;
+
+  /* pill bubble position/size (set by JS) */
+  --pill-x: 0px;
+  --pill-w: 0px;
+}
+
 .topbar {
-  position: sticky;
-  top: 0;
-  z-index: 50;
+  position: fixed;
+  top: 18px;
+  left: 0;
+  right: 0;
+  z-index: 80;
+
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
-  padding: 16px 22px;
+  gap: 18px;
+
+  padding: 0;
+  background: transparent;
+  border: 0;
+  backdrop-filter: none;
+}
+
+/* left icon (theme) */
+.topIconBtn {
+  width: 46px;
+  height: 46px;
+  border-radius: 999px;
+
+  display: grid;
+  place-items: center;
+
+  border: 1px solid color-mix(in srgb, var(--stroke) 75%, transparent);
+  background: color-mix(in srgb, var(--glass2) 88%, transparent);
+  color: color-mix(in srgb, var(--text) 92%, transparent);
+  cursor: pointer;
+
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease;
+}
+
+.topIconBtn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(155, 140, 255, 0.45);
+  background: color-mix(in srgb, var(--glass) 85%, transparent);
+}
+
+.topIconBtn:active {
+  transform: translateY(0px);
+}
+
+/* center pill nav */
+.pillNav {
+  position: relative;
+  justify-self: center;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 8px;
+  border-radius: 999px;
+
+  border: 1px solid color-mix(in srgb, var(--stroke) 75%, transparent);
+  background: color-mix(in srgb, var(--glass2) 86%, transparent);
   backdrop-filter: blur(18px);
-  background: color-mix(in srgb, var(--bg) 76%, transparent);
-  border-bottom: 1px solid color-mix(in srgb, var(--stroke) 75%, transparent);
+
+  box-shadow: 0 20px 70px rgba(0, 0, 0, 0.35);
+
+  /* keeps it from stretching weird */
+  width: fit-content;
+  max-width: min(720px, 100%);
 }
 
-.topLeft {
-  display: flex;
-  align-items: center;
+.pillTrack {
+  position: absolute;
+  inset: 8px;
+  border-radius: 999px;
+  pointer-events: none;
 }
 
-.brand {
-  display: flex;
+.pillActive {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+
+  left: var(--pill-x);
+  width: var(--pill-w);
+
+  border-radius: 999px;
+
+  background: color-mix(in srgb, var(--glass) 90%, transparent);
+  border: 1px solid color-mix(in srgb, var(--stroke) 70%, transparent);
+
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.35),
+    0 0 0 1px rgba(155, 140, 255, 0.12) inset;
+
+  transform: translateZ(0);
+  opacity: 0;
+  transition:
+    left 220ms ease,
+    width 220ms ease,
+    opacity 180ms ease;
+}
+
+.pillNav[data-ready="1"] .pillActive {
+  opacity: 1;
+}
+
+.pillLink {
+  position: relative;
+  z-index: 2;
+
+  text-decoration: none;
+  color: color-mix(in srgb, var(--text) 70%, transparent);
+
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+
+  padding: 10px 18px;
+  border-radius: 999px;
+
+  transition:
+    color 180ms ease,
+    opacity 180ms ease;
+  white-space: nowrap;
+}
+
+.pillLink:hover {
+  color: color-mix(in srgb, var(--text) 88%, transparent);
+}
+
+.pillLink.isActive {
+  color: color-mix(in srgb, var(--text) 95%, transparent);
+}
+
+/* right action button (Stats) */
+.topActionBtn {
+  justify-self: end;
+
+  height: 46px;
+  padding: 0 16px;
+  border-radius: 999px;
+
+  display: inline-flex;
   align-items: center;
   gap: 10px;
-}
 
-.brandDot {
-  width: 10px;
-  height: 10px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, var(--accent), var(--accent2));
-  box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 18%, transparent);
-}
+  border: 1px solid color-mix(in srgb, var(--stroke) 75%, transparent);
+  background: color-mix(in srgb, var(--glass2) 86%, transparent);
+  color: color-mix(in srgb, var(--text) 92%, transparent);
 
-.brandName {
-  font-weight: 850;
-  letter-spacing: -0.02em;
-}
-
-.topEmailWrap {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.topEmail {
-  color: var(--muted);
-  font-size: 13px;
-  padding: 8px 12px;
-  border-radius: 999px;
-  border: 1px solid var(--stroke);
-  background: var(--glass2);
-}
-
-.topEmail:hover {
-  color: var(--text);
-  background: var(--glass);
-}
-
-.emailToggle {
-  border: 1px solid var(--stroke);
-  background: var(--glass2);
-  color: var(--muted);
-  padding: 8px 10px;
-  border-radius: 999px;
   cursor: pointer;
-  font-size: 12px;
-  letter-spacing: 0.06em;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease;
 }
 
-.emailToggle:hover {
-  color: var(--text);
+.topActionBtn:hover {
   transform: translateY(-1px);
+  border-color: rgba(155, 140, 255, 0.45);
+  background: color-mix(in srgb, var(--glass) 85%, transparent);
 }
 
-.emailToggle:active {
-  transform: translateY(0);
+.topActionBtn:active {
+  transform: translateY(0px);
 }
 
-.topNav {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 14px;
+.topActionIcon {
+  opacity: 0.9;
+  font-size: 14px;
 }
 
-.topNav a {
-  color: var(--muted);
-  font-size: 13px;
-  letter-spacing: 0.12em;
-  padding: 8px 10px;
-  border-radius: 12px;
+/* make sure sections don't jump under the fixed header */
+.section,
+.story,
+.wrap > section {
+  scroll-margin-top: calc(var(--navH) + 22px);
 }
 
-.topNav a:hover {
-  background: var(--glass2);
-  color: var(--text);
-}
-
-.themeBtn {
-  border: 1px solid var(--stroke);
-  background: var(--glass2);
-  color: var(--text);
-  padding: 8px 11px;
-  border-radius: 12px;
-  cursor: pointer;
-}
-
-.themeBtn:hover {
-  transform: translateY(-1px);
+/* give the page breathing room so the fixed header doesn't overlap the very top */
+.wrap {
+  padding-top: calc(var(--navH) + 26px);
 }
 
 .themeBtn:active {
@@ -450,7 +545,7 @@ input {
 .wrap {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 26px 18px 40px;
+  padding: calc(var(--navH) + 26px) 18px 40px;
   overflow: visible !important;
 }
 
@@ -1393,50 +1488,165 @@ html.noReveal .r,
   color: var(--muted);
 }
 
-/* Contact */
-.contactGrid {
-  margin-top: 16px;
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 14px;
+/* =========================
+   Contact (footer-style panel)
+========================= */
+
+.contactPanel {
+  margin-top: 18px;
+  border-radius: 34px;
+
+  background: rgba(8, 9, 12, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+
+  box-shadow:
+    0 30px 100px rgba(0, 0, 0, 0.72),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+
+  overflow: hidden;
+  backdrop-filter: blur(10px);
 }
 
+.contactPanelInner {
+  display: grid;
+  grid-template-columns: 1.15fr 1.85fr;
+  gap: 34px;
+  padding: 34px;
+}
+
+.contactBrand {
+  padding: 8px 6px;
+}
+
+.contactLogo {
+  font-weight: 950;
+  letter-spacing: -0.05em;
+  font-size: 52px;
+  line-height: 1;
+  margin-bottom: 14px;
+}
+
+.contactBrandText {
+  margin: 0;
+  color: color-mix(in srgb, var(--text) 78%, transparent);
+  line-height: 1.7;
+  max-width: 42ch;
+}
+
+.contactQuick {
+  margin-top: 16px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.contactPill {
+  display: grid;
+  gap: 6px;
+  padding: 14px 16px;
+  border-radius: 16px;
+
+  min-width: 260px;
+
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.11);
+}
+
+.contactPill:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.contactPillTop {
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.contactPillBot {
+  font-weight: 850;
+  letter-spacing: -0.02em;
+  color: color-mix(in srgb, var(--text) 92%, transparent);
+}
+
+.contactCols {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(150px, 1fr));
+  gap: 40px;
+  align-content: start;
+  padding: 10px 6px;
+}
+
+.contactColTitle {
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.86);
+  font-weight: 900;
+  margin-bottom: 14px;
+}
+
+.contactLink {
+  display: block;
+  padding: 8px 0;
+  color: rgba(255, 255, 255, 0.62);
+  font-weight: 650;
+}
+
+.contactLink:hover {
+  color: rgba(255, 255, 255, 0.92);
+  transform: translateY(-1px);
+}
+
+.contactHint {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.contactBottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+
+  padding: 16px 22px 18px;
+  border-top: 1px solid color-mix(in srgb, var(--stroke) 75%, transparent);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.contactBottomRight {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Responsive */
 @media (max-width: 980px) {
-  .contactGrid {
+  .contactPanelInner {
     grid-template-columns: 1fr;
+  }
+
+  .contactCols {
+    grid-template-columns: 1fr 1fr;
   }
 }
 
-.contactCard {
-  border: 1px solid var(--stroke);
-  background: color-mix(in srgb, var(--glass) 84%, transparent);
-  border-radius: var(--r1);
-  box-shadow: var(--shadow);
-  padding: 16px;
-}
+@media (max-width: 560px) {
+  .contactCols {
+    grid-template-columns: 1fr;
+  }
 
-.contactCard:hover {
-  transform: translateY(-2px);
-}
+  .contactPanelInner {
+    padding: 22px;
+  }
 
-.contactTitle {
-  font-weight: 950;
-  letter-spacing: -0.02em;
-}
-
-.contactSub {
-  margin-top: 6px;
-  color: var(--muted);
-}
-
-.contactLabel {
-  font-weight: 950;
-  letter-spacing: -0.02em;
-}
-
-.contactValue {
-  margin-top: 6px;
-  color: var(--muted);
+  .contactLogo {
+    font-size: 40px;
+  }
 }
 
 /* Footer */
@@ -2696,22 +2906,6 @@ html.noReveal .r,
   }
 }
 
-@media (max-width: 760px) {
-  .brandName {
-    font-size: 13px;
-  }
-
-  .topNav a {
-    font-size: 11px;
-    letter-spacing: 0.08em;
-    padding: 6px 8px;
-  }
-
-  .topNav {
-    gap: 6px;
-  }
-}
-
 /* =========================
    Mobile (phones)
 ========================= */
@@ -2722,48 +2916,46 @@ html.noReveal .r,
     overflow-x: hidden;
   }
 
-  /* Header: single column stack */
+  /* =========================
+     Header (pill nav version)
+  ========================= */
+
   .topbar {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
+    left: 12px;
+    right: 12px;
+    top: 10px;
+    grid-template-columns: auto 1fr auto;
     gap: 10px;
-    padding: 12px 14px;
   }
 
-  .topLeft {
-    justify-content: center;
+  .topIconBtn {
+    width: 42px;
+    height: 42px;
   }
 
-  .brandName {
-    font-size: 13px;
+  .topActionBtn {
+    height: 42px;
+    padding: 0 14px;
   }
 
-  .topEmailWrap {
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 8px;
+  .pillNav {
+    max-width: 100%;
+    padding: 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
   }
 
-  .topEmail {
-    font-size: 12px;
-    max-width: 92vw;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    padding: 7px 10px;
+  .pillNav::-webkit-scrollbar {
+    display: none;
   }
 
-  .topNav {
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 6px;
+  .pillTrack {
+    inset: 6px;
   }
 
-  .topNav a {
-    font-size: 11px;
-    letter-spacing: 0.08em;
-    padding: 6px 8px;
+  .pillLink {
+    padding: 9px 14px;
+    font-size: 12.5px;
   }
 
   /* Floating resume button tends to cover content on phones */
@@ -2771,7 +2963,10 @@ html.noReveal .r,
     display: none;
   }
 
-  /* Career timeline: keep the rail, but make it fit */
+  /* =========================
+     Career timeline
+  ========================= */
+
   #career.section {
     padding-left: 0;
     padding-right: 0;

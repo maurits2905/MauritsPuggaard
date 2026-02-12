@@ -111,6 +111,90 @@ function initDeepFade() {
 }
 
 /* ------------------------------
+   Header pill nav (active bubble)
+------------------------------ */
+function initHeaderPillNav() {
+  const nav = document.getElementById("pillNav");
+  const active = document.getElementById("pillActive");
+  if (!nav || !active) return;
+
+  const track = nav.querySelector(".pillTrack");
+  const links = Array.from(nav.querySelectorAll(".pillLink"));
+  if (!track || !links.length) return;
+
+  const getNavOffset = () => {
+    const raw = getComputedStyle(document.documentElement)
+      .getPropertyValue("--navH")
+      .trim();
+    const n = Number.parseFloat(raw || "92");
+    return Number.isFinite(n) ? n : 92;
+  };
+
+  function setActiveLink(link, immediate = false) {
+    if (!link) return;
+
+    links.forEach((a) => a.classList.toggle("isActive", a === link));
+
+    const r = link.getBoundingClientRect();
+    const tr = track.getBoundingClientRect();
+    const x = Math.round(r.left - tr.left);
+    const w = Math.round(r.width);
+
+    nav.style.setProperty("--pill-x", `${x}px`);
+    nav.style.setProperty("--pill-w", `${w}px`);
+
+    if (immediate) {
+      active.style.transition = "none";
+      active.offsetHeight; // reflow
+      active.style.transition = "";
+    }
+
+    nav.dataset.ready = "1";
+  }
+
+  // Map links -> target elements
+  const targets = links
+    .map((a) => {
+      const id = a.dataset.target || (a.getAttribute("href") || "").slice(1);
+      const el = id ? document.getElementById(id) : null;
+      return { link: a, id, el };
+    })
+    .filter((x) => x.el);
+
+  function pickActiveFromScroll() {
+    const y = window.scrollY + getNavOffset() + 18;
+    let best = targets[0];
+    for (const t of targets) {
+      if (t.el.offsetTop <= y) best = t;
+    }
+    if (best) setActiveLink(best.link);
+  }
+
+  // Click: update immediately so it feels snappy
+  links.forEach((a) => {
+    a.addEventListener("click", () => {
+      setActiveLink(a, true);
+      requestAnimationFrame(() => requestAnimationFrame(pickActiveFromScroll));
+    });
+  });
+
+  let raf = 0;
+  function onScroll() {
+    if (raf) return;
+    raf = requestAnimationFrame(() => {
+      raf = 0;
+      pickActiveFromScroll();
+    });
+  }
+
+  window.addEventListener("scroll", onScroll, { passive: true });
+  window.addEventListener("resize", pickActiveFromScroll);
+  window.addEventListener("load", pickActiveFromScroll);
+
+  requestAnimationFrame(pickActiveFromScroll);
+}
+
+/* ------------------------------
    Scroll story (pinned)
 ------------------------------ */
 function initStory() {
@@ -949,6 +1033,7 @@ async function init() {
   initTheme();
   initBackground();
   initDeepFade();
+  initHeaderPillNav();
 
   initCustomScrollbar();
 
@@ -994,8 +1079,8 @@ async function init() {
   // Contact cards - emails
   const workEmailText = document.getElementById("workEmailText");
   const workEmailLink = document.getElementById("workEmailLink");
-  if (workEmailText) workEmailText.textContent = emailWork;
-  if (workEmailLink) workEmailLink.href = `mailto:${emailWork}`;
+  if (workEmailText) workEmailText.textContent = emailPrivate;
+  if (workEmailLink) workEmailLink.href = `mailto:${emailPrivate}`;
 
   const privateEmailText = document.getElementById("privateEmailText");
   const privateEmailLink = document.getElementById("privateEmailLink");
@@ -1004,6 +1089,12 @@ async function init() {
 
   const liLink = document.getElementById("linkedinLink");
   if (liLink) liLink.href = linkedinProfile;
+
+  const xLink = document.getElementById("xLink");
+  const igLink = document.getElementById("igLink");
+
+  if (xLink) xLink.href = xProfile;
+  if (igLink) igLink.href = igProfile;
 
   // Resume placeholder (put resume.pdf in repo root)
   const resumeBtn = document.getElementById("resumeBtn");
