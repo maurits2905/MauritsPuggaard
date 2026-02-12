@@ -1158,9 +1158,24 @@ html.noReveal .r,
 
 .railViewport {
   overflow: visible;
-  /* don't clip cards/shadows */
-  border-radius: var(--r1);
-  /* keep rounding visually */
+  border-radius: 0; /* ← vigtig */
+  background: transparent;
+}
+
+.railWrap {
+  overflow: visible;
+}
+
+/* Remove the big panel look around cards */
+.railWrap,
+.railViewport {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.railViewport {
+  border-radius: 0;
 }
 
 /* Horizontal rail */
@@ -1184,7 +1199,9 @@ html.noReveal .r,
   scrollbar-width: none;
 }
 
-.workGrid:hover .railArrow {
+/* show arrows when you hover the rail area */
+.railWrap:hover .railArrow,
+.railWrap:focus-within .railArrow {
   opacity: 1;
 }
 
@@ -1196,11 +1213,42 @@ html.noReveal .r,
   border: 1px solid var(--stroke);
   background: color-mix(in srgb, var(--glass) 86%, transparent);
   border-radius: var(--r1);
-  box-shadow: var(--shadow);
+
+  /* Softere shadow så rækken ikke ligner én stor “box” */
+  box-shadow: 0 14px 42px rgba(0, 0, 0, 0.28);
+  transition: box-shadow 180ms ease;
+
   overflow: hidden;
   cursor: pointer;
   transform-style: preserve-3d;
   will-change: transform;
+}
+
+/* Hover effect */
+.projectCard:hover {
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.32);
+}
+
+/* Light mode shadow */
+[data-theme="light"] .projectCard {
+  box-shadow: 0 14px 42px rgba(16, 26, 60, 0.1);
+}
+
+[data-theme="light"] .projectCard:hover {
+  box-shadow: 0 20px 60px rgba(16, 26, 60, 0.14);
+}
+
+.projectCard:hover {
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.32);
+}
+
+/* Light mode shadow override */
+[data-theme="light"] .projectCard {
+  box-shadow: 0 14px 42px rgba(16, 26, 60, 0.1);
+}
+
+[data-theme="light"] .projectCard:hover {
+  box-shadow: 0 20px 60px rgba(16, 26, 60, 0.14);
 }
 
 /* Featured cards are no longer bigger — badge only */
@@ -1987,6 +2035,37 @@ html.noReveal .r,
   text-transform: uppercase;
   opacity: 0.7;
   margin: 0 0 12px;
+}
+
+/* ===== Projects rail fix (no big box, no clipping) ===== */
+
+.railWrap {
+  position: relative;
+}
+
+/* Make THIS the scroll container */
+.railViewport {
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+
+  /* gives air left/right and bottom so shadows aren't clipped */
+  padding: 0 28px 26px;
+  margin: 0 -28px;
+
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+}
+.railViewport::-webkit-scrollbar {
+  display: none;
+}
+
+/* Cards container should NOT scroll */
+.workGrid.rail {
+  overflow: visible;
+  padding: 0;
+  margin: 0;
+  gap: 22px;
 }
 
 /* ===== Rail arrows ===== */

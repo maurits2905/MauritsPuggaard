@@ -32,7 +32,7 @@
     "tags": ["AI", "Web", "Experiment"],
     "date": "2026-2-04",
     "featured": false,
-    "imageUrl": "assets/projects/x.png",
+    "imageUrl": "assets/projects/Read_out_assistant.png",
     "highlights": ["Live transcription workflow", "AI-generated answers from audio input", "Client-focused, experimental setup"],
     "demoUrl": "https://maurits2905.github.io/AI_Answer_and_Transcript/",
     "repoUrl": "https://github.com/maurits2905/AI_Answer_and_Transcript"
@@ -45,7 +45,7 @@
     "tags": ["Data", "Dashboard", "Web"],
     "date": "2015-6-17",
     "featured": false,
-    "imageUrl": "assets/projects/x.png",
+    "imageUrl": "assets/projects/DataHub.jpg",
     "highlights": ["Real-time and historical data views", "Clean, readable visualizations", "Built to support sensor-based data pipelines"],
     "demoUrl": "https://pollen-project.github.io/Dashboard/",
     "repoUrl": "https://github.com/pollen-project/Dashboard"
@@ -58,7 +58,7 @@
     "tags": ["AI", "SAP", "Automation"],
     "date": "2026-1-20",
     "featured": false,
-    "imageUrl": "assets/projects/x.png",
+    "imageUrl": "assets/projects/SAP_Multi-agent_PoC.png",
     "highlights": ["Multi-agent architecture", "Designed for consulting use cases", "Focus on practical internal tooling"],
     "demoUrl": "https://maurits2905.github.io/SAP-Multiagent/",
     "repoUrl": "https://github.com/maurits2905/SAP-Multiagent"
@@ -71,7 +71,7 @@
     "tags": ["Tool", "Web", "Developer"],
     "date": "2026-1-20",
     "featured": false,
-    "imageUrl": "assets/projects/x.png",
+    "imageUrl": "assets/projects/Code_compare.png",
     "highlights": ["Side-by-side comparison view", "Fast local processing", "Useful for review and validation tasks"],
     "demoUrl": "https://maurits2905.github.io/Compare_code_program/",
     "repoUrl": "https://github.com/maurits2905/Compare_code_program"
@@ -84,23 +84,10 @@
     "tags": ["UI", "Web", "Experiment"],
     "date": "2025-4-10",
     "featured": false,
-    "imageUrl": "assets/projects/x.png",
+    "imageUrl": "assets/projects/Money_counter.png",
     "highlights": ["Real-time animated counter", "Clean and focused UI", "Built for clarity and motivation"],
     "demoUrl": "https://maurits2905.github.io/MoneyCounter/",
     "repoUrl": "https://github.com/maurits2905/MoneyCounter"
-  },
-
-  {
-    "id": "Simple Mandelbrot",
-    "name": "Simple Mandelbrot",
-    "description": "Small project exploring the Mandelbrot set through code. Built to understand mathematical visualization and rendering fundamentals.",
-    "tags": ["Math", "Visualization", "Experiment"],
-    "date": "2022-10-05",
-    "featured": false,
-    "imageUrl": "assets/projects/x.png",
-    "highlights": ["Mandelbrot set rendering", "Focus on fundamentals", "Purely exploratory project"],
-    "demoUrl": "",
-    "repoUrl": "https://github.com/maurits2905/Simple_Mandelbrot"
   },
 
   {
@@ -110,9 +97,22 @@
     "tags": ["Data", "Web", "Dashboard"],
     "date": "2024-12-04",
     "featured": false,
-    "imageUrl": "assets/projects/x.png",
+    "imageUrl": "assets/projects/DataHub1.png",
     "highlights": ["Centralized data presentation", "Built to support live sensor input", "Designed as part of a larger system"],
     "demoUrl": "https://pollen-project.github.io/Pollen_Website/",
     "repoUrl": "https://github.com/pollen-project/Pollen_Website"
+  },
+
+  {
+    "id": "Heat Map",
+    "name": "Heat Map",
+    "description": "x",
+    "tags": ["Data", "Visualization", "Math"],
+    "date": "2015-7-20",
+    "featured": false,
+    "imageUrl": "assets/projects/heatmap.png",
+    "highlights": ["x", "x", "x"],
+    "demoUrl": "x",
+    "repoUrl": "x"
   }
 ]

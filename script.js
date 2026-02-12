@@ -470,8 +470,8 @@ function renderWork() {
     return;
   }
 
-  // Reset scroll so we always start at first card
-  grid.scrollLeft = 0;
+  const viewport = document.querySelector(".railViewport");
+  if (viewport) viewport.scrollLeft = 0;
 
   // Force arrow refresh after render + scroll reset
   requestAnimationFrame(() => {
@@ -1098,7 +1098,7 @@ async function init() {
   }
 
   // Rail arrows + initial no-flash
-  const rail = document.getElementById("workGrid");
+  const rail = document.querySelector(".railViewport");
   const next = document.getElementById("railNext");
   const prev = document.getElementById("railPrev");
 
@@ -1109,7 +1109,8 @@ async function init() {
     if (!rail || !next || !prev) return;
 
     const empty = document.getElementById("emptyState");
-    const hasCards = rail.children && rail.children.length > 0;
+    const grid = document.getElementById("workGrid");
+    const hasCards = grid && grid.children && grid.children.length > 0;
 
     // If no results are visible, hide both arrows no matter what
     if ((empty && !empty.hidden) || !hasCards) {
