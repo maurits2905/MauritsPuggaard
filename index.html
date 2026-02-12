@@ -22,7 +22,7 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
 
-  <body>
+  <body data-bg="stars">
     <!-- Background -->
     <div id="bg"></div>
     <div class="bgOverlay"></div>
@@ -32,53 +32,14 @@
 
     <div class="bgNoise" aria-hidden="true"></div>
 
-    <!-- Social rail (left) -->
-    <aside class="socialRail" aria-label="Social links">
-      <a
-        class="sIcon"
-        href="#"
-        id="ghIcon"
-        target="_blank"
-        rel="noopener"
-        aria-label="GitHub"
-        >GH</a
-      >
-      <a
-        class="sIcon"
-        href="#"
-        id="liIcon"
-        target="_blank"
-        rel="noopener"
-        aria-label="LinkedIn"
-        >in</a
-      >
-      <a
-        class="sIcon"
-        href="#"
-        id="xIcon"
-        target="_blank"
-        rel="noopener"
-        aria-label="X"
-        >x</a
-      >
-      <a
-        class="sIcon"
-        href="#"
-        id="igIcon"
-        target="_blank"
-        rel="noopener"
-        aria-label="Instagram"
-        >ig</a
-      >
-    </aside>
-
     <!-- Resume button (bottom right) -->
     <a class="resumeBtn" id="resumeBtn" href="#" target="_blank" rel="noopener">
       RESUME <span class="resumeMark">▦</span>
     </a>
 
     <!-- Top nav -->
-    <header class="topbar" id="topbar">
+    <header class="topbar">
+      <!-- Left: theme -->
       <button
         class="topIconBtn"
         id="themeBtn"
@@ -88,6 +49,7 @@
         ☾
       </button>
 
+      <!-- Center: pill nav (NO dropdown like pic 2) -->
       <nav class="pillNav" id="pillNav" aria-label="Primary">
         <div class="pillTrack" aria-hidden="true">
           <span class="pillActive" id="pillActive"></span>
@@ -95,145 +57,76 @@
 
         <a class="pillLink" href="#top" data-target="top">Home</a>
         <a class="pillLink" href="#about" data-target="about">About</a>
-        <a class="pillLink" href="#career" data-target="career">Career</a>
         <a class="pillLink" href="#work" data-target="work">Projects</a>
         <a class="pillLink" href="#tech" data-target="tech">Skills</a>
         <a class="pillLink" href="#ask" data-target="ask">Other</a>
       </nav>
 
+      <!-- Right: CTA -->
       <button class="topActionBtn" id="statsBtn" type="button">
-        <span class="topActionIcon" aria-hidden="true">▦</span>
-        <span>Stats</span>
+        <span>Book a Call</span>
       </button>
     </header>
 
     <main class="wrap" id="top">
-      <!-- 1) PINNED INTRO STORY -->
-      <section class="story" id="story">
-        <div class="storyGrid">
-          <!-- LEFT column -->
-          <div class="storyLeft">
-            <div class="scene sceneHero" id="sceneHero">
-              <div class="roleSmall">Hello! I'm</div>
-              <h1 class="heroName">
-                <span class="heroLine">MAURITS</span>
-                <span class="heroLine glow">PUGGAARD</span>
-              </h1>
-            </div>
+      <!-- 1) HERO (video-style) -->
+      <section class="heroSpace" id="hero">
+        <!-- animated stars (only for hero) -->
+        <canvas id="heroStars" class="heroStars" aria-hidden="true"></canvas>
 
-            <div class="scene sceneWhat" id="sceneWhat">
-              <div class="whatBig">WHAT I DO</div>
+        <div class="heroSpaceInner">
+          <div class="heroNewRow">
+            <a class="heroNewChip" href="#work">
+              <span class="newBadge">New</span>
+              <span class="newText">Excel Merger is live!</span>
+              <span class="chipArrow" aria-hidden="true">›</span>
+            </a>
+          </div>
+
+          <h1 class="heroSpaceTitle heroTitle">
+            I design and build products that<br />
+            deliver <span class="fxWord">real</span> impact
+          </h1>
+
+          <div class="heroHelloRow">
+            <div class="heroHelloLine">Hello, I’m <strong>Maurits</strong></div>
+            <div class="heroRolePill skillPill" id="skillPill">
+              Problem Solver
             </div>
           </div>
 
-          <!-- CENTER illustration (moves left on scroll) -->
-          <div class="storyCenter">
-            <div class="avatarStage" id="avatarStage" aria-label="Illustration">
-              <!-- Keep your existing 2D image as fallback -->
-              <img
-                class="avatarImg"
-                src="assets/avatar.png"
-                alt=""
-                onerror="this.style.display = 'none'"
-              />
+          <div class="heroConnectRow">
+            <a class="heroCtaBtn" href="#contact">
+              <span>Let’s Connect</span>
+              <span class="ctaDot" aria-hidden="true">→</span>
+            </a>
 
-              <!-- ✅ 3D mount (we will render the helmet into this element) -->
-              <div class="threeMount" id="threeMount" aria-hidden="true"></div>
-            </div>
-          </div>
-
-          <!-- RIGHT column -->
-          <div class="storyRight">
-            <div class="scene sceneRole" id="sceneRole">
-              <div class="roleSmall">An</div>
-              <div class="roleBig">
-                <span class="roleTop">SAP CONSULTANT</span>
-                <span class="roleBottom">FULL-STACK BUILDER</span>
-              </div>
-
-              <div class="heroCtas">
-                <a class="btn primary" href="#work">View projects</a>
-                <a class="btn" href="#contact">Contact</a>
-              </div>
-            </div>
-
-            <div class="scene sceneAbout" id="about">
-              <div class="kicker">ABOUT ME</div>
-
-              <div class="aboutHeadline">
-                SAP Technical Consultant building real-world software.
-              </div>
-
-              <div class="aboutText">
-                <p>
-                  I’m a SAP Technical Consultant and full-stack builder based in
-                  Denmark, working where enterprise systems meet modern software
-                  development.
-                </p>
-
-                <p>
-                  My focus is on building practical, maintainable solutions
-                  using SAP ABAP, CDS, OData, SAP Fiori/UI5, and modern web
-                  technologies.
-                </p>
-
-                <p>
-                  I’m especially interested in automation and applied AI as
-                  tools that support real workflows — not demos.
-                </p>
-              </div>
-
-              <div class="heroStats">
-                <div class="stat">
-                  <div class="statNum" id="statProjects">—</div>
-                  <div class="statLab">projects</div>
-                </div>
-                <div class="stat">
-                  <div class="statNum" id="statTags">—</div>
-                  <div class="statLab">tags</div>
-                </div>
-                <div class="stat">
-                  <div class="statNum">DK</div>
-                  <div class="statLab">based</div>
-                </div>
-              </div>
-            </div>
-
-            <div class="scene sceneDoCards" id="sceneDoCards">
-              <div class="doCard">
-                <div class="doTitle">SAP & Integration</div>
-                <div class="doSub">Building solid solutions around SAP</div>
-                <ul class="doList">
-                  <li>ABAP and backend logic</li>
-                  <li>SAP Fiori / UI5 applications</li>
-                  <li>OData services, APIs, and system integrations</li>
-                </ul>
-                <button class="miniBtn" type="button" aria-label="Expand">
-                  ▾
-                </button>
-              </div>
-
-              <div class="doCard">
-                <div class="doTitle">Web Tools & UI</div>
-                <div class="doSub">
-                  Modern web tools with a focus on usability
-                </div>
-                <ul class="doList">
-                  <li>Fast, readable user interfaces</li>
-                  <li>Client-side tools and utilities</li>
-                  <li>Animation and interaction where it adds value</li>
-                </ul>
-                <button class="miniBtn" type="button" aria-label="Expand">
-                  ▾
-                </button>
-              </div>
-            </div>
+            <a class="heroMailPill" href="mailto:maurits.pug@gmail.com">
+              <span class="mailIcon" aria-hidden="true">✉</span>
+              <span>maurits.pug@gmail.com</span>
+            </a>
           </div>
         </div>
 
-        <div class="scrollHint" aria-hidden="true">
-          <div class="scrollLine"></div>
-          <div class="scrollText">Scroll</div>
+        <!-- earth / horizon glow -->
+        <div class="heroEarth" aria-hidden="true"></div>
+
+        <!-- scroll cue -->
+        <a class="heroScrollCue" href="#career" aria-label="Scroll to Career">
+          <span class="line"></span>
+          <span class="txt">Scroll</span>
+        </a>
+      </section>
+
+      <!-- 2) ABOUT (keep for nav anchor) -->
+      <section id="about" class="section aboutRef">
+        <div class="section-head r">
+          <h2 class="sectionTitle">About <span class="gradWord">me</span></h2>
+          <p class="p">
+            I’m Maurits — SAP Technical Consultant at 2BM. I like building clean
+            solutions end-to-end: backend logic, integrations, and a UI that
+            doesn’t fight the user.
+          </p>
         </div>
       </section>
 
@@ -413,7 +306,10 @@
           <div class="contactPanelInner">
             <!-- Left brand/summary -->
             <div class="contactBrand">
-              <div class="contactLogo">MP</div>
+              <div class="contactLogo">
+                <img src="assets/MP-logo.png" alt="Maurits logo" />
+              </div>
+
               <p class="contactBrandText">
                 Building practical software where enterprise systems meet modern
                 web. If you want to reach out, these are the fastest ways.
@@ -491,15 +387,96 @@
               </div>
             </div>
           </div>
+        </div>
 
-          <div class="contactBottom">
-            <div>© <span id="year"></span> Maurits</div>
-            <div class="contactBottomRight">
-              <span class="mutedSmall">Built for GitHub Pages</span>
-              <button class="btn tiny" id="backTop" type="button">
-                Back to top
-              </button>
-            </div>
+        <!-- ✅ Footer bar OUTSIDE the panel (matches reference) -->
+        <div class="footerBar">
+          <div>© <span id="year"></span> Maurits</div>
+
+          <div class="footerBarRight">
+            <a
+              class="footerIcon"
+              id="footerGitHub"
+              href="#"
+              target="_blank"
+              rel="noopener"
+              aria-label="GitHub"
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  d="M12 .5C5.73.5.75 5.6.75 12c0 5.13 3.3 9.48 7.88 11.02.58.11.8-.26.8-.57v-2.1c-3.2.71-3.88-1.41-3.88-1.41-.52-1.38-1.27-1.75-1.27-1.75-1.04-.73.08-.72.08-.72 1.15.08 1.76 1.21 1.76 1.21 1.02 1.79 2.67 1.27 3.32.97.1-.76.4-1.27.72-1.56-2.55-.3-5.23-1.31-5.23-5.84 0-1.29.45-2.35 1.2-3.18-.12-.3-.52-1.52.12-3.17 0 0 .98-.32 3.2 1.21a10.8 10.8 0 0 1 2.92-.41c.99 0 1.99.14 2.92.41 2.22-1.53 3.2-1.21 3.2-1.21.64 1.65.24 2.87.12 3.17.75.83 1.2 1.89 1.2 3.18 0 4.54-2.68 5.54-5.24 5.83.41.36.78 1.08.78 2.18v3.23c0 .31.22.68.8.57A11.27 11.27 0 0 0 23.25 12C23.25 5.6 18.27.5 12 .5z"
+                />
+              </svg>
+            </a>
+
+            <a
+              class="footerIcon"
+              id="footerLinkedIn"
+              href="#"
+              target="_blank"
+              rel="noopener"
+              aria-label="LinkedIn"
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  d="M4.98 3.5C4.98 4.88 3.87 6 2.5 6S0 4.88 0 3.5 1.12 1 2.5 1 4.98 2.12 4.98 3.5zM0.5 8.5H4.5V23H0.5zM8 8.5h3.8v2h.06c.53-.98 1.83-2.02 3.76-2.02C19.44 8.48 21 10.7 21 15.1V23h-4v-7c0-1.67-.03-3.82-2.33-3.82-2.33 0-2.69 1.82-2.69 3.7V23H8z"
+                />
+              </svg>
+            </a>
+
+            <a
+              class="footerIcon"
+              id="footerX"
+              href="#"
+              target="_blank"
+              rel="noopener"
+              aria-label="X"
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  d="M18.9 2H22l-6.8 7.8L23 22h-6.9l-5.4-6.7L4.9 22H2l7.4-8.5L1 2h7l4.9 6.1L18.9 2Zm-1.2 18h1.7L6.3 3.9H4.5L17.7 20Z"
+                />
+              </svg>
+            </a>
+
+            <a
+              class="footerIcon"
+              id="footerIG"
+              href="#"
+              target="_blank"
+              rel="noopener"
+              aria-label="Instagram"
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5Zm10 2H7a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3Zm-5 4.2A4.8 4.8 0 1 1 7.2 13 4.8 4.8 0 0 1 12 8.2Zm0 2A2.8 2.8 0 1 0 14.8 13 2.8 2.8 0 0 0 12 10.2ZM18.2 6.6a1 1 0 1 1-1 1 1 1 0 0 1 1-1Z"
+                />
+              </svg>
+            </a>
           </div>
         </div>
       </section>
@@ -516,7 +493,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/loaders/GLTFLoader.js"></script>
 
-    <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.net.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
 

@@ -42,27 +42,16 @@ function applyThemeToBackground(theme) {
   if (vantaEffect && typeof vantaEffect.destroy === "function") {
     vantaEffect.destroy();
   }
-
-  vantaEffect = window.VANTA.NET({
-    el: "#bg",
-    mouseControls: true,
-    touchControls: true,
-    gyroControls: false,
-    minHeight: 200,
-    minWidth: 200,
-    scale: 1.0,
-    scaleMobile: 1.0,
-    points: 7.0,
-    maxDistance: 24.0,
-    spacing: 18.0,
-    ...options, // ⚠️ make sure this is ...options (not ".options")
-  });
 }
 
 /* ------------------------------
    Background (Vanta NET)
 ------------------------------ */
 function initBackground() {
+  // If we use the "stars" design, skip Vanta completely
+  const bgMode = document.body.getAttribute("data-bg");
+  if (bgMode === "stars") return;
+
   const reduced =
     window.matchMedia &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -1027,6 +1016,200 @@ function initCustomScrollbar() {
 }
 
 /* ------------------------------
+   Hero stars (canvas)
+   - Only runs for #hero
+------------------------------ */
+function initHeroStars() {
+  const canvas = document.getElementById("heroStars");
+  const hero = document.getElementById("hero");
+  if (!canvas || !hero) return;
+
+  const ctx = canvas.getContext("2d", { alpha: true });
+  if (!ctx) return;
+
+  const reduced =
+    window.matchMedia &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  let w = 0;
+  let h = 0;
+  let dpr = 1;
+
+  const stars = [];
+  const STAR_COUNT = 220; // slightly fewer = smoother
+  let vignette = null;
+
+  function rebuild() {
+    stars.length = 0;
+    for (let i = 0; i < STAR_COUNT; i++) {
+      stars.push({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        r: Math.random() * 1.1 + 0.2,
+        a: Math.random() * 0.65 + 0.08,
+        v: Math.random() * 0.55 + 0.18, // much faster fall
+        vx: (Math.random() - 0.5) * 0.06, // tiny sideways drift
+        tw: Math.random() * 0.025 + 0.006,
+      });
+    }
+  }
+
+  function resize() {
+    dpr = Math.max(1, Math.min(1.6, window.devicePixelRatio || 1));
+    const rect = hero.getBoundingClientRect();
+    w = Math.max(1, Math.floor(rect.width));
+    h = Math.max(1, Math.floor(rect.height));
+
+    canvas.width = Math.floor(w * dpr);
+    canvas.height = Math.floor(h * dpr);
+    canvas.style.width = w + "px";
+    canvas.style.height = h + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    vignette = ctx.createRadialGradient(
+      w * 0.5,
+      h * 0.45,
+      50,
+      w * 0.5,
+      h * 0.45,
+      Math.max(w, h),
+    );
+    vignette.addColorStop(0, "rgba(0,0,0,0)");
+    vignette.addColorStop(1, "rgba(0,0,0,0.55)");
+
+    rebuild();
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, w, h);
+
+    // stars
+    for (const s of stars) {
+      s.y += s.v;
+      s.x += s.vx;
+
+      if (s.y > h + 6) {
+        s.y = -6;
+        s.x = Math.random() * w;
+      }
+      if (s.x < -6) s.x = w + 6;
+      if (s.x > w + 6) s.x = -6;
+
+      s.a += (Math.random() - 0.5) * s.tw;
+      s.a = Math.max(0.08, Math.min(0.8, s.a));
+
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${s.a})`;
+      ctx.fill();
+    }
+
+    // vignette (precomputed)
+    ctx.fillStyle = vignette;
+    ctx.fillRect(0, 0, w, h);
+  }
+
+  let raf = 0;
+  let last = 0;
+  const FRAME_MS = 1000 / 30; // cap to 30fps
+
+  function loop(ts) {
+    if (!last || ts - last >= FRAME_MS) {
+      last = ts;
+      draw();
+    }
+    raf = requestAnimationFrame(loop);
+  }
+
+  resize();
+  window.addEventListener("resize", resize);
+
+  if (!reduced) loop(0);
+  else draw();
+
+  const io = new IntersectionObserver(
+    (entries) => {
+      const vis = entries.some((e) => e.isIntersecting);
+      if (vis && !reduced && !raf) loop(0);
+      if (!vis && raf) {
+        cancelAnimationFrame(raf);
+        raf = 0;
+        last = 0;
+      }
+    },
+    { root: null, threshold: 0.01 },
+  );
+
+  io.observe(hero);
+}
+
+/* ------------------------------
+   Hero skill ticker (red pill)
+------------------------------ */
+function initHeroSkillTicker() {
+  const pill = document.getElementById("skillPill");
+  if (!pill) return;
+
+  const skills = [
+    "SAP Consulting",
+    "ABAP Development",
+    "Fiori / UI5",
+    "CDS & OData",
+    "Integrations",
+    "Automation",
+    "Applied AI",
+  ];
+
+  let i = 0;
+
+  function swap() {
+    pill.classList.add("isOut");
+    window.setTimeout(() => {
+      i = (i + 1) % skills.length;
+      pill.textContent = skills[i];
+      pill.classList.remove("isOut");
+    }, 260);
+  }
+
+  // start from whatever is in HTML, then rotate
+  window.setInterval(swap, 2000);
+}
+
+function initMoreDropdown() {
+  const btn = document.getElementById("moreBtn");
+  const menu = document.getElementById("moreMenu");
+  if (!btn || !menu) return;
+
+  const close = () => {
+    menu.setAttribute("hidden", "");
+    btn.setAttribute("aria-expanded", "false");
+  };
+
+  const open = () => {
+    menu.removeAttribute("hidden");
+    btn.setAttribute("aria-expanded", "true");
+  };
+
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const isOpen = !menu.hasAttribute("hidden");
+    if (isOpen) close();
+    else open();
+  });
+
+  menu.addEventListener("click", (e) => {
+    const a = e.target.closest("a");
+    if (!a) return;
+    close();
+  });
+
+  document.addEventListener("click", close);
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") close();
+  });
+}
+
+/* ------------------------------
    Init
 ------------------------------ */
 async function init() {
@@ -1034,6 +1217,9 @@ async function init() {
   initBackground();
   initDeepFade();
   initHeaderPillNav();
+
+  initHeroStars();
+  initHeroSkillTicker();
 
   initCustomScrollbar();
 
@@ -1095,6 +1281,15 @@ async function init() {
 
   if (xLink) xLink.href = xProfile;
   if (igLink) igLink.href = igProfile;
+
+  const statsBtn = document.getElementById("statsBtn");
+  if (statsBtn) {
+    statsBtn.addEventListener("click", () => {
+      const contact = document.getElementById("contact");
+      if (contact)
+        contact.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
 
   // Resume placeholder (put resume.pdf in repo root)
   const resumeBtn = document.getElementById("resumeBtn");
