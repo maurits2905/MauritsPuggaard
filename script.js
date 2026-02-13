@@ -1827,6 +1827,9 @@ async function renderTechStack() {
   const orbs = items.map((it) => {
     const a = document.createElement("a");
     a.className = "techOrb";
+    a.draggable = false;
+    a.setAttribute("draggable", "false");
+    a.addEventListener("dragstart", (e) => e.preventDefault());
     a.href = it.url || "#";
     a.target = "_blank";
     a.rel = "noopener noreferrer";
@@ -1984,6 +1987,10 @@ async function renderTechStack() {
   let lastX = 0;
   let lastY = 0;
 
+  let dragDist = 0;
+  let didDrag = false;
+  let justDragged = false;
+
   const onDown = (e) => {
     dragging = true;
     stage.classList.add("isDragging");
@@ -1991,6 +1998,9 @@ async function renderTechStack() {
 
     lastX = e.clientX;
     lastY = e.clientY;
+
+    dragDist = 0;
+    didDrag = false;
   };
 
   const onMove = (e) => {
@@ -2001,12 +2011,22 @@ async function renderTechStack() {
     lastX = e.clientX;
     lastY = e.clientY;
 
+    dragDist += Math.abs(dx) + Math.abs(dy);
+    if (dragDist > 6) {
+      didDrag = true;
+    }
+
     // free rotation anywhere (no borders/constraints)
     velY = dx * 0.0042;
     velX = -dy * 0.0032;
   };
 
   const onUp = () => {
+    if (didDrag) {
+      justDragged = true;
+      setTimeout(() => (justDragged = false), 0);
+    }
+
     dragging = false;
     stage.classList.remove("isDragging");
   };
@@ -2015,6 +2035,16 @@ async function renderTechStack() {
   window.addEventListener("pointermove", onMove, { passive: true });
   window.addEventListener("pointerup", onUp, { passive: true });
   window.addEventListener("pointercancel", onUp, { passive: true });
+
+  sphere.addEventListener(
+    "click",
+    (e) => {
+      if (!justDragged) return;
+      e.preventDefault();
+      e.stopPropagation();
+    },
+    true,
+  );
 
   let raf = 0;
 

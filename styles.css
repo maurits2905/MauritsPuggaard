@@ -2922,6 +2922,12 @@ html.noReveal .r,
   touch-action: none; /* we handle drag */
 }
 
+.techSphereStage,
+.techSphereStage * {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
 .techSphereBackdrop {
   position: absolute;
   inset: 0;
