@@ -66,8 +66,10 @@ function initBackground() {
 ------------------------------ */
 
 function initDeepFade() {
-  const career = document.getElementById("career");
-  if (!career) return;
+  // Start blending as we approach the FIRST content section
+  const triggerEl =
+    document.getElementById("about") || document.getElementById("career");
+  if (!triggerEl) return;
 
   let raf = 0;
   const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
@@ -75,10 +77,12 @@ function initDeepFade() {
   function update() {
     raf = 0;
 
-    const r = career.getBoundingClientRect();
+    const r = triggerEl.getBoundingClientRect();
 
-    const start = window.innerHeight * 0.95;
-    const end = window.innerHeight * 0.25;
+    // Start the fade while the trigger is still below the viewport,
+    // so the hero -> content transition feels continuous.
+    const start = window.innerHeight * 1.15; // earlier than before
+    const end = window.innerHeight * 0.35; // finish sooner
     const t = (start - r.top) / (start - end);
 
     const progress = clamp(t, 0, 1);
@@ -92,8 +96,6 @@ function initDeepFade() {
 
   window.addEventListener("scroll", onScroll, { passive: true });
   window.addEventListener("resize", onScroll);
-
-  // Also update when theme toggles (so it switches instantly)
   window.addEventListener("themechange", update);
 
   update();
@@ -1019,10 +1021,12 @@ function initCustomScrollbar() {
    Hero stars (canvas)
    - Only runs for #hero
 ------------------------------ */
-function initHeroStars() {
-  const canvas = document.getElementById("heroStars");
-  const hero = document.getElementById("hero");
-  if (!canvas || !hero) return;
+/* ------------------------------
+   Global stars canvas (whole site)
+------------------------------ */
+function initBgStars() {
+  const canvas = document.getElementById("bgStars");
+  if (!canvas) return;
 
   const ctx = canvas.getContext("2d", { alpha: true });
   if (!ctx) return;
@@ -1036,57 +1040,51 @@ function initHeroStars() {
   let dpr = 1;
 
   const stars = [];
-  const STAR_COUNT = 220; // slightly fewer = smoother
+  const STAR_COUNT = 260; // a bit more since it's global
   let vignette = null;
 
-  function rebuild() {
+  function resize() {
+    dpr = Math.min(2, window.devicePixelRatio || 1);
+    w = Math.floor(window.innerWidth * dpr);
+    h = Math.floor(window.innerHeight * dpr);
+
+    canvas.width = w;
+    canvas.height = h;
+
+    // precompute vignette
+    const g = ctx.createRadialGradient(
+      w * 0.5,
+      h * 0.45,
+      Math.min(w, h) * 0.1,
+      w * 0.5,
+      h * 0.5,
+      Math.min(w, h) * 0.85,
+    );
+    g.addColorStop(0, "rgba(0,0,0,0)");
+    g.addColorStop(1, "rgba(0,0,0,0.55)");
+    vignette = g;
+
+    // rebuild stars
     stars.length = 0;
     for (let i = 0; i < STAR_COUNT; i++) {
       stars.push({
         x: Math.random() * w,
         y: Math.random() * h,
-        r: Math.random() * 1.1 + 0.2,
+        r: Math.random() * 1.2 + 0.2,
         a: Math.random() * 0.65 + 0.08,
-        v: Math.random() * 0.55 + 0.18, // much faster fall
-        vx: (Math.random() - 0.5) * 0.06, // tiny sideways drift
-        tw: Math.random() * 0.025 + 0.006,
+        v: Math.random() * 0.55 + 0.18,
+        tw: Math.random() * 0.02 + 0.006,
       });
     }
-  }
-
-  function resize() {
-    dpr = Math.max(1, Math.min(1.6, window.devicePixelRatio || 1));
-    const rect = hero.getBoundingClientRect();
-    w = Math.max(1, Math.floor(rect.width));
-    h = Math.max(1, Math.floor(rect.height));
-
-    canvas.width = Math.floor(w * dpr);
-    canvas.height = Math.floor(h * dpr);
-    canvas.style.width = w + "px";
-    canvas.style.height = h + "px";
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-    vignette = ctx.createRadialGradient(
-      w * 0.5,
-      h * 0.45,
-      50,
-      w * 0.5,
-      h * 0.45,
-      Math.max(w, h),
-    );
-    vignette.addColorStop(0, "rgba(0,0,0,0)");
-    vignette.addColorStop(1, "rgba(0,0,0,0.55)");
-
-    rebuild();
   }
 
   function draw() {
     ctx.clearRect(0, 0, w, h);
 
-    // stars
+    // stars drift (subtle, but visible)
     for (const s of stars) {
       s.y += s.v;
-      s.x += s.vx;
+      s.x += s.v * 0.12;
 
       if (s.y > h + 6) {
         s.y = -6;
@@ -1095,6 +1093,7 @@ function initHeroStars() {
       if (s.x < -6) s.x = w + 6;
       if (s.x > w + 6) s.x = -6;
 
+      // twinkle
       s.a += (Math.random() - 0.5) * s.tw;
       s.a = Math.max(0.08, Math.min(0.8, s.a));
 
@@ -1104,14 +1103,14 @@ function initHeroStars() {
       ctx.fill();
     }
 
-    // vignette (precomputed)
+    // vignette
     ctx.fillStyle = vignette;
     ctx.fillRect(0, 0, w, h);
   }
 
   let raf = 0;
   let last = 0;
-  const FRAME_MS = 1000 / 30; // cap to 30fps
+  const FRAME_MS = 1000 / 30;
 
   function loop(ts) {
     if (!last || ts - last >= FRAME_MS) {
@@ -1121,26 +1120,23 @@ function initHeroStars() {
     raf = requestAnimationFrame(loop);
   }
 
+  function stop() {
+    if (raf) cancelAnimationFrame(raf);
+    raf = 0;
+    last = 0;
+  }
+
+  // pause when tab is hidden
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) stop();
+    else if (!reduced && !raf) loop(0);
+  });
+
   resize();
   window.addEventListener("resize", resize);
 
   if (!reduced) loop(0);
   else draw();
-
-  const io = new IntersectionObserver(
-    (entries) => {
-      const vis = entries.some((e) => e.isIntersecting);
-      if (vis && !reduced && !raf) loop(0);
-      if (!vis && raf) {
-        cancelAnimationFrame(raf);
-        raf = 0;
-        last = 0;
-      }
-    },
-    { root: null, threshold: 0.01 },
-  );
-
-  io.observe(hero);
 }
 
 /* ------------------------------
@@ -1277,10 +1273,10 @@ function initMoreDropdown() {
 async function init() {
   initTheme();
   initBackground();
-  initDeepFade();
+  //initDeepFade();
   initHeaderPillNav();
 
-  initHeroStars();
+  initBgStars();
   initHeroEarthFX();
   initHeroSkillTicker();
 

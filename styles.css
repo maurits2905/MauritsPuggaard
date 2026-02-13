@@ -185,6 +185,42 @@ input {
   background: #000;
 }
 
+/* Make the hero share the same grain as the rest of the page (removes the seam) */
+#hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1; /* below content, above backgrounds */
+  opacity: 0.08; /* match .bgNoise */
+
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='340' height='340'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='340' height='340' filter='url(%23n)' opacity='.7'/%3E%3C/svg%3E");
+}
+
+/* Smooth hero -> page blend */
+#hero::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+
+  /* make it longer so it fades more smoothly */
+  height: clamp(320px, 40vh, 520px);
+
+  pointer-events: none;
+
+  /* IMPORTANT: keep it behind the planet/glow */
+  z-index: 0;
+
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.55) 45%,
+    rgba(0, 0, 0, 1) 100%
+  );
+}
+
 .heroInner {
   position: relative;
   z-index: 3;
@@ -359,6 +395,22 @@ body[data-bg="stars"] #bg::after {
     linear-gradient(var(--deepBg), var(--deepBg));
 }
 
+body[data-bg="stars"] {
+  background: #000;
+
+  /* Force the whole page base to pure black so the hero fade matches */
+  --bg: #000;
+  --deepBg: #000;
+}
+
+body[data-bg="stars"] #hero {
+  background: transparent;
+}
+
+body[data-bg="stars"] .bgDeep {
+  display: none !important;
+}
+
 /* Fade Vanta net away as deep layer fades in */
 #bg canvas {
   opacity: calc(1 - (var(--deep) * 0.92));
@@ -409,6 +461,17 @@ body[data-bg="stars"] #bg::after {
   opacity: 0.85;
   mix-blend-mode: multiply;
   filter: contrast(1.15) saturate(1.15);
+}
+
+/* Global stars canvas (behind everything) */
+.bgStars {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -2; /* above base bg, below content */
+  pointer-events: none;
+  opacity: 0.9;
 }
 
 /* =========================
@@ -1426,6 +1489,8 @@ html.noReveal .r,
 
 /* Sections */
 .section {
+  position: relative;
+  z-index: 1;
   padding: 56px 0 0;
 }
 
@@ -4071,6 +4136,20 @@ html.noReveal .r,
 
   z-index: 1;
   isolation: isolate;
+
+  /* FIX: fade the top edge so blurred aurora doesn't get "cut" and form a line */
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 1) 18%,
+    rgba(0, 0, 0, 1) 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 1) 18%,
+    rgba(0, 0, 0, 1) 100%
+  );
 }
 
 /* planet + rim (this is the “always visible” border) */
@@ -4116,7 +4195,7 @@ html.noReveal .r,
 
   background: radial-gradient(
     closest-side at 50% 78%,
-    rgba(255, 140, 60, 0.26),
+    rgba(255, 85, 40, 0.3),
     rgba(255, 110, 35, 0.1) 42%,
     transparent 72%
   );
@@ -4136,7 +4215,7 @@ html.noReveal .r,
   background:
     radial-gradient(
       1200px 560px at 50% 82%,
-      rgba(255, 140, 60, 0.24),
+      rgba(255, 85, 40, 0.26),
       rgba(255, 110, 35, 0.1) 44%,
       transparent 74%
     ),
@@ -4240,7 +4319,7 @@ html.noReveal .r,
 
   mix-blend-mode: screen;
   filter: blur(0.9px);
-  opacity: 0.55;
+  opacity: 0.75;
 
   animation: earthRimSweep 22s linear infinite;
   z-index: 4;
