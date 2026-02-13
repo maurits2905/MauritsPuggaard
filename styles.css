@@ -1084,6 +1084,10 @@ html.noReveal .r,
 .heroSpaceInner {
   width: min(980px, 92vw);
   z-index: 2;
+  text-align: center;
+
+  padding-top: calc(var(--navH) + 42px);
+  padding-bottom: 40px;
 }
 
 .heroStars {
@@ -1094,12 +1098,6 @@ html.noReveal .r,
   z-index: 0;
   pointer-events: none;
   opacity: 0.95;
-}
-
-.heroSpaceInner {
-  width: min(980px, 92vw);
-  z-index: 2;
-  text-align: center; /* ✅ center like ref */
 }
 
 .heroNewRow {
@@ -3995,11 +3993,6 @@ html.noReveal .r,
   padding: 0;
 }
 
-.heroSpaceInner {
-  padding-top: calc(var(--navH) + 42px); /* gives the title breathing room */
-  padding-bottom: 40px;
-}
-
 /* =========================
    FINAL HEADER (matches your pic 2)
 ========================= */
@@ -4052,91 +4045,226 @@ html.noReveal .r,
 }
 
 /* =========================
-   EARTH (single source of truth)
-   Put this at the VERY END of styles.css
+   HERO EARTH (final)
+   - stable rim math (always visible)
+   - slower + wider aurora (no “compact” look)
+   - less banding / “waves”
 ========================= */
-
-#hero.heroSpace {
-  overflow: hidden !important;
-  position: relative !important;
+:root {
+  --planetSize: clamp(1400px, 150vw, 2400px);
+  --rimReveal: clamp(110px, 13vh, 160px);
 }
 
-/* Earth container */
+/* container */
 .heroEarth {
-  position: absolute !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  height: clamp(220px, 26vh, 320px) !important;
-  overflow: hidden !important;
-  pointer-events: none !important;
+  --hx: 0;
+  --hy: 0;
 
-  /* behind text, above star canvas */
-  z-index: 1 !important;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  height: clamp(340px, 42vh, 580px);
+  overflow: hidden;
+  pointer-events: none;
+
+  z-index: 1;
+  isolation: isolate;
 }
 
-/* Big planet circle (we only see the rim) */
+/* planet + rim (this is the “always visible” border) */
 .heroEarth::before {
-  content: "" !important;
-  position: absolute !important;
-  left: 50% !important;
-  transform: translateX(-50%) !important;
+  content: "";
+  position: absolute;
+  left: 50%;
+  width: var(--planetSize);
+  height: var(--planetSize);
+  border-radius: 50%;
 
-  width: clamp(1400px, 150vw, 2400px) !important;
-  height: clamp(1400px, 150vw, 2400px) !important;
-  border-radius: 50% !important;
+  /* correct, zoom-proof math */
+  bottom: calc(-1 * (var(--planetSize) - var(--rimReveal)));
 
-  /* show ~140px of the top rim */
-  bottom: calc(-1 * (clamp(1400px, 150vw, 2400px) - 140px)) !important;
+  transform: translateX(calc(-50% + (var(--hx) * 8px)))
+    translateY(calc(var(--hy) * 5px));
 
   background: radial-gradient(
-    circle at 50% 40%,
-    #090909 0%,
-    #000 62%
-  ) !important;
+    circle at 50% 42%,
+    rgba(22, 22, 22, 0.96) 0%,
+    rgba(0, 0, 0, 1) 64%
+  );
 
   box-shadow:
-    0 -2px 0 rgba(255, 255, 255, 0.92),
-    0 -12px 44px rgba(255, 255, 255, 0.12),
-    0 -30px 120px rgba(255, 130, 60, 0.1) !important;
+    0 -2px 0 rgba(255, 255, 255, 0.85),
+    0 -18px 70px rgba(255, 255, 255, 0.07),
+    0 -90px 320px rgba(255, 130, 60, 0.1);
+
+  z-index: 3;
 }
 
-/* Orange atmosphere glow (animated) */
+/* warm base glow (keep subtle) */
 .heroEarth::after {
-  content: "" !important;
-  position: absolute !important;
-  left: 50% !important;
-  transform: translateX(-50%) !important;
-  bottom: -60px !important;
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -12vh;
+  transform: translateX(-50%);
 
-  width: 140% !important;
-  height: 260% !important;
-  border-radius: 999px !important;
+  width: 140%;
+  height: 260%;
+  border-radius: 999px;
 
   background: radial-gradient(
     closest-side at 50% 78%,
-    rgba(255, 120, 40, 0.55),
-    rgba(255, 90, 20, 0.22) 35%,
-    transparent 68%
-  ) !important;
+    rgba(255, 140, 60, 0.26),
+    rgba(255, 110, 35, 0.1) 42%,
+    transparent 72%
+  );
 
-  filter: blur(14px) !important;
-  opacity: 0.95 !important;
-  animation: heroAtmosPulse 6s ease-in-out infinite !important;
-  mix-blend-mode: screen !important;
+  filter: blur(28px);
+  opacity: 0.85;
+  z-index: 1;
 }
 
-@keyframes heroAtmosPulse {
+/* aurora curtains (slower + less banding) */
+.heroEarth .earthAurora {
+  position: absolute;
+  inset: -45% -30% -40% -30%;
+  z-index: 2;
+  pointer-events: none;
+
+  background:
+    radial-gradient(
+      1200px 560px at 50% 82%,
+      rgba(255, 140, 60, 0.24),
+      rgba(255, 110, 35, 0.1) 44%,
+      transparent 74%
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 130, 60, 0) 0px,
+      rgba(255, 130, 60, 0.08) 90px,
+      rgba(255, 130, 60, 0.02) 170px,
+      rgba(255, 130, 60, 0) 260px
+    );
+
+  background-size:
+    100% 100%,
+    1800px 100%;
+  background-position:
+    50% 50%,
+    0% 50%;
+
+  opacity: 0.65;
+  filter: blur(30px) saturate(112%);
+  mix-blend-mode: screen;
+
+  -webkit-mask-image: radial-gradient(
+    1200px 560px at 50% 82%,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 1) 46%,
+    rgba(0, 0, 0, 0) 74%
+  );
+  mask-image: radial-gradient(
+    1200px 560px at 50% 82%,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 1) 46%,
+    rgba(0, 0, 0, 0) 74%
+  );
+
+  transform: translateX(calc(var(--hx) * 12px))
+    translateY(calc(var(--hy) * 6px));
+
+  animation: earthAuroraDrift 22s ease-in-out infinite;
+}
+
+@keyframes earthAuroraDrift {
   0% {
-    opacity: 0.78;
-    transform: translateX(-50%) translateY(0);
+    background-position:
+      50% 50%,
+      0% 50%;
+    opacity: 0.55;
   }
   50% {
-    opacity: 1;
-    transform: translateX(-50%) translateY(-6px);
+    background-position:
+      50% 50%,
+      100% 50%;
+    opacity: 0.78;
   }
   100% {
-    opacity: 0.78;
-    transform: translateX(-50%) translateY(0);
+    background-position:
+      50% 50%,
+      0% 50%;
+    opacity: 0.55;
+  }
+}
+
+/* rim sweep highlight (slow + subtle) */
+.heroEarth .earthRim {
+  position: absolute;
+  left: 50%;
+  width: var(--planetSize);
+  height: var(--planetSize);
+  border-radius: 50%;
+
+  bottom: calc(-1 * (var(--planetSize) - var(--rimReveal)));
+
+  transform: translateX(calc(-50% + (var(--hx) * 8px)))
+    translateY(calc(var(--hy) * 5px));
+
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(255, 255, 255, 0) 304deg,
+    rgba(255, 255, 255, 0.55) 332deg,
+    rgba(255, 255, 255, 0) 352deg,
+    transparent 360deg
+  );
+
+  -webkit-mask-image: radial-gradient(
+    circle at 50% 50%,
+    transparent 0%,
+    transparent 65.6%,
+    rgba(0, 0, 0, 1) 66.9%,
+    rgba(0, 0, 0, 1) 67.8%,
+    transparent 69.2%
+  );
+  mask-image: radial-gradient(
+    circle at 50% 50%,
+    transparent 0%,
+    transparent 65.6%,
+    rgba(0, 0, 0, 1) 66.9%,
+    rgba(0, 0, 0, 1) 67.8%,
+    transparent 69.2%
+  );
+
+  mix-blend-mode: screen;
+  filter: blur(0.9px);
+  opacity: 0.55;
+
+  animation: earthRimSweep 22s linear infinite;
+  z-index: 4;
+}
+
+@keyframes earthRimSweep {
+  0% {
+    transform: translateX(calc(-50% + (var(--hx) * 8px)))
+      translateY(calc(var(--hy) * 5px)) rotate(0deg);
+    opacity: 0.45;
+  }
+  35% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateX(calc(-50% + (var(--hx) * 8px)))
+      translateY(calc(var(--hy) * 5px)) rotate(360deg);
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heroEarth .earthAurora,
+  .heroEarth .earthRim {
+    animation: none !important;
   }
 }

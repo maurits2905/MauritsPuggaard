@@ -1144,6 +1144,68 @@ function initHeroStars() {
 }
 
 /* ------------------------------
+   Hero earth FX (aurora + subtle parallax)
+   - drives CSS vars --hx/--hy used by .heroEarth
+------------------------------ */
+function initHeroEarthFX() {
+  const hero = document.getElementById("hero");
+  const earth = document.querySelector(".heroEarth");
+  if (!hero || !earth) return;
+
+  const reduced =
+    window.matchMedia &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduced) return;
+
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+  let raf = 0;
+  let targetX = 0;
+  let targetY = 0;
+  let curX = 0;
+  let curY = 0;
+
+  function onMove(e) {
+    const r = hero.getBoundingClientRect();
+    const x = (e.clientX - r.left) / Math.max(1, r.width);
+    const y = (e.clientY - r.top) / Math.max(1, r.height);
+
+    // -1..1, then clamped so it stays subtle
+    targetX = clamp((x - 0.5) * 2, -0.65, 0.65);
+    targetY = clamp((y - 0.5) * 2, -0.55, 0.55);
+
+    if (!raf) raf = requestAnimationFrame(tick);
+  }
+
+  function tick() {
+    raf = 0;
+
+    // smoother + slower
+    curX += (targetX - curX) * 0.04;
+    curY += (targetY - curY) * 0.04;
+
+    earth.style.setProperty("--hx", curX.toFixed(3));
+    earth.style.setProperty("--hy", curY.toFixed(3));
+
+    // keep easing if we're not close yet
+    if (Math.abs(targetX - curX) > 0.002 || Math.abs(targetY - curY) > 0.002) {
+      raf = requestAnimationFrame(tick);
+    }
+  }
+
+  hero.addEventListener("pointermove", onMove, { passive: true });
+  hero.addEventListener(
+    "pointerleave",
+    () => {
+      targetX = 0;
+      targetY = 0;
+      if (!raf) raf = requestAnimationFrame(tick);
+    },
+    { passive: true },
+  );
+}
+
+/* ------------------------------
    Hero skill ticker (red pill)
 ------------------------------ */
 function initHeroSkillTicker() {
@@ -1219,6 +1281,7 @@ async function init() {
   initHeaderPillNav();
 
   initHeroStars();
+  initHeroEarthFX();
   initHeroSkillTicker();
 
   initCustomScrollbar();
