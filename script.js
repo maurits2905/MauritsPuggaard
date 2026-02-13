@@ -1297,6 +1297,14 @@ async function init() {
   const xProfile = "https://x.com/maurits2905";
   const igProfile = "https://www.instagram.com/maurits2905/";
 
+  initContactSheet({
+    emailPrivate,
+    githubProfile,
+    linkedinProfile,
+    xProfile,
+    igProfile,
+  });
+
   // Header email (private only)
   const topEmail = document.getElementById("topEmail");
   if (topEmail) {
@@ -1341,13 +1349,99 @@ async function init() {
   if (xLink) xLink.href = xProfile;
   if (igLink) igLink.href = igProfile;
 
-  const statsBtn = document.getElementById("statsBtn");
-  if (statsBtn) {
-    statsBtn.addEventListener("click", () => {
-      const contact = document.getElementById("contact");
-      if (contact)
-        contact.scrollIntoView({ behavior: "smooth", block: "start" });
+  function initContactSheet({
+    emailPrivate,
+    githubProfile,
+    linkedinProfile,
+    xProfile,
+    igProfile,
+  }) {
+    const openBtn = document.getElementById("statsBtn");
+    const overlay = document.getElementById("contactOverlay");
+    const sheet = document.getElementById("contactSheet");
+    const closeBtn = document.getElementById("contactClose");
+    const copyBtn = document.getElementById("contactCopyBtn");
+    const copyValue = document.getElementById("contactCopyValue");
+
+    const emailLink = document.getElementById("contactEmailLink");
+    const callLink = document.getElementById("contactCallLink");
+
+    const ghMini = document.getElementById("contactGhMini");
+    const liMini = document.getElementById("contactLiMini");
+    const xMini = document.getElementById("contactXMini");
+    const igMini = document.getElementById("contactIgMini");
+
+    if (!openBtn || !overlay || !sheet || !closeBtn) return;
+
+    // Wire links
+    if (emailLink) emailLink.href = `mailto:${emailPrivate}`;
+    if (callLink)
+      callLink.href = `mailto:${emailPrivate}?subject=Call%20request&body=Hey%20Maurits%2C%0A%0AI'd%20love%20to%20book%20a%2030%20min%20call.%20Here%20are%20a%20few%20times%20that%20work%20for%20me%3A%0A-%20%0A-%20%0A%0AThanks!`;
+
+    if (ghMini) ghMini.href = githubProfile;
+    if (liMini) liMini.href = linkedinProfile;
+    if (xMini) xMini.href = xProfile;
+    if (igMini) igMini.href = igProfile;
+
+    if (copyValue) copyValue.textContent = emailPrivate;
+
+    let lastFocus = null;
+
+    const open = () => {
+      lastFocus = document.activeElement;
+      document.body.classList.add("contactOpen");
+      overlay.hidden = false;
+      sheet.setAttribute("aria-hidden", "false");
+
+      // focus close for accessibility
+      closeBtn.focus({ preventScroll: true });
+    };
+
+    const close = () => {
+      document.body.classList.remove("contactOpen");
+      sheet.setAttribute("aria-hidden", "true");
+
+      // let the animation finish, then hide overlay so it doesn't block clicks
+      window.setTimeout(() => {
+        overlay.hidden = true;
+      }, 240);
+
+      if (lastFocus && typeof lastFocus.focus === "function") {
+        lastFocus.focus({ preventScroll: true });
+      }
+    };
+
+    openBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      open();
     });
+
+    closeBtn.addEventListener("click", close);
+
+    overlay.addEventListener("click", close);
+
+    window.addEventListener("keydown", (e) => {
+      if (!document.body.classList.contains("contactOpen")) return;
+      if (e.key === "Escape") close();
+    });
+
+    if (copyBtn) {
+      copyBtn.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(emailPrivate);
+          copyBtn.classList.add("copied");
+          const label = copyBtn.querySelector(".copyText");
+          if (label) {
+            const old = label.textContent;
+            label.textContent = "Copied!";
+            window.setTimeout(() => (label.textContent = old), 900);
+          }
+        } catch {
+          // fallback: open mail client if clipboard blocked
+          window.location.href = `mailto:${emailPrivate}`;
+        }
+      });
+    }
   }
 
   // Resume placeholder (put resume.pdf in repo root)
@@ -2234,4 +2328,130 @@ if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", renderTechStack);
 } else {
   renderTechStack();
+}
+
+function initContactSheetUI() {
+  const openBtn = document.getElementById("statsBtn"); // your header Contact button
+  const overlay = document.getElementById("contactOverlay");
+  const sheet = document.getElementById("contactSheet");
+  const closeBtn = document.getElementById("contactClose");
+  const copyBtn = document.getElementById("contactCopyBtn");
+
+  if (!openBtn || !overlay || !sheet || !closeBtn) return;
+
+  // Profiles (keep in ONE place)
+  const emailPrivate = "maurits.pug@gmail.com";
+  const linkedinProfile =
+    "https://www.linkedin.com/in/maurits-puggaard-4095351b0/";
+  const githubProfile = "https://github.com/maurits2905";
+  const xProfile = "https://x.com/maurits2905";
+  const igProfile = "https://www.instagram.com/maurits2905/";
+
+  // Wire sheet links
+  const emailLink = document.getElementById("contactEmailLink");
+  if (emailLink) emailLink.href = `mailto:${emailPrivate}`;
+
+  const liLink = document.getElementById("contactLinkedInLink");
+  if (liLink) liLink.href = linkedinProfile;
+
+  // Wire mini links (optional but nice)
+  const ghMini = document.getElementById("contactGhMini");
+  const liMini = document.getElementById("contactLiMini");
+  const xMini = document.getElementById("contactXMini");
+  const igMini = document.getElementById("contactIgMini");
+
+  if (ghMini) ghMini.href = githubProfile;
+  if (liMini) liMini.href = linkedinProfile;
+  if (xMini) xMini.href = xProfile;
+  if (igMini) igMini.href = igProfile;
+
+  let isOpen = false;
+  let scrollY = 0;
+
+  const open = () => {
+    if (isOpen) return;
+    isOpen = true;
+
+    scrollY = window.scrollY || 0;
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.left = "0";
+    document.body.style.right = "0";
+    document.body.style.width = "100%";
+
+    overlay.hidden = false;
+    overlay.classList.add("isOpen");
+    sheet.classList.add("isOpen");
+    sheet.setAttribute("aria-hidden", "false");
+
+    // focus close for accessibility
+    setTimeout(() => closeBtn.focus(), 50);
+  };
+
+  const close = () => {
+    if (!isOpen) return;
+    isOpen = false;
+
+    overlay.classList.remove("isOpen");
+    sheet.classList.remove("isOpen");
+    sheet.setAttribute("aria-hidden", "true");
+
+    // wait for slide-down to finish then hide overlay
+    setTimeout(() => {
+      overlay.hidden = true;
+
+      document.body.style.position = "";
+      const top = document.body.style.top;
+      document.body.style.top = "";
+      document.body.style.left = "";
+      document.body.style.right = "";
+      document.body.style.width = "";
+
+      const restore = Math.abs(parseInt(top || "0", 10)) || scrollY;
+      window.scrollTo(0, restore);
+    }, 280);
+  };
+
+  openBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    open();
+  });
+
+  closeBtn.addEventListener("click", close);
+
+  overlay.addEventListener("click", close);
+
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") close();
+  });
+
+  if (copyBtn) {
+    copyBtn.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(emailPrivate);
+        copyBtn.classList.add("isCopied");
+        const old = copyBtn.querySelector(".copyText")?.textContent;
+        const label = copyBtn.querySelector(".copyText");
+        if (label) label.textContent = "Copied!";
+        setTimeout(() => {
+          if (label && old) label.textContent = old;
+          copyBtn.classList.remove("isCopied");
+        }, 1100);
+      } catch {
+        // fallback
+        const ta = document.createElement("textarea");
+        ta.value = emailPrivate;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        ta.remove();
+      }
+    });
+  }
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initContactSheetUI);
+} else {
+  initContactSheetUI();
 }

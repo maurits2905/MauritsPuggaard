@@ -4726,3 +4726,312 @@ html.noReveal .r,
 .techNetSvg path.back {
   stroke: rgba(255, 120, 150, 0.12);
 }
+
+/* =========================
+   CONTACT SHEET (Get in touch) — FINAL (single source of truth)
+========================= */
+
+:root {
+  --contact-red: rgba(255, 88, 58, 1);
+}
+
+/* blurred background */
+.contactOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9990;
+  background: rgba(0, 0, 0, 0.42);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  opacity: 0;
+  transition: opacity 240ms ease;
+}
+
+.contactOverlay.isOpen {
+  opacity: 1;
+}
+
+/* bottom sheet wrapper */
+.contactSheet {
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  transform: translate(-50%, 120%);
+  z-index: 9991;
+  width: min(520px, calc(100vw - 28px));
+  transition: transform 280ms cubic-bezier(0.2, 0.9, 0.2, 1);
+  will-change: transform;
+}
+
+.contactSheet.isOpen {
+  transform: translate(-50%, 0%);
+}
+
+/* card */
+.contactSheetInner {
+  position: relative;
+  border-radius: 22px;
+  padding: 18px 18px 16px;
+
+  /* darker, closer to reference */
+  background: linear-gradient(
+    180deg,
+    rgba(22, 22, 26, 0.92),
+    rgba(12, 12, 14, 0.92)
+  );
+
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 30px 90px rgba(0, 0, 0, 0.72),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+
+  overflow: hidden;
+}
+
+/* tiny handle at top (reference detail) */
+.contactSheetInner::before {
+  content: "";
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 46px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+/* subtle red glow wash (slightly red like you asked) */
+.contactSheetInner::after {
+  content: "";
+  position: absolute;
+  inset: -120px -160px auto -160px;
+  height: 220px;
+  pointer-events: none;
+  background: radial-gradient(
+    closest-side,
+    rgba(255, 88, 58, 0.34),
+    rgba(255, 88, 58, 0.14),
+    transparent 70%
+  );
+  filter: blur(14px);
+  opacity: 0.95;
+}
+
+.contactClose {
+  position: absolute;
+  right: 14px;
+  top: 12px;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.88);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  line-height: 1;
+  z-index: 2;
+}
+
+.contactClose:hover {
+  transform: translateY(-1px);
+}
+
+.contactTitle {
+  margin: 26px 0 2px;
+  font-size: 46px;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  font-weight: 900;
+  position: relative;
+  z-index: 1;
+}
+
+.contactSub {
+  margin: 0 0 14px;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 13px;
+  position: relative;
+  z-index: 1;
+}
+
+/* tiles should be like reference: icon top, text below (not side-by-side) */
+.contactActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 10px;
+  position: relative;
+  z-index: 1;
+}
+
+.contactTile {
+  text-decoration: none;
+  color: rgba(255, 255, 255, 0.92);
+  border-radius: 16px;
+  padding: 16px;
+
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 110px;
+
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease;
+}
+
+.contactTile:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 88, 58, 0.35);
+  background: rgba(255, 255, 255, 0.075);
+}
+
+.tileIcon {
+  width: 30px;
+  height: 30px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  overflow: visible; /* important: don't clip SVG */
+  color: rgba(255, 88, 58, 0.95);
+  background: rgba(255, 88, 58, 0.12);
+  border: 1px solid rgba(255, 88, 58, 0.22);
+}
+
+.tileIcon svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+  overflow: visible; /* important */
+}
+
+.tileText .tileTop {
+  font-weight: 750;
+  font-size: 13px;
+  margin-bottom: 3px;
+}
+
+.tileText .tileBottom {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.contactDivider {
+  height: 1px;
+  margin: 14px 0;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.06),
+    rgba(255, 255, 255, 0.14),
+    rgba(255, 255, 255, 0.06)
+  );
+}
+
+.contactBottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 0; /* guard */
+}
+
+.copyRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.72);
+  cursor: pointer;
+}
+
+.copyRow:hover {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.copyIcon svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+  opacity: 0.75;
+}
+
+.copyText {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.copyValue {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* keep mini links compact so they don't force weird wrapping */
+.contactMiniLinks {
+  display: flex;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+.miniLink {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  text-decoration: none;
+
+  color: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.miniLink svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+  opacity: 0.9;
+}
+
+.miniLink:hover {
+  border-color: rgba(255, 88, 58, 0.35);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+/* mobile */
+@media (max-width: 520px) {
+  .contactTitle {
+    font-size: 40px;
+  }
+
+  .contactActions {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .copyValue {
+    max-width: 40vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+/* reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  .contactSheet,
+  .contactOverlay {
+    transition: none !important;
+  }
+}
