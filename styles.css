@@ -1412,12 +1412,6 @@ html.noReveal .r,
   .heroNewChip {
     font-size: 12px;
   }
-
-  .heroEarth {
-    bottom: -300px;
-    width: 980px;
-    height: 520px;
-  }
 }
 
 .scrollLine {
@@ -4061,6 +4055,13 @@ html.noReveal .r,
    EARTH (single source of truth)
    Put this at the VERY END of styles.css
 ========================= */
+
+#hero.heroSpace {
+  overflow: hidden !important;
+  position: relative !important;
+}
+
+/* Earth container */
 .heroEarth {
   position: absolute !important;
   left: 0 !important;
@@ -4070,7 +4071,7 @@ html.noReveal .r,
   overflow: hidden !important;
   pointer-events: none !important;
 
-  /* keep earth behind content, but above the star canvas */
+  /* behind text, above star canvas */
   z-index: 1 !important;
 }
 
@@ -4085,8 +4086,8 @@ html.noReveal .r,
   height: clamp(1400px, 150vw, 2400px) !important;
   border-radius: 50% !important;
 
-  /* push it down so only the top rim is visible */
-  bottom: calc(-1 * clamp(980px, 92vw, 1500px)) !important;
+  /* show ~140px of the top rim */
+  bottom: calc(-1 * (clamp(1400px, 150vw, 2400px) - 140px)) !important;
 
   background: radial-gradient(
     circle at 50% 40%,
@@ -4094,14 +4095,10 @@ html.noReveal .r,
     #000 62%
   ) !important;
 
-  /* rim */
   box-shadow:
     0 -2px 0 rgba(255, 255, 255, 0.92),
     0 -12px 44px rgba(255, 255, 255, 0.12),
     0 -30px 120px rgba(255, 130, 60, 0.1) !important;
-
-  /* force rim above atmosphere */
-  z-index: 2 !important;
 }
 
 /* Orange atmosphere glow (animated) */
@@ -4126,11 +4123,6 @@ html.noReveal .r,
   filter: blur(14px) !important;
   opacity: 0.95 !important;
   animation: heroAtmosPulse 6s ease-in-out infinite !important;
-
-  /* keep glow under the rim */
-  z-index: 1 !important;
-
-  /* makes the glow feel more “light” instead of “paint” */
   mix-blend-mode: screen !important;
 }
 
