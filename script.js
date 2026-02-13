@@ -1793,21 +1793,61 @@ function tileHTML(item) {
 }
 
 async function renderTechStack() {
-  const root = document.getElementById("techGrid");
-  if (!root) return;
+  const mount = document.getElementById("techGrid");
+  if (!mount) return;
 
-  root.innerHTML = TECH_GROUPS.map(
-    (group) => `
-    <div class="tech-group">
-      <div class="tech-group-title">${group.title}</div>
-      <div class="tech-grid">
-        ${group.items.map(tileHTML).join("")}
-      </div>
+  // Flatten your existing groups into one list (keeps your data source)
+  const items = (TECH_GROUPS || []).flatMap((g) =>
+    (g.items || []).map((it) => ({ ...it, group: g.title })),
+  );
+
+  // Build stage (sphere)
+  mount.innerHTML = `
+    <div class="techSphereStage" id="techSphereStage">
+      <div class="techSphereBackdrop" aria-hidden="true"></div>
+      <div class="techSphereBall" id="techSphereBall" aria-hidden="true"></div>
+      <svg class="techNetSvg" id="techNetSvg" aria-hidden="true"></svg>
+
+      <div class="techSphere" id="techSphere"></div>
+      <div class="techSphereHint" aria-hidden="true">Drag to rotate • Hover to highlight</div>
     </div>
-  `,
-  ).join("");
+  `;
 
-  const iconHolders = [...root.querySelectorAll(".tech-icon[data-icon]")];
+  const stage = document.getElementById("techSphereStage");
+  const ball = document.getElementById("techSphereBall");
+  const net = document.getElementById("techSphereNet");
+  const sphere = document.getElementById("techSphere");
+  if (!stage || !sphere || !ball) return;
+
+  const reduced =
+    window.matchMedia &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // Create orbs
+  const orbs = items.map((it) => {
+    const a = document.createElement("a");
+    a.className = "techOrb";
+    a.href = it.url || "#";
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    a.setAttribute("aria-label", `${it.name} (opens official site)`);
+
+    a.innerHTML = `
+      <span class="techOrbIcon" data-icon="${it.slug || ""}" aria-hidden="true"></span>
+      <span class="techOrbLabel">${escapeHtml(it.name || "")}</span>
+    `;
+
+    a.addEventListener("mouseenter", () => a.classList.add("isHot"));
+    a.addEventListener("mouseleave", () => a.classList.remove("isHot"));
+    a.addEventListener("focus", () => a.classList.add("isHot"));
+    a.addEventListener("blur", () => a.classList.remove("isHot"));
+
+    sphere.appendChild(a);
+    return a;
+  });
+
+  // Load icons using your existing icon pipeline
+  const iconHolders = [...sphere.querySelectorAll(".techOrbIcon[data-icon]")];
 
   await Promise.all(
     iconHolders.map(async (el) => {
@@ -1824,6 +1864,339 @@ async function renderTechStack() {
       }
     }),
   );
+
+  // --- Sphere math / animation ---
+  const N = orbs.length;
+  const points = [];
+  const golden = Math.PI * (3 - Math.sqrt(5)); // ~2.399.
+
+  for (let i = 0; i < N; i++) {
+    // Fibonacci sphere distribution
+    const y = 1 - (i / Math.max(1, N - 1)) * 2; // 1..-1
+    const r = Math.sqrt(Math.max(0, 1 - y * y));
+    const theta = golden * i;
+    const x = Math.cos(theta) * r;
+    const z = Math.sin(theta) * r;
+    points.push({ x, y, z });
+  }
+
+  // Use the BALL element as the true center/radius so icons never drift off the sphere
+  let cx = 0;
+  let cy = 0;
+  let radius = 240;
+
+  const measure = () => {
+    const sr = stage.getBoundingClientRect();
+    const br = ball.getBoundingClientRect();
+
+    cx = br.left - sr.left + br.width / 2;
+    cy = br.top - sr.top + br.height / 2;
+    radius = (br.width / 2) * 0.96; // keep icons slightly “inside” the edge
+  };
+  measure();
+  window.addEventListener("resize", () => requestAnimationFrame(measure));
+
+  const netSvg = document.getElementById("techNetSvg");
+
+  const NET_LAT = 8; // rings
+  const NET_LON = 10; // longitudes
+  const NET_STEPS = 72;
+
+  const netPaths = [];
+  function buildNet() {
+    if (!netSvg) return;
+    netSvg.innerHTML = "";
+    netPaths.length = 0;
+
+    // Set a viewBox so we can draw in "ball-space" pixels
+    netSvg.setAttribute("viewBox", "0 0 1000 1000");
+    netSvg.setAttribute("preserveAspectRatio", "none");
+
+    const makePath = (cls) => {
+      const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      if (cls) p.setAttribute("class", cls);
+      netSvg.appendChild(p);
+      return p;
+    };
+
+    // latitude rings: front + back
+    for (let i = 1; i <= NET_LAT; i++) {
+      const front = makePath("front");
+      const back = makePath("back");
+      netPaths.push({ kind: "lat", idx: i, front, back });
+    }
+
+    // longitude lines: front + back
+    for (let i = 0; i < NET_LON; i++) {
+      const front = makePath("front");
+      const back = makePath("back");
+      netPaths.push({ kind: "lon", idx: i, front, back });
+    }
+  }
+  buildNet();
+
+  // --- Intro "fly in" when section becomes visible ---
+  let introActive = false;
+  let introStart = 0;
+  const introPos = points.map(() => ({ x: 0, y: 0 }));
+
+  const startIntro = () => {
+    if (introActive || reduced) return;
+    introActive = true;
+    introStart = performance.now();
+
+    const sr = stage.getBoundingClientRect();
+    for (let i = 0; i < N; i++) {
+      const fromLeft = Math.random() < 0.5;
+      introPos[i].x = fromLeft
+        ? -sr.width * (0.25 + Math.random() * 0.35)
+        : sr.width * (1.25 + Math.random() * 0.35);
+      introPos[i].y = sr.height * (0.2 + Math.random() * 0.6);
+    }
+  };
+
+  const io = new IntersectionObserver(
+    (entries) => {
+      if (entries.some((en) => en.isIntersecting)) {
+        startIntro();
+        io.disconnect();
+      }
+    },
+    { threshold: 0.35 },
+  );
+  io.observe(stage);
+
+  requestAnimationFrame(() => {
+    const r = stage.getBoundingClientRect();
+    const inView =
+      r.top < window.innerHeight * 0.8 && r.bottom > window.innerHeight * 0.2;
+    if (inView) startIntro();
+  });
+
+  // Rotation state
+  let rotX = -0.25;
+  let rotY = 0.55;
+  let velX = 0.0;
+  let velY = 0.0;
+
+  // Drag
+  let dragging = false;
+  let lastX = 0;
+  let lastY = 0;
+
+  const onDown = (e) => {
+    dragging = true;
+    stage.classList.add("isDragging");
+    stage.setPointerCapture?.(e.pointerId);
+
+    lastX = e.clientX;
+    lastY = e.clientY;
+  };
+
+  const onMove = (e) => {
+    if (!dragging) return;
+
+    const dx = e.clientX - lastX;
+    const dy = e.clientY - lastY;
+    lastX = e.clientX;
+    lastY = e.clientY;
+
+    // free rotation anywhere (no borders/constraints)
+    velY = dx * 0.0042;
+    velX = -dy * 0.0032;
+  };
+
+  const onUp = () => {
+    dragging = false;
+    stage.classList.remove("isDragging");
+  };
+
+  stage.addEventListener("pointerdown", onDown);
+  window.addEventListener("pointermove", onMove, { passive: true });
+  window.addEventListener("pointerup", onUp, { passive: true });
+  window.addEventListener("pointercancel", onUp, { passive: true });
+
+  let raf = 0;
+
+  const tick = () => {
+    // Idle drift
+    if (!dragging) {
+      velY += 0.00022;
+      velX += 0.00008;
+    }
+
+    // Apply velocity (damping)
+    rotX += velX;
+    rotY += velY;
+    velX *= 0.92;
+    velY *= 0.92;
+
+    const sx = Math.sin(rotX);
+    const cxr = Math.cos(rotX);
+    const sy = Math.sin(rotY);
+    const cyr = Math.cos(rotY);
+
+    // ===== 3D Wireframe Update (front/back split) =====
+    if (netSvg && netPaths.length) {
+      const R = 500;
+      const C = 500;
+
+      // simple perspective factor (makes it feel more spherical)
+      const persp = 0.28;
+
+      const project = (px, py, pz) => {
+        // rotate Y
+        const x1 = px * cyr + pz * sy;
+        const z1 = -px * sy + pz * cyr;
+
+        // rotate X
+        const y2 = py * cxr - z1 * sx;
+        const z2 = py * sx + z1 * cxr;
+
+        // depth 0..1
+        const depth = (z2 + 1) / 2;
+
+        // subtle perspective
+        const k = 1 + (depth - 0.5) * persp;
+
+        return { x: C + x1 * R * k, y: C + y2 * R * k, depth };
+      };
+
+      const buildPath = (pts) => {
+        let d = "";
+        for (let i = 0; i < pts.length; i++) {
+          const p = pts[i];
+          d +=
+            (i === 0 ? "M" : "L") + p.x.toFixed(2) + " " + p.y.toFixed(2) + " ";
+        }
+        return d.trim();
+      };
+
+      const H = 0.5; // hemisphere split
+      const EPS = 0.02; // small hysteresis band to avoid flicker on the edge
+
+      const pushD = (d, p, move) =>
+        d + (move ? "M" : "L") + p.x.toFixed(2) + " " + p.y.toFixed(2) + " ";
+
+      for (const seg of netPaths) {
+        let dFront = "";
+        let dBack = "";
+
+        let prevSide = null; // "front" | "back"
+        let frontMove = true;
+        let backMove = true;
+
+        const addPoint = (pr) => {
+          const side =
+            pr.depth > H + EPS
+              ? "front"
+              : pr.depth < H - EPS
+                ? "back"
+                : prevSide || "front";
+
+          // When side changes, break the path so SVG doesn’t draw a straight line across
+          if (side !== prevSide) {
+            if (side === "front") frontMove = true;
+            else backMove = true;
+          }
+
+          if (side === "front") {
+            dFront = pushD(dFront, pr, frontMove);
+            frontMove = false;
+          } else {
+            dBack = pushD(dBack, pr, backMove);
+            backMove = false;
+          }
+
+          prevSide = side;
+        };
+
+        if (seg.kind === "lat") {
+          const t = seg.idx / (NET_LAT + 1);
+          const y = 1 - t * 2;
+          const rr = Math.sqrt(Math.max(0, 1 - y * y));
+
+          for (let s = 0; s <= NET_STEPS; s++) {
+            const a = (s / NET_STEPS) * Math.PI * 2;
+            const px = Math.cos(a) * rr;
+            const pz = Math.sin(a) * rr;
+            addPoint(project(px, y, pz));
+          }
+        } else {
+          const a0 = (seg.idx / NET_LON) * Math.PI * 2;
+
+          for (let s = 0; s <= NET_STEPS; s++) {
+            const t = s / NET_STEPS;
+            const y = 1 - t * 2;
+            const rr = Math.sqrt(Math.max(0, 1 - y * y));
+            const px = Math.cos(a0) * rr;
+            const pz = Math.sin(a0) * rr;
+            addPoint(project(px, y, pz));
+          }
+        }
+
+        seg.front.setAttribute("d", dFront.trim());
+        seg.back.setAttribute("d", dBack.trim());
+
+        seg.front.style.opacity = "0.55";
+        seg.back.style.opacity = "0.22";
+      }
+    }
+
+    for (let i = 0; i < N; i++) {
+      const p = points[i];
+
+      // Rotate around Y
+      const x1 = p.x * cyr + p.z * sy;
+      const z1 = -p.x * sy + p.z * cyr;
+
+      // Rotate around X
+      const y2 = p.y * cxr - z1 * sx;
+      const z2 = p.y * sx + z1 * cxr;
+
+      // Depth: 0..1 (back..front)
+      const depth = (z2 + 1) / 2;
+      const front = Math.max(0, Math.min(1, (depth - 0.25) / 0.75));
+
+      // Project to 2D (always anchored to the ball center/radius)
+      const x = cx + x1 * radius;
+      const y = cy + y2 * radius;
+
+      // Larger in front, smaller at edge/back
+      const s = 0.55 + front * 0.78;
+
+      const el = orbs[i];
+      el.style.setProperty("--front", front.toFixed(3));
+
+      // Intro lerp: icons fly in from left/right, then fully dynamic
+      let px = x;
+      let py = y;
+      if (introActive) {
+        const t = Math.min(1, (performance.now() - introStart) / 900);
+        const ease = 1 - Math.pow(1 - t, 3); // easeOutCubic
+        px = introPos[i].x + (x - introPos[i].x) * ease;
+        py = introPos[i].y + (y - introPos[i].y) * ease;
+        if (t >= 1) introActive = false;
+      }
+
+      el.style.transform = `translate3d(${px}px, ${py}px, 0) translate(-50%, -50%) scale(${s})`;
+      el.style.zIndex = String(10 + Math.floor(front * 200));
+      el.style.opacity = String(0.22 + front * 0.78);
+      el.style.filter = `blur(${(1 - front) * 0.75}px)`;
+      el.style.pointerEvents = front < 0.08 ? "none" : "auto";
+    }
+
+    raf = requestAnimationFrame(tick);
+  };
+
+  if (!reduced) tick();
+}
+
+// run when ready
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", renderTechStack);
+} else {
+  renderTechStack();
 }
 
 // run when ready
