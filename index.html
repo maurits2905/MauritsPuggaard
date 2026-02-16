@@ -219,45 +219,74 @@
           </article>
 
           <!-- Info: hover to read more -->
-          <article class="aboutCard aboutCard--info r" aria-label="Highlights">
+          <!-- Info: hover to read more -->
+          <article
+            class="aboutCard aboutCard--info aboutHover r"
+            aria-label="Highlights"
+            data-active="-1"
+          >
             <div class="aboutInfoHint">HOVER TO READ MORE</div>
 
-            <div class="aboutInfoRow">
-              <div class="aboutInfoItem">
-                <div class="aboutInfoTitle">SAP</div>
-                <div class="aboutInfoShort">
-                  SAP Technical Consultant at 2BM. ABAP, CDS/OData, UI5…
+            <div class="aboutHoverDeck" role="list">
+              <button
+                class="aboutHoverTile"
+                type="button"
+                data-idx="0"
+                role="listitem"
+                aria-label="SAP"
+              >
+                <div class="aboutHoverLabel">SAP</div>
+                <div class="aboutHoverText">
+                  <div class="aboutHoverShort">
+                    SAP Technical Consultant at 2BM. ABAP, CDS/OData, UI5…
+                  </div>
+                  <div class="aboutHoverFull">
+                    SAP Technical Consultant at 2BM. I build and extend S/4
+                    solutions end-to-end: ABAP, CDS/OData, UI5/Fiori,
+                    integrations, and automation that saves people time.
+                  </div>
                 </div>
-                <div class="aboutInfoFull">
-                  SAP Technical Consultant at 2BM. I build and extend S/4
-                  solutions end-to-end: ABAP, CDS/OData, UI5/Fiori,
-                  integrations, and automation that saves people time.
-                </div>
-              </div>
+              </button>
 
-              <div class="aboutInfoItem">
-                <div class="aboutInfoTitle">BUILDING</div>
-                <div class="aboutInfoShort">
-                  Tools and demos on GitHub Pages. Focus on clean UX.
+              <button
+                class="aboutHoverTile"
+                type="button"
+                data-idx="1"
+                role="listitem"
+                aria-label="Building"
+              >
+                <div class="aboutHoverLabel">BUILDING</div>
+                <div class="aboutHoverText">
+                  <div class="aboutHoverShort">
+                    Tools and demos on GitHub Pages. Focus on clean UX.
+                  </div>
+                  <div class="aboutHoverFull">
+                    I ship small, useful web tools (Excel Merger, Work Time
+                    Calculator, AI prototypes). I care about fast UI,
+                    reliability, and “no surprises” behavior.
+                  </div>
                 </div>
-                <div class="aboutInfoFull">
-                  I ship small, useful web tools (Excel Merger, Work Time
-                  Calculator, AI prototypes). I care about fast UI, reliability,
-                  and “no surprises” behavior.
-                </div>
-              </div>
+              </button>
 
-              <div class="aboutInfoItem">
-                <div class="aboutInfoTitle">MINDSET</div>
-                <div class="aboutInfoShort">
-                  Structured, detail-driven, and practical.
+              <button
+                class="aboutHoverTile"
+                type="button"
+                data-idx="2"
+                role="listitem"
+                aria-label="Mindset"
+              >
+                <div class="aboutHoverLabel">MINDSET</div>
+                <div class="aboutHoverText">
+                  <div class="aboutHoverShort">
+                    Structured, detail-driven, and practical.
+                  </div>
+                  <div class="aboutHoverFull">
+                    I like constraints, clear priorities, and finishing things
+                    properly. I’d rather deliver a smaller thing that works
+                    perfectly than a big messy one.
+                  </div>
                 </div>
-                <div class="aboutInfoFull">
-                  I like constraints, clear priorities, and finishing things
-                  properly. I’d rather deliver a smaller thing that works
-                  perfectly than a big messy one.
-                </div>
-              </div>
+              </button>
             </div>
           </article>
 

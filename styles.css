@@ -5261,6 +5261,11 @@ html.noReveal .r,
   border-radius: 999px;
 }
 
+.aboutCard--info.aboutHover .aboutInfoHint {
+  position: relative;
+  z-index: 20;
+}
+
 .aboutInfoRow {
   display: grid;
   gap: 10px;
@@ -5309,6 +5314,247 @@ html.noReveal .r,
   }
   .aboutInfoItem:hover .aboutInfoFull {
     display: block;
+  }
+}
+
+/* --- Info card: 3-topic hover deck (CARD-HAND version) --- */
+
+/* Matte container look for the info hover card (override the red wash on .aboutCard) */
+.aboutCard--info.aboutHover {
+  background: #0a0b0f !important;
+  border-color: rgba(255, 32, 68, 0.28) !important;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.52) !important;
+}
+
+.aboutCard--info.aboutHover::before {
+  background: radial-gradient(
+    900px 420px at 50% 12%,
+    rgba(255, 32, 68, 0.08),
+    transparent 62%
+  ) !important;
+  opacity: 0.7 !important;
+}
+
+.aboutCard--info.aboutHover {
+  padding: 18px 18px 16px;
+  overflow: hidden;
+}
+
+.aboutHoverDeck {
+  position: relative;
+  height: 180px;
+  margin-top: 8px;
+}
+
+/* Base tile styling */
+.aboutHoverTile {
+  position: absolute;
+  top: 56%;
+  width: 36%;
+  min-height: 108px;
+
+  text-align: left;
+  padding: 16px 16px 14px;
+
+  background: #0c0d12;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.55);
+
+  cursor: pointer;
+  overflow: hidden;
+
+  transform-origin: 50% 92%;
+
+  transition:
+    left 320ms cubic-bezier(0.2, 0.9, 0.2, 1),
+    width 320ms cubic-bezier(0.2, 0.9, 0.2, 1),
+    transform 320ms cubic-bezier(0.2, 0.9, 0.2, 1),
+    opacity 240ms ease,
+    filter 240ms ease,
+    box-shadow 240ms ease,
+    border-color 240ms ease,
+    background 240ms ease;
+}
+
+.aboutHoverTile::before {
+  position: absolute;
+  inset: -40%;
+  background: radial-gradient(
+    520px 280px at 50% 20%,
+    rgba(255, 32, 68, 0.18),
+    transparent 62%
+  );
+  opacity: 0;
+  content: "";
+  transition: opacity 220ms ease;
+  pointer-events: none;
+}
+
+.aboutHoverTile::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.22));
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+.aboutHoverTile > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Fan layout */
+.aboutHoverTile[data-idx="0"] {
+  left: 18%;
+  transform: translate(-50%, -50%) rotate(-3deg) scale(0.98);
+  z-index: 1;
+}
+.aboutHoverTile[data-idx="1"] {
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(0deg) scale(1);
+  z-index: 2;
+}
+.aboutHoverTile[data-idx="2"] {
+  left: 82%;
+  transform: translate(-50%, -50%) rotate(3deg) scale(0.98);
+  z-index: 1;
+}
+
+.aboutHoverLabel {
+  margin-bottom: 10px;
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.aboutHoverShort,
+.aboutHoverFull {
+  font-size: 13px;
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--muted) 92%, transparent);
+}
+
+/* Reveal logic */
+.aboutHoverFull {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition:
+    max-height 320ms ease,
+    opacity 220ms ease;
+}
+
+.aboutHoverShort {
+  transition: opacity 180ms ease;
+}
+
+/* Non-active cards drawn back + active card centered (card-hand effect) */
+
+/* rotation presets */
+.aboutHoverTile[data-idx="0"] {
+  --r: -6deg;
+}
+.aboutHoverTile[data-idx="1"] {
+  --r: 0deg;
+}
+.aboutHoverTile[data-idx="2"] {
+  --r: 6deg;
+}
+
+/* Draw back non-active cards (stay left/right, fade/blur) */
+.aboutCard--info.aboutHover[data-active="0"]
+  .aboutHoverTile:not([data-idx="0"]),
+.aboutCard--info.aboutHover[data-active="1"]
+  .aboutHoverTile:not([data-idx="1"]),
+.aboutCard--info.aboutHover[data-active="2"]
+  .aboutHoverTile:not([data-idx="2"]) {
+  opacity: 0.22;
+  filter: blur(1px);
+  transform: translate(-50%, -48%) rotate(var(--r)) scale(0.92);
+}
+
+/* Active card: grow in-place + highlight (no moving to middle) */
+.aboutCard--info.aboutHover[data-active="0"] .aboutHoverTile[data-idx="0"],
+.aboutCard--info.aboutHover[data-active="1"] .aboutHoverTile[data-idx="1"],
+.aboutCard--info.aboutHover[data-active="2"] .aboutHoverTile[data-idx="2"] {
+  z-index: 10;
+  transform: translate(-50%, -58%) rotate(0deg) scale(1.14);
+
+  border-color: rgba(255, 32, 68, 0.55);
+  background: #0c0d12;
+
+  box-shadow:
+    0 26px 85px rgba(0, 0, 0, 0.72),
+    0 0 0 1px rgba(255, 32, 68, 0.18),
+    0 0 52px rgba(255, 32, 68, 0.28);
+}
+
+.aboutCard--info.aboutHover[data-active="0"]
+  .aboutHoverTile[data-idx="0"]::before,
+.aboutCard--info.aboutHover[data-active="1"]
+  .aboutHoverTile[data-idx="1"]::before,
+.aboutCard--info.aboutHover[data-active="2"]
+  .aboutHoverTile[data-idx="2"]::before {
+  opacity: 1;
+}
+
+.aboutCard--info.aboutHover[data-active="0"]
+  .aboutHoverTile[data-idx="0"]
+  .aboutHoverShort,
+.aboutCard--info.aboutHover[data-active="1"]
+  .aboutHoverTile[data-idx="1"]
+  .aboutHoverShort,
+.aboutCard--info.aboutHover[data-active="2"]
+  .aboutHoverTile[data-idx="2"]
+  .aboutHoverShort {
+  opacity: 0;
+}
+
+.aboutCard--info.aboutHover[data-active="0"]
+  .aboutHoverTile[data-idx="0"]
+  .aboutHoverFull,
+.aboutCard--info.aboutHover[data-active="1"]
+  .aboutHoverTile[data-idx="1"]
+  .aboutHoverFull,
+.aboutCard--info.aboutHover[data-active="2"]
+  .aboutHoverTile[data-idx="2"]
+  .aboutHoverFull {
+  max-height: 220px;
+  opacity: 1;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .aboutHoverTile:hover {
+    border-color: rgba(255, 32, 68, 0.45);
+  }
+}
+
+/* Mobile: stack */
+@media (max-width: 740px) {
+  .aboutHoverDeck {
+    height: auto;
+    display: grid;
+    gap: 12px;
+  }
+
+  .aboutHoverTile {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: auto;
+    min-height: auto;
+    transform: none !important;
+    opacity: 1 !important;
+    filter: none !important;
+  }
+
+  .aboutHoverFull {
+    max-height: 0;
+    opacity: 0;
   }
 }
 

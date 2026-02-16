@@ -1503,6 +1503,57 @@ function initMoreDropdown() {
   });
 }
 
+function initAboutHoverDeck() {
+  const reduced =
+    window.matchMedia &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const cards = document.querySelectorAll(".aboutCard--info.aboutHover");
+  if (!cards.length) return;
+
+  cards.forEach((card) => {
+    const tiles = Array.from(card.querySelectorAll(".aboutHoverTile"));
+    if (!tiles.length) return;
+
+    // Start clean (no active card)
+    card.setAttribute("data-active", "-1");
+
+    const setActive = (idx) => {
+      const v = typeof idx === "number" ? idx : -1;
+      card.setAttribute("data-active", String(v));
+    };
+
+    tiles.forEach((tile) => {
+      const idx = Number(tile.getAttribute("data-idx") || "-1");
+
+      tile.addEventListener("mouseenter", () => {
+        if (reduced) return;
+        setActive(idx);
+      });
+
+      tile.addEventListener("focusin", () => {
+        setActive(idx);
+      });
+
+      // Click/tap toggles (useful on touch)
+      tile.addEventListener("click", () => {
+        const cur = Number(card.getAttribute("data-active") || "-1");
+        setActive(cur === idx ? -1 : idx);
+      });
+    });
+
+    card.addEventListener("mouseleave", () => {
+      if (reduced) return;
+      setActive(-1);
+    });
+
+    card.addEventListener("focusout", (e) => {
+      const next = e.relatedTarget;
+      if (!next || !card.contains(next)) setActive(-1);
+    });
+  });
+}
+
 /* ------------------------------
    Init
 ------------------------------ */
@@ -1519,6 +1570,7 @@ async function init() {
   initBackground();
   //initDeepFade();
   initHeaderPillNav();
+  initAboutHoverDeck();
 
   // Fonts can be one of the slowest first-paint items (Google Fonts)
   try {
