@@ -1,3 +1,7 @@
+<!----------------------------
+   index.html
+----------------------------->
+
 <!doctype html>
 <html lang="en">
   <head>
@@ -202,15 +206,210 @@
         </a>
       </section>
 
-      <!-- 2) ABOUT (keep for nav anchor) -->
-      <section id="about" class="section aboutRef">
-        <div class="section-head r">
-          <h2 class="sectionTitle">About <span class="gradWord">me</span></h2>
-          <p class="p">
-            I’m Maurits — SAP Technical Consultant at 2BM. I like building clean
-            solutions end-to-end: backend logic, integrations, and a UI that
-            doesn’t fight the user.
-          </p>
+      <!-- 2) ABOUT (bento grid) -->
+      <section id="about" class="section aboutRef aboutBento">
+        <div class="aboutGrid">
+          <!-- Name -->
+          <article class="aboutCard aboutCard--name r" aria-label="Name">
+            <div class="aboutName">
+              <div class="aboutNameTop">MAURITS</div>
+              <div class="aboutNameTop">PUGGAARD</div>
+            </div>
+            <div class="aboutRole">SAP CONSULTANT · FULL STACK</div>
+          </article>
+
+          <!-- Info: hover to read more -->
+          <article class="aboutCard aboutCard--info r" aria-label="Highlights">
+            <div class="aboutInfoHint">HOVER TO READ MORE</div>
+
+            <div class="aboutInfoRow">
+              <div class="aboutInfoItem">
+                <div class="aboutInfoTitle">SAP</div>
+                <div class="aboutInfoShort">
+                  SAP Technical Consultant at 2BM. ABAP, CDS/OData, UI5…
+                </div>
+                <div class="aboutInfoFull">
+                  SAP Technical Consultant at 2BM. I build and extend S/4
+                  solutions end-to-end: ABAP, CDS/OData, UI5/Fiori,
+                  integrations, and automation that saves people time.
+                </div>
+              </div>
+
+              <div class="aboutInfoItem">
+                <div class="aboutInfoTitle">BUILDING</div>
+                <div class="aboutInfoShort">
+                  Tools and demos on GitHub Pages. Focus on clean UX.
+                </div>
+                <div class="aboutInfoFull">
+                  I ship small, useful web tools (Excel Merger, Work Time
+                  Calculator, AI prototypes). I care about fast UI, reliability,
+                  and “no surprises” behavior.
+                </div>
+              </div>
+
+              <div class="aboutInfoItem">
+                <div class="aboutInfoTitle">MINDSET</div>
+                <div class="aboutInfoShort">
+                  Structured, detail-driven, and practical.
+                </div>
+                <div class="aboutInfoFull">
+                  I like constraints, clear priorities, and finishing things
+                  properly. I’d rather deliver a smaller thing that works
+                  perfectly than a big messy one.
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <!-- Mindset -->
+          <article class="aboutCard aboutCard--mindset r" aria-label="Mindset">
+            <h3 class="aboutH">Mindset</h3>
+
+            <p class="aboutP">
+              <strong>Building more than software.</strong> My interests keep me
+              disciplined and focused.
+            </p>
+
+            <div class="aboutShot">
+              <img
+                src="assets/me.jpeg"
+                alt="Hobby / lifestyle"
+                loading="lazy"
+              />
+              <div class="aboutShotTag">COOKING</div>
+            </div>
+
+            <p class="aboutP aboutP--bottom">
+              <strong>Mastering body and mind</strong> is my path to
+              <strong>excellence</strong>.
+            </p>
+          </article>
+
+          <!-- Portrait -->
+          <article
+            class="aboutCard aboutCard--portrait r"
+            aria-label="Portrait"
+          >
+            <img
+              class="aboutPortrait"
+              src="assets/me.jpeg"
+              alt="Maurits portrait"
+            />
+          </article>
+
+          <!-- Craft -->
+          <article class="aboutCard aboutCard--craft r" aria-label="Craft">
+            <h3 class="aboutH">Craft</h3>
+
+            <p class="aboutP">
+              Building scalable
+              <strong>apps, websites, and automations</strong>.
+            </p>
+
+            <p class="aboutP">
+              I like modern tech when it’s useful, and I care about solutions a
+              business actually needs.
+            </p>
+
+            <div class="aboutMarquee" aria-label="Tech stack">
+              <div class="aboutMarqueeTrack">
+                <span class="chip">ABAP</span>
+                <span class="chip">CDS</span>
+                <span class="chip">OData</span>
+                <span class="chip">UI5</span>
+                <span class="chip">BTP</span>
+                <span class="chip">React</span>
+                <span class="chip">TypeScript</span>
+                <span class="chip">Python</span>
+                <span class="chip">Docker</span>
+
+                <!-- duplicate for seamless loop -->
+                <span class="chip">ABAP</span>
+                <span class="chip">CDS</span>
+                <span class="chip">OData</span>
+                <span class="chip">UI5</span>
+                <span class="chip">BTP</span>
+                <span class="chip">React</span>
+                <span class="chip">TypeScript</span>
+                <span class="chip">Python</span>
+                <span class="chip">Docker</span>
+              </div>
+            </div>
+
+            <p class="aboutFoot">
+              Open to collaboration. I enjoy building practical stuff with good
+              people.
+            </p>
+
+            <div class="aboutStatus">
+              <span class="dotLive" aria-hidden="true"></span>
+              <span>Open to collaboration</span>
+            </div>
+          </article>
+
+          <!-- Location -->
+          <article
+            class="aboutCard aboutCard--location r"
+            aria-label="Location"
+          >
+            <div class="aboutRadar" aria-hidden="true">
+              <img
+                class="aboutRadarMap"
+                src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Denmark_blank_transparent_bkgd.svg/1920px-Denmark_blank_transparent_bkgd.svg.png"
+                alt=""
+              />
+
+              <svg viewBox="0 0 520 420" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <radialGradient id="dkGlow" cx="50%" cy="55%" r="70%">
+                    <stop offset="0%" stop-color="rgba(255,32,68,0.18)" />
+                    <stop offset="55%" stop-color="rgba(255,32,68,0.07)" />
+                    <stop offset="100%" stop-color="rgba(255,32,68,0)" />
+                  </radialGradient>
+                </defs>
+
+                <circle cx="260" cy="230" r="210" fill="url(#dkGlow)" />
+
+                <circle
+                  cx="260"
+                  cy="230"
+                  r="70"
+                  fill="none"
+                  stroke="rgba(255,32,68,0.12)"
+                  stroke-width="1"
+                />
+                <circle
+                  cx="260"
+                  cy="230"
+                  r="120"
+                  fill="none"
+                  stroke="rgba(255,32,68,0.10)"
+                  stroke-width="1"
+                />
+                <circle
+                  cx="260"
+                  cy="230"
+                  r="170"
+                  fill="none"
+                  stroke="rgba(255,32,68,0.08)"
+                  stroke-width="1"
+                />
+              </svg>
+
+              <div class="aboutScanLine" aria-hidden="true"></div>
+            </div>
+
+            <div class="aboutLocOverlay"></div>
+
+            <div class="aboutLocBody">
+              <div class="aboutLocTitle">DENMARK</div>
+              <div class="aboutLocMeta">GMT+1</div>
+              <div class="aboutLocLine">
+                <span class="aboutLocDash">—</span>
+                <span>Remote / on-site</span>
+              </div>
+            </div>
+          </article>
         </div>
       </section>
 

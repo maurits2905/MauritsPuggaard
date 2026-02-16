@@ -1,4 +1,8 @@
 /* ------------------------------
+   script.js
+------------------------------ */
+
+/* ------------------------------
    Theme
 ------------------------------ */
 let vantaEffect = null;
@@ -296,7 +300,9 @@ function initBackground() {
 function initDeepFade() {
   // Start blending as we approach the FIRST content section
   const triggerEl =
-    document.getElementById("about") || document.getElementById("career");
+    document.getElementById("projects") ||
+    document.getElementById("skills") ||
+    document.getElementById("career");
   if (!triggerEl) return;
 
   let raf = 0;
@@ -425,11 +431,14 @@ function initStory() {
   const isMobile =
     window.matchMedia && window.matchMedia("(max-width: 900px)").matches;
   const storyEl = document.getElementById("story");
+
+  if (!storyEl) return;
+
   if (isMobile) {
-    if (storyEl) storyEl.classList.add("storyStatic");
+    storyEl.classList.add("storyStatic");
     return;
   } else {
-    if (storyEl) storyEl.classList.remove("storyStatic");
+    storyEl.classList.remove("storyStatic");
   }
 
   gsap.registerPlugin(ScrollTrigger);
@@ -437,7 +446,6 @@ function initStory() {
   // Scene start states
   gsap.set("#sceneWhat", { autoAlpha: 0, y: 20 });
   gsap.set("#sceneDoCards", { autoAlpha: 0, y: 20 });
-  gsap.set("#about", { autoAlpha: 0, y: 20 });
 
   gsap.set("#sceneHero", { autoAlpha: 1, y: 0 });
   gsap.set("#sceneRole", { autoAlpha: 1, y: 0 });
