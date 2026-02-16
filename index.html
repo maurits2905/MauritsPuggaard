@@ -429,6 +429,14 @@
                 <a class="contactLink" href="#career">Career</a>
                 <a class="contactLink" href="#ask">Ask me</a>
                 <a class="contactLink" href="#contact">Contact</a>
+
+                <button
+                  class="contactLink contactLinkBtn"
+                  id="footerStatsBtn"
+                  type="button"
+                >
+                  Stats
+                </button>
               </div>
 
               <div class="contactCol">
@@ -579,7 +587,6 @@
     </div>
 
     <!-- Contact bottom sheet -->
-    <!-- Contact bottom sheet -->
     <div class="contactOverlay" id="contactOverlay" hidden></div>
 
     <section
@@ -729,6 +736,107 @@
               </svg>
             </a>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stats modal -->
+    <div class="statsOverlay" id="statsOverlay" hidden></div>
+
+    <section
+      class="statsModal"
+      id="statsModal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="statsTitle"
+      aria-hidden="true"
+    >
+      <div class="statsInner">
+        <button
+          class="statsClose"
+          id="statsClose"
+          type="button"
+          aria-label="Close stats"
+        >
+          ×
+        </button>
+
+        <div class="statsHeader">
+          <h1 class="statsH1" id="statsTitle">About this portfolio</h1>
+          <p class="statsLead">
+            Insights and metrics about this portfolio website
+          </p>
+        </div>
+
+        <div class="statsGridTop">
+          <article class="statsCard">
+            <div class="statsCardTop">
+              <span class="statsMiniIcon" aria-hidden="true">👁</span>
+              <div class="statsCardTitle">Total Views</div>
+            </div>
+
+            <div class="statsBigNumber" id="statsViews">—</div>
+            <div class="statsSubText">Unique page visits since Oct-2025</div>
+          </article>
+
+          <article class="statsCard">
+            <div class="statsCardTop">
+              <span class="statsMiniIcon" aria-hidden="true">♡</span>
+              <div class="statsCardTitle">Appreciation Count</div>
+            </div>
+
+            <div class="statsBigNumber hot" id="statsLikes">—</div>
+
+            <button class="statsLoveBtn" id="statsLikeBtn" type="button">
+              <span aria-hidden="true">♡</span>
+              Love this portfolio
+            </button>
+          </article>
+        </div>
+
+        <h2 class="statsH2">GitHub Stats</h2>
+        <p class="statsLead2">Insights and metrics about my GitHub profile</p>
+
+        <div class="statsHeatWrap">
+          <img
+            class="statsHeatImg"
+            id="statsHeatImg"
+            alt="GitHub contributions heatmap"
+            loading="lazy"
+          />
+          <div class="statsHeatFoot" id="statsHeatFoot">—</div>
+        </div>
+
+        <div class="statsGridBottom">
+          <article class="statsTile big ok">
+            <div class="statsTileLabel">Hireable</div>
+            <div class="statsTileValue" id="ghHireable">—</div>
+          </article>
+
+          <article class="statsTile">
+            <div class="statsTileLabel">Total Public Repositories</div>
+            <div class="statsTileValue" id="ghRepos">—</div>
+          </article>
+
+          <article class="statsTile">
+            <div class="statsTileLabel">Followers</div>
+            <div class="statsTileValue" id="ghFollowers">—</div>
+          </article>
+
+          <article class="statsTile">
+            <div class="statsTileLabel">Following</div>
+            <div class="statsTileValue" id="ghFollowing">—</div>
+          </article>
+
+          <article class="statsTile">
+            <div class="statsTileLabel">Current Company</div>
+            <div class="statsTileValue small" id="ghCompany">—</div>
+          </article>
+
+          <article class="statsTile">
+            <div class="statsTileLabel">Location</div>
+            <div class="statsTileValue small" id="ghLocation">—</div>
+          </article>
         </div>
       </div>
     </section>

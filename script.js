@@ -1556,6 +1556,8 @@ async function init() {
     igProfile,
   });
 
+  initStatsModal({ githubUsername: "maurits2905" });
+
   // Header email (private only)
   const topEmail = document.getElementById("topEmail");
   if (topEmail) {
@@ -2732,6 +2734,173 @@ function initContactSheetUI() {
       }
     });
   }
+}
+
+function initStatsModal({ githubUsername }) {
+  const openBtn = document.getElementById("footerStatsBtn");
+  const overlay = document.getElementById("statsOverlay");
+  const modal = document.getElementById("statsModal");
+  const closeBtn = document.getElementById("statsClose");
+
+  const viewsEl = document.getElementById("statsViews");
+  const likesEl = document.getElementById("statsLikes");
+  const likeBtn = document.getElementById("statsLikeBtn");
+
+  const heatImg = document.getElementById("statsHeatImg");
+  const heatFoot = document.getElementById("statsHeatFoot");
+
+  const hireableEl = document.getElementById("ghHireable");
+  const reposEl = document.getElementById("ghRepos");
+  const followersEl = document.getElementById("ghFollowers");
+  const followingEl = document.getElementById("ghFollowing");
+  const companyEl = document.getElementById("ghCompany");
+  const locationEl = document.getElementById("ghLocation");
+
+  if (!openBtn || !overlay || !modal || !closeBtn) return;
+
+  // ---- Simple global counters (CountAPI) ----
+  // Change namespace if you want a different "bucket"
+  const COUNT_NS = "maurits-portfolio";
+  const VIEWS_KEY = "views";
+  const LIKES_KEY = "likes";
+
+  async function countGet(key) {
+    const r = await fetch(`https://api.countapi.xyz/get/${COUNT_NS}/${key}`);
+    const j = await r.json();
+    return Number(j.value || 0);
+  }
+
+  async function countHit(key) {
+    const r = await fetch(`https://api.countapi.xyz/hit/${COUNT_NS}/${key}`);
+    const j = await r.json();
+    return Number(j.value || 0);
+  }
+
+  async function loadCounts() {
+    try {
+      // Count 1 view per session (per browser tab session)
+      const counted = sessionStorage.getItem("pvCounted") === "1";
+      const v = counted ? await countGet(VIEWS_KEY) : await countHit(VIEWS_KEY);
+      sessionStorage.setItem("pvCounted", "1");
+      if (viewsEl) viewsEl.textContent = String(v);
+
+      const likes = await countGet(LIKES_KEY);
+      if (likesEl) likesEl.textContent = String(likes);
+
+      const alreadyLiked = localStorage.getItem("portfolioLiked") === "1";
+      if (likeBtn) {
+        likeBtn.disabled = alreadyLiked;
+        if (alreadyLiked) likeBtn.textContent = "Loved ✓";
+      }
+    } catch (e) {
+      console.error(e);
+      if (viewsEl) viewsEl.textContent = "0";
+      if (likesEl) likesEl.textContent = "0";
+    }
+  }
+
+  async function onLike() {
+    try {
+      if (!likeBtn || likeBtn.disabled) return;
+      const next = await countHit(LIKES_KEY);
+      if (likesEl) likesEl.textContent = String(next);
+      localStorage.setItem("portfolioLiked", "1");
+      likeBtn.disabled = true;
+      likeBtn.textContent = "Loved ✓";
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  if (likeBtn) likeBtn.addEventListener("click", onLike);
+
+  // ---- GitHub user stats ----
+  async function loadGitHub() {
+    try {
+      const r = await fetch(`https://api.github.com/users/${githubUsername}`);
+      if (!r.ok) throw new Error("GitHub user fetch failed");
+      const u = await r.json();
+
+      if (hireableEl) hireableEl.textContent = u.hireable ? "Yes" : "No";
+      if (reposEl) reposEl.textContent = String(u.public_repos ?? "—");
+      if (followersEl) followersEl.textContent = String(u.followers ?? "—");
+      if (followingEl) followingEl.textContent = String(u.following ?? "—");
+      if (companyEl)
+        companyEl.textContent = u.company ? String(u.company) : "—";
+      if (locationEl)
+        locationEl.textContent = u.location ? String(u.location) : "—";
+
+      // Heatmap image (no token needed)
+      // If you want a different style/provider, tell me and I’ll swap it.
+      if (heatImg) heatImg.src = `https://ghchart.rshah.org/${githubUsername}`;
+      if (heatFoot)
+        heatFoot.textContent = `${u.public_repos ?? "—"} public repos · ${u.followers ?? "—"} followers`;
+    } catch (e) {
+      console.error(e);
+      if (heatFoot)
+        heatFoot.textContent = "Could not load GitHub stats right now.";
+    }
+  }
+
+  // ---- Open/close (lock scroll like your contact sheet) ----
+  let isOpen = false;
+  let scrollY = 0;
+
+  const open = async () => {
+    if (isOpen) return;
+    isOpen = true;
+
+    scrollY = window.scrollY || 0;
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.left = "0";
+    document.body.style.right = "0";
+    document.body.style.width = "100%";
+
+    overlay.hidden = false;
+    overlay.classList.add("isOpen");
+    modal.classList.add("isOpen");
+    modal.setAttribute("aria-hidden", "false");
+
+    // load data once opened (feels faster)
+    await Promise.allSettled([loadCounts(), loadGitHub()]);
+
+    setTimeout(() => closeBtn.focus(), 40);
+  };
+
+  const close = () => {
+    if (!isOpen) return;
+    isOpen = false;
+
+    overlay.classList.remove("isOpen");
+    modal.classList.remove("isOpen");
+    modal.setAttribute("aria-hidden", "true");
+
+    setTimeout(() => {
+      overlay.hidden = true;
+
+      document.body.style.position = "";
+      const top = document.body.style.top;
+      document.body.style.top = "";
+      document.body.style.left = "";
+      document.body.style.right = "";
+      document.body.style.width = "";
+
+      const y = top ? Math.abs(parseInt(top, 10)) : scrollY;
+      window.scrollTo(0, y);
+
+      openBtn.focus();
+    }, 220);
+  };
+
+  openBtn.addEventListener("click", open);
+  closeBtn.addEventListener("click", close);
+
+  overlay.addEventListener("click", close);
+  window.addEventListener("keydown", (e) => {
+    if (!isOpen) return;
+    if (e.key === "Escape") close();
+  });
 }
 
 if (document.readyState === "loading") {

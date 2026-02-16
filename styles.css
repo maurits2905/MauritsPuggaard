@@ -5256,3 +5256,302 @@ html.noReveal .r,
     transition: none !important;
   }
 }
+
+/* ------------------------------
+   Stats modal
+------------------------------ */
+
+.contactLinkBtn {
+  background: transparent;
+  border: 0;
+
+  /* IMPORTANT: match .contactLink spacing */
+  padding: 8px 0;
+
+  color: inherit;
+
+  /* do NOT use `font: inherit;` (it resets font-weight) */
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  font-weight: 650;
+
+  cursor: pointer;
+  text-align: left;
+
+  /* Make it behave like the links */
+  display: block;
+  width: 100%;
+}
+
+.statsOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.58);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  opacity: 0;
+  transition: opacity 220ms ease;
+  z-index: 9998;
+}
+
+.statsOverlay.isOpen {
+  opacity: 1;
+}
+
+.statsModal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+
+  /* was center -> creates dead space + micro-scroll */
+  place-items: start center;
+
+  padding: 12px 18px;
+  pointer-events: none;
+}
+
+.statsModal.isOpen {
+  pointer-events: auto;
+}
+
+.statsInner {
+  width: min(1120px, 100%);
+
+  /* give a bit more room so it doesn't barely overflow */
+  max-height: min(96vh, 900px);
+
+  overflow: auto;
+
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(8, 9, 12, 0.92);
+  box-shadow:
+    0 40px 120px rgba(0, 0, 0, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+
+  /* less top padding */
+  padding: 14px 20px 18px;
+
+  opacity: 0;
+  transform: translateY(10px) scale(0.99);
+  transition:
+    opacity 220ms ease,
+    transform 220ms ease;
+}
+
+.statsInner::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.statsModal.isOpen .statsInner {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.statsClose {
+  position: sticky;
+  top: 10px;
+  margin-left: auto;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  font-size: 26px;
+  line-height: 1;
+}
+
+.statsHeader {
+  padding: 0 2px 6px;
+}
+
+.statsH1 {
+  margin: 0 0 8px;
+  font-size: 34px;
+  letter-spacing: -0.02em;
+}
+
+.statsLead {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 14px;
+}
+
+.statsGridTop {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.statsCard {
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 16px 16px 18px;
+  min-height: 160px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.statsCardTop {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  color: rgba(255, 255, 255, 0.86);
+  font-weight: 600;
+}
+
+.statsMiniIcon {
+  width: 18px;
+  height: 18px;
+  opacity: 0.85;
+}
+
+.statsBigNumber {
+  font-size: 56px;
+  letter-spacing: -0.03em;
+  font-weight: 800;
+  color: #9b8cff;
+  text-align: center;
+  margin: 6px 0 4px;
+}
+
+.statsBigNumber.hot {
+  color: #ff2a6d;
+}
+
+.statsSubText {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 12px;
+}
+
+.statsLoveBtn {
+  margin: 14px auto 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(155, 140, 255, 0.14);
+  color: rgba(255, 255, 255, 0.92);
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.statsLoveBtn[disabled] {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.statsH2 {
+  margin: 26px 0 8px;
+  font-size: 28px;
+  letter-spacing: -0.02em;
+}
+
+.statsLead2 {
+  margin: 0 0 14px;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 14px;
+}
+
+.statsHeatWrap {
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 14px;
+}
+
+.statsHeatImg {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 12px;
+  opacity: 0.95;
+
+  /* make the white heatmap fit dark UI */
+  filter: invert(1) hue-rotate(180deg) contrast(1.05) brightness(0.95);
+}
+
+.statsHeatFoot {
+  margin-top: 10px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.statsGridBottom {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr;
+  gap: 14px;
+}
+
+.statsTile {
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 14px 14px 16px;
+}
+
+.statsTile.big {
+  grid-column: span 1;
+}
+
+.statsTile.ok {
+  background: rgba(68, 240, 177, 0.14);
+  border-color: rgba(68, 240, 177, 0.2);
+}
+
+.statsTileLabel {
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 12px;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.statsTileValue {
+  font-size: 40px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.statsTileValue.small {
+  font-size: 26px;
+  font-weight: 800;
+}
+
+@media (max-width: 920px) {
+  .statsGridTop {
+    grid-template-columns: 1fr;
+  }
+  .statsGridBottom {
+    grid-template-columns: 1fr 1fr;
+  }
+  .statsTile.big {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 560px) {
+  .statsGridBottom {
+    grid-template-columns: 1fr;
+  }
+  .statsBigNumber {
+    font-size: 48px;
+  }
+}
