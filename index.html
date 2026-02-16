@@ -19,10 +19,92 @@
       href="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/devicon.min.css"
     />
 
+    <style>
+      /* Boot overlay so the loader looks right BEFORE external CSS loads */
+      #preloader {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+
+        background:
+          radial-gradient(
+            circle at 50% 45%,
+            rgba(255, 35, 55, 0.2),
+            transparent 55%
+          ),
+          radial-gradient(
+            circle at 18% 22%,
+            rgba(255, 80, 40, 0.1),
+            transparent 50%
+          ),
+          radial-gradient(
+            circle at 78% 72%,
+            rgba(255, 20, 90, 0.1),
+            transparent 55%
+          ),
+          #04040a;
+      }
+
+      /* subtle vignette like your real loader */
+      #preloader::after {
+        content: "";
+        position: absolute;
+        inset: -10%;
+        background: radial-gradient(
+          circle at 50% 40%,
+          transparent 40%,
+          rgba(0, 0, 0, 0.68) 72%,
+          rgba(0, 0, 0, 0.94) 100%
+        );
+        pointer-events: none;
+      }
+    </style>
+
     <link rel="stylesheet" href="styles.css" />
   </head>
 
-  <body data-bg="stars">
+  <body data-bg="stars" class="isLoading">
+    <!-- Preloader (shown on first paint) -->
+    <!-- Preloader (shown on first paint) -->
+    <div
+      id="preloader"
+      class="preloader"
+      role="status"
+      aria-live="polite"
+      aria-label="Loading"
+    >
+      <!-- Decorative corner elements -->
+      <div class="corner-decor top-left" aria-hidden="true"></div>
+      <div class="corner-decor top-right" aria-hidden="true"></div>
+      <div class="corner-decor bottom-left" aria-hidden="true"></div>
+      <div class="corner-decor bottom-right" aria-hidden="true"></div>
+
+      <div class="loader-content">
+        <!-- Name with letter animation (JS fills this) -->
+        <div class="name-text" id="preName" aria-hidden="true"></div>
+
+        <!-- Counter -->
+        <div class="counter-wrapper" aria-hidden="true">
+          <span class="counter" id="prePct">0</span>
+          <span class="percent">%</span>
+        </div>
+
+        <!-- Progress bar -->
+        <div class="progress-container" aria-hidden="true">
+          <div class="progress-bar" id="preBarFill"></div>
+        </div>
+
+        <!-- Small label -->
+        <p class="loading-text">Loading Experience</p>
+      </div>
+
+      <!-- Bottom decorative line -->
+      <div class="bottom-line" id="preBottomLine" aria-hidden="true"></div>
+    </div>
+
     <!-- Background -->
     <div id="bg"></div>
     <div class="bgOverlay"></div>

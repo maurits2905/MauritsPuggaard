@@ -3,6 +3,234 @@
 ------------------------------ */
 let vantaEffect = null;
 
+/* ------------------------------
+   Preloader
+   - Shows name + progress (0-100)
+   - Progress is tied to real milestones (fonts, projects.json, image warmup)
+------------------------------ */
+
+function svgRasterizeElementToDataURL(el, width, height) {
+  return new Promise((resolve) => {
+    try {
+      const clone = el.cloneNode(true);
+
+      // Freeze state: no animations in the snapshot
+      clone.querySelectorAll("*").forEach((n) => {
+        n.style.animation = "none";
+        n.style.transition = "none";
+      });
+
+      const wrap = document.createElement("div");
+      wrap.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
+      wrap.style.width = width + "px";
+      wrap.style.height = height + "px";
+      wrap.style.overflow = "hidden";
+      wrap.appendChild(clone);
+
+      const svg = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
+          <foreignObject width="100%" height="100%">
+            ${new XMLSerializer().serializeToString(wrap)}
+          </foreignObject>
+        </svg>
+      `.trim();
+
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL("image/png"));
+      };
+      img.onerror = () => resolve(null);
+      img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+    } catch (e) {
+      resolve(null);
+    }
+  });
+}
+
+async function applySnapshotToSlices(preloaderEl, slicesEl) {
+  const r = preloaderEl.getBoundingClientRect();
+  const w = Math.max(1, Math.round(r.width));
+  const h = Math.max(1, Math.round(r.height));
+
+  const dataUrl = await svgRasterizeElementToDataURL(preloaderEl, w, h);
+  if (!dataUrl) return false;
+
+  const cols = Array.from(slicesEl.querySelectorAll(".preSlice"));
+  const n = Math.max(1, cols.length);
+  const sliceW = w / n;
+
+  cols.forEach((col, i) => {
+    col.style.backgroundImage = `url("${dataUrl}")`;
+    col.style.backgroundSize = `${w}px ${h}px`;
+    col.style.backgroundPosition = `${-i * sliceW}px 0px`;
+  });
+
+  return true;
+}
+
+function createPreloader() {
+  const el = document.getElementById("preloader");
+  if (!el) return null;
+
+  const fill = document.getElementById("preBarFill");
+  const pct = document.getElementById("prePct");
+  const bottomLine = document.getElementById("preBottomLine");
+  const nameWrap = document.getElementById("preName");
+
+  const reduced =
+    window.matchMedia &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  if (reduced) {
+    el.remove();
+    return null;
+  }
+
+  document.body.classList.add("isLoading");
+
+  // ---- fixed duration (always) ----
+  // total ≈ 4.5s (like your reference)
+  const startedAt = performance.now();
+  const LOAD_MS = 3200; // progress time
+  const HOLD_MS = 400; // small pause at 100
+  const OUTRO_MS = 900; // slide up
+  const TOTAL_MS = LOAD_MS + HOLD_MS + OUTRO_MS;
+
+  let current = 0;
+  let doneOnce = false;
+
+  // ---- build animated letters once ----
+  const NAME = "MAURITS PUGGAARD";
+
+  if (nameWrap && !nameWrap.dataset.built) {
+    nameWrap.textContent = "";
+    const frag = document.createDocumentFragment();
+
+    [...NAME].forEach((ch, i) => {
+      const s = document.createElement("span");
+      s.className = "letter";
+      s.textContent = ch === " " ? "\u00A0" : ch;
+
+      // stagger timing (matches the React example vibe)
+      s.style.transitionDelay = `${i * 0.08}s`;
+      frag.appendChild(s);
+    });
+
+    nameWrap.appendChild(frag);
+    nameWrap.dataset.built = "1";
+
+    // start the letter reveal shortly after load starts
+    setTimeout(() => {
+      nameWrap.querySelectorAll(".letter").forEach((span) => {
+        span.classList.add("visible");
+      });
+    }, 200);
+  }
+
+  function paint(p) {
+    const clamped = Math.max(0, Math.min(100, p));
+    const pctText = String(Math.floor(clamped)).padStart(2, "0");
+
+    if (pct) pct.textContent = pctText;
+    if (fill) fill.style.width = `${clamped}%`;
+    if (bottomLine) bottomLine.style.width = `${clamped}%`;
+  }
+
+  // --- smooth cinematic progress (slow -> faster -> 100%) ---
+  paint(0);
+  current = 0;
+
+  const easeInCubic = (t) => t * t * t;
+
+  function tick() {
+    const elapsed = performance.now() - startedAt;
+
+    // 0..1 over LOAD_MS
+    const t = Math.max(0, Math.min(1, elapsed / LOAD_MS));
+
+    // slow start, faster finish
+    const eased = easeInCubic(t);
+
+    current = eased * 100;
+    paint(current);
+
+    if (t < 1) {
+      requestAnimationFrame(tick);
+    } else {
+      // hold at 100 for a moment, then exit
+      setTimeout(() => {
+        done();
+      }, HOLD_MS);
+    }
+  }
+
+  requestAnimationFrame(tick);
+
+  function done() {
+    if (doneOnce) return;
+    doneOnce = true;
+
+    // ensure the loader stays up for TOTAL_MS minimum
+    const elapsed = performance.now() - startedAt;
+    const wait = Math.max(0, TOTAL_MS - elapsed - OUTRO_MS);
+
+    setTimeout(() => {
+      el.classList.add("exit");
+      setTimeout(() => {
+        el.remove();
+        document.body.classList.remove("isLoading");
+      }, OUTRO_MS);
+    }, wait);
+  }
+
+  // Keep compatibility with the rest of your script (if it calls loader.set/done)
+  function set(p) {
+    // If other parts of your script try to push progress:
+    // never decrease it, and never skip past the simulated feel.
+    current = Math.max(current, p);
+    paint(current);
+  }
+
+  return { set, done };
+}
+
+function preloadImages(urls, limit = 6) {
+  const list = (urls || []).filter(Boolean).slice(0, Math.max(0, limit));
+  if (!list.length) return Promise.resolve();
+
+  return Promise.all(
+    list.map(
+      (src) =>
+        new Promise((resolve) => {
+          const img = new Image();
+          img.decoding = "async";
+          img.loading = "eager";
+
+          const finish = () => {
+            // decode helps avoid jank when the image is first painted
+            if (img.decode) {
+              img
+                .decode()
+                .catch(() => {})
+                .finally(resolve);
+            } else {
+              resolve();
+            }
+          };
+
+          img.onload = finish;
+          img.onerror = resolve;
+          img.src = src;
+        }),
+    ),
+  ).then(() => undefined);
+}
+
 function setTheme(next) {
   document.documentElement.setAttribute("data-theme", next);
   localStorage.setItem("theme", next);
@@ -1271,14 +1499,37 @@ function initMoreDropdown() {
    Init
 ------------------------------ */
 async function init() {
+  const loader = createPreloader();
+
+  // Disable milestone jumps so the loader can do a smooth cinematic progress
+  const loadTo = () => {};
+
+  loadTo(6);
+
   initTheme();
+  loadTo(14);
   initBackground();
   //initDeepFade();
   initHeaderPillNav();
 
+  // Fonts can be one of the slowest first-paint items (Google Fonts)
+  try {
+    if (document.fonts && document.fonts.ready) {
+      await Promise.race([
+        document.fonts.ready,
+        new Promise((r) => setTimeout(r, 800)),
+      ]);
+    }
+  } catch {
+    // ignore
+  }
+  loadTo(28);
+
   initBgStars();
   initHeroEarthFX();
   initHeroSkillTicker();
+
+  loadTo(40);
 
   initCustomScrollbar();
 
@@ -1469,8 +1720,11 @@ async function init() {
   // Career
   renderCareer();
 
+  loadTo(52);
+
   // Projects
   try {
+    loadTo(62);
     const res = await fetch("projects.json", { cache: "no-store" });
     state.projects = await res.json();
     state.tags = uniqueTags(state.projects);
@@ -1484,6 +1738,24 @@ async function init() {
 
     // NOTE: featured is now part of the rail (no separate featured card)
     renderWork();
+
+    // Warm up a few project images so the projects section feels instant
+    try {
+      const imgs = state.projects
+        .filter((p) => p && p.imageUrl)
+        .sort(
+          (a, b) =>
+            (b.featured === true) - (a.featured === true) ||
+            (b.date || "").localeCompare(a.date || ""),
+        )
+        .map((p) => p.imageUrl);
+
+      loadTo(78);
+      await preloadImages(imgs, 8);
+    } catch {
+      // ignore
+    }
+    loadTo(92);
   } catch (e) {
     console.warn("projects.json not found or invalid", e);
   }
@@ -1612,9 +1884,21 @@ async function init() {
   }
 
   initAskMe();
+
+  loadTo(100);
+  if (loader) loader.done();
 }
 
-init().catch(console.error);
+init().catch((e) => {
+  console.error(e);
+  // Never leave the user stuck behind the loader
+  const el = document.getElementById("preloader");
+  if (el) {
+    el.classList.add("isDone");
+    document.body.classList.remove("isLoading");
+    window.setTimeout(() => el.remove(), 650);
+  }
+});
 
 /* ---------------------------
    Tech Stack tiles (grouped)
