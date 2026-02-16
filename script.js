@@ -362,8 +362,8 @@ function initHeaderPillNav() {
 
     const r = link.getBoundingClientRect();
     const tr = track.getBoundingClientRect();
-    const x = Math.round(r.left - tr.left);
-    const w = Math.round(r.width);
+    const x = r.left - tr.left;
+    const w = r.width;
 
     nav.style.setProperty("--pill-x", `${x}px`);
     nav.style.setProperty("--pill-w", `${w}px`);
@@ -377,7 +377,7 @@ function initHeaderPillNav() {
     nav.dataset.ready = "1";
   }
 
-  // Map links -> target elements
+  // Map links -> target elements (must match ids)
   const targets = links
     .map((a) => {
       const id = a.dataset.target || (a.getAttribute("href") || "").slice(1);
@@ -386,21 +386,73 @@ function initHeaderPillNav() {
     })
     .filter((x) => x.el);
 
+  if (!targets.length) return;
+
+  let lockUntil = 0;
+  let lockId = "";
+
+  // Pick active section based on a "scan line" just under the fixed header
   function pickActiveFromScroll() {
-    const y = window.scrollY + getNavOffset() + 18;
+    // Prevent tiny back-and-forth changes while our smooth scroll is running
+    if (performance.now() < lockUntil) return;
+
+    const line = getNavOffset() + 22; // px from top of viewport
     let best = targets[0];
+
     for (const t of targets) {
-      if (t.el.offsetTop <= y) best = t;
+      const r = t.el.getBoundingClientRect();
+      if (r.top <= line) best = t;
     }
+
     if (best) setActiveLink(best.link);
   }
 
-  // Click: update immediately so it feels snappy
+  // Smooth-scroll with header offset
+  function scrollToTarget(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    const y =
+      el.getBoundingClientRect().top + window.scrollY - getNavOffset() - 14;
+
+    window.scrollTo({
+      top: Math.max(0, Math.round(y)),
+      behavior: "smooth",
+    });
+  }
+
+  // Click handling: prevent default jump and do offset scroll
   links.forEach((a) => {
-    a.addEventListener("click", () => {
-      setActiveLink(a, true);
+    a.addEventListener("click", (e) => {
+      const id = a.dataset.target || (a.getAttribute("href") || "").slice(1);
+      const el = id ? document.getElementById(id) : null;
+      if (!id || !el) return;
+
+      e.preventDefault();
+
+      // Lock scroll-based updates briefly so the bubble doesn't "correct" mid-scroll
+      lockId = id;
+      lockUntil = performance.now() + 700;
+
+      // Move bubble smoothly (no instant snap)
+      setActiveLink(a, false);
+
+      // Update URL hash (without jumping)
+      history.pushState(null, "", `#${id}`);
+
+      // Offset scroll
+      scrollToTarget(id);
+
+      // Re-check after scroll starts (after lock expires it will settle correctly)
       requestAnimationFrame(() => requestAnimationFrame(pickActiveFromScroll));
     });
+  });
+
+  // Handle manual hash changes / back-forward
+  window.addEventListener("hashchange", () => {
+    const id = (location.hash || "").slice(1);
+    const match = targets.find((t) => t.id === id);
+    if (match) setActiveLink(match.link, true);
   });
 
   let raf = 0;
@@ -414,7 +466,20 @@ function initHeaderPillNav() {
 
   window.addEventListener("scroll", onScroll, { passive: true });
   window.addEventListener("resize", pickActiveFromScroll);
-  window.addEventListener("load", pickActiveFromScroll);
+  window.addEventListener("load", () => {
+    // If page loads with a hash, align it nicely
+    const id = (location.hash || "").slice(1);
+    if (id && document.getElementById(id)) {
+      // Don’t “smooth” on initial load; just jump correctly once
+      const y =
+        document.getElementById(id).getBoundingClientRect().top +
+        window.scrollY -
+        getNavOffset() -
+        14;
+      window.scrollTo(0, Math.max(0, Math.round(y)));
+    }
+    pickActiveFromScroll();
+  });
 
   requestAnimationFrame(pickActiveFromScroll);
 }
