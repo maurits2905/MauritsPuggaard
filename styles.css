@@ -645,26 +645,29 @@ html[data-theme="light"] body[data-bg="stars"] .bgDeep {
 
 /* --- Hero --- */
 
-/* The planet disk: warm stone/cream colour instead of solid black */
+/* Planet disk stays dark — just soften the rim and swap the outer glow to
+   a deep-rose so it sits nicely against the cream background */
 [data-theme="light"] .heroEarth::before {
-  background: radial-gradient(
-    circle at 50% 42%,
-    rgba(232, 224, 214, 1) 0%,
-    rgba(210, 198, 184, 1) 64%
-  );
   box-shadow:
-    0 -2px 0 rgba(175, 160, 140, 0.85),
-    0 -18px 70px rgba(255, 140, 60, 0.14),
-    0 -90px 320px rgba(255, 100, 40, 0.16);
+    0 -2px 0 rgba(255, 255, 255, 0.55),
+    0 -18px 70px rgba(220, 50, 40, 0.18),
+    0 -90px 320px rgba(180, 30, 20, 0.12);
 }
 
-/* Slightly soften the aurora so it doesn't look too neon on a light bg */
-[data-theme="light"] .heroEarth .earthAurora {
-  opacity: 0.40;
-}
-
+/* Pull the base radial glow back: less orange, more deep-rose, much dimmer */
 [data-theme="light"] .heroEarth::after {
-  opacity: 0.55;
+  background: radial-gradient(
+    closest-side at 50% 78%,
+    rgba(200, 40, 30, 0.18),
+    rgba(220, 60, 40, 0.07) 42%,
+    transparent 72%
+  );
+  opacity: 0.7;
+}
+
+/* Aurora: keep but tone down so it doesn't clash with the light page */
+[data-theme="light"] .heroEarth .earthAurora {
+  opacity: 0.30;
 }
 
 /* Hero chips/pills */
@@ -867,17 +870,7 @@ html[data-theme="light"] body[data-bg="stars"] .bgDeep {
   color: rgba(8, 9, 12, 0.45);
 }
 
-/* --- Project cards in light mode --- */
-
-[data-theme="light"] .projectCard {
-  background: #ffffff;
-  border: 1px solid rgba(8, 9, 12, 0.10);
-  box-shadow: 0 4px 20px rgba(8, 9, 12, 0.07);
-}
-
-[data-theme="light"] .projectCard:hover {
-  box-shadow: 0 8px 32px rgba(8, 9, 12, 0.12);
-}
+/* --- Project cards in light mode — see card block below --- */
 
 /* --- Ask me section --- */
 
@@ -902,16 +895,6 @@ html[data-theme="light"] body[data-bg="stars"] .bgDeep {
 [data-theme="light"] .askBubble {
   background: rgba(8, 9, 12, 0.06);
   color: rgba(8, 9, 12, 0.88);
-}
-
-/* --- Hero earth: match white bg --- */
-
-[data-theme="light"] .heroEarth::before {
-  background: radial-gradient(circle at 50% 42%, #e8e4e0 0%, #ccc8c2 64%);
-  box-shadow:
-    0 -2px 0 rgba(140, 130, 120, 0.6),
-    0 -18px 70px rgba(232, 51, 42, 0.10),
-    0 -90px 320px rgba(232, 51, 42, 0.08);
 }
 
 /* --- Misc glass elements --- */
@@ -2180,154 +2163,253 @@ html.noReveal .r,
   opacity: 1;
 }
 
-/* ===== Uniform cards ===== */
+/* ===== Project cards — grid redesign ===== */
 
 .projectCard {
-  flex: 0 0 clamp(260px, 24vw, 340px);
-  background: color-mix(in srgb, var(--glass) 86%, transparent);
-  border: 1px solid var(--stroke);
-  border-radius: var(--r1);
-  box-shadow: 0 14px 42px rgba(0, 0, 0, 0.28);
-  cursor: pointer;
-  transition: box-shadow 180ms ease;
-  will-change: transform;
+  position: relative;
+  background: #07080d;
+  border: 1px solid rgba(255, 32, 68, 0.14);
+  border-radius: 18px;
   overflow: hidden;
-  scroll-snap-align: start;
+  cursor: pointer;
+  transition:
+    border-color 280ms ease,
+    box-shadow 280ms ease,
+    transform 200ms ease;
+  will-change: transform;
   transform-style: preserve-3d;
 }
 
-/* Hover effect */
-
-/* Light mode shadow */
-
-.projectCard:hover {
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.32);
+@media (hover: hover) and (pointer: fine) {
+  .projectCard:hover {
+    border-color: rgba(255, 32, 68, 0.48);
+    box-shadow:
+      0 0 0 1px rgba(255, 32, 68, 0.1),
+      0 28px 80px rgba(0, 0, 0, 0.55),
+      0 0 55px rgba(255, 32, 68, 0.08);
+  }
 }
 
-/* Light mode shadow override */
-
-[data-theme="light"] .projectCard {
-  box-shadow: 0 14px 42px rgba(16, 26, 60, 0.1);
-}
-
-[data-theme="light"] .projectCard:hover {
-  box-shadow: 0 20px 60px rgba(16, 26, 60, 0.14);
-}
-
-/* Featured cards are no longer bigger — badge only */
-
+/* Featured spans full row */
 .projectCard.featured {
-  flex: 0 0 clamp(260px, 24vw, 340px);
+  grid-column: span 2;
 }
 
-/* Project card tag spacing */
+@media (max-width: 680px) {
+  .projectCard.featured {
+    grid-column: span 1;
+  }
+}
+
+/* ── Card media (image + overlays) ── */
+
+.cardMedia {
+  position: relative;
+  height: 220px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.projectCard.featured .cardMedia {
+  height: 300px;
+}
+
+.cardMedia img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.88;
+  transition: transform 420ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              opacity 280ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .projectCard:hover .cardMedia img {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+}
+
+/* Hover overlay with action links */
+.cardOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.62);
+  backdrop-filter: blur(6px);
+  opacity: 0;
+  transition: opacity 240ms ease;
+  z-index: 4;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .projectCard:hover .cardOverlay {
+    opacity: 1;
+  }
+}
+
+/* On touch devices always show subtle links instead */
+@media (hover: none) {
+  .cardOverlay {
+    position: static;
+    opacity: 1;
+    background: transparent;
+    backdrop-filter: none;
+    justify-content: flex-start;
+    padding: 0 18px 14px;
+    gap: 10px;
+  }
+}
+
+.overlayLinks {
+  display: flex;
+  gap: 12px;
+}
+
+.overlayBtn {
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 750;
+  letter-spacing: 0.01em;
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  text-decoration: none;
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    transform 180ms ease;
+  white-space: nowrap;
+}
+
+.overlayBtn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  transform: translateY(-1px);
+}
+
+.overlayBtn.live {
+  background: rgba(255, 32, 68, 0.82);
+  border-color: transparent;
+}
+
+.overlayBtn.live:hover {
+  background: rgba(255, 32, 68, 1);
+}
+
+/* Number badge on image */
+.cardNum {
+  position: absolute;
+  top: 12px;
+  left: 14px;
+  padding: 4px 9px;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  color: rgba(255, 255, 255, 0.82);
+  background: rgba(0, 0, 0, 0.48);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  backdrop-filter: blur(6px);
+  z-index: 3;
+}
+
+/* Featured badge on image */
+.pBadge {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 32, 68, 0.78);
+  border: 1px solid rgba(255, 32, 68, 0.4);
+  border-radius: 999px;
+  backdrop-filter: blur(6px);
+  z-index: 3;
+}
+
+/* ── Card body ── */
+
+.cardBody {
+  display: flex;
+  flex-direction: column;
+  padding: 16px 18px 18px;
+}
 
 .projectCard .tagRow {
-  gap: 8px;
-  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
 }
 
 .projectCard .tagRow .tag {
-  padding: 6px 10px;
+  padding: 4px 10px;
+  font-size: 11px;
 }
 
-/* Clamp description so height stays uniform */
+.cardTitle {
+  font-size: 17px;
+  font-weight: 900;
+  letter-spacing: -0.025em;
+  line-height: 1.25;
+  color: var(--text);
+}
 
-.pDesc {
+.projectCard.featured .cardTitle {
+  font-size: 21px;
+}
+
+.cardDesc {
   display: -webkit-box;
   margin-top: 8px;
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: 13.5px;
+  line-height: 1.55;
   color: var(--muted);
   overflow: hidden;
   -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.projectCard.featured .cardDesc {
   -webkit-line-clamp: 3;
 }
 
-/* Push meta to bottom */
-
-.projectBody {
-  display: flex;
-  flex-direction: column;
-  min-height: 170px;
-  padding: 12px 14px 14px;
+.cardMeta {
+  margin-top: 14px;
+  font-size: 11.5px;
+  color: color-mix(in srgb, var(--muted) 65%, transparent);
+  letter-spacing: 0.03em;
 }
 
-.projectTop {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 14px 14px 8px;
+/* ── Light mode overrides ── */
+
+[data-theme="light"] .projectCard {
+  background: rgba(255, 255, 255, 0.88);
+  border-color: rgba(12, 10, 8, 0.1);
+  box-shadow: 0 4px 24px rgba(12, 10, 8, 0.06);
 }
 
-.pNum {
-  font-weight: 900;
-  letter-spacing: 0.08em;
-  color: color-mix(in srgb, var(--muted) 80%, transparent);
+[data-theme="light"] .projectCard:hover {
+  border-color: rgba(232, 51, 42, 0.45);
+  box-shadow: 0 12px 48px rgba(12, 10, 8, 0.1), 0 0 40px rgba(232, 51, 42, 0.06);
 }
 
-.pBadge {
-  padding: 6px 10px;
-  font-size: 12px;
-  color: var(--muted);
-  background: var(--glass2);
-  border: 1px solid var(--stroke);
-  border-radius: 999px;
+[data-theme="light"] .cardTitle {
+  color: rgba(12, 10, 8, 0.92);
 }
 
-.projectMedia {
-  position: relative;
-  height: 220px;
-  background: rgba(0, 0, 0, 0.25);
-  border-bottom: 1px solid color-mix(in srgb, var(--stroke) 70%, transparent);
-  border-top: 1px solid color-mix(in srgb, var(--stroke) 70%, transparent);
-}
-
-.projectMedia img {
-  width: 100%;
-  height: 100%;
-  opacity: 0.92;
-  object-fit: cover;
-}
-
-.projectMedia .mediaGlow {
-  position: absolute;
-  inset: -40%;
-  background:
-    radial-gradient(
-      circle at 30% 30%,
-      rgba(155, 140, 255, 0.22),
-      transparent 60%
-    ),
-    radial-gradient(
-      circle at 60% 70%,
-      rgba(68, 240, 177, 0.12),
-      transparent 62%
-    );
-  filter: blur(22px);
-  pointer-events: none;
-}
-
-.pTitle {
-  font-size: 16px;
-  font-weight: 950;
-  letter-spacing: -0.02em;
-}
-
-.pMeta {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  margin-top: 12px;
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.pLinks {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+[data-theme="light"] .cardNum {
+  color: rgba(12, 10, 8, 0.75);
+  background: rgba(255, 255, 255, 0.7);
+  border-color: rgba(12, 10, 8, 0.12);
 }
 
 .empty {
@@ -3481,89 +3563,32 @@ html.noReveal .r,
   }
 }
 
-/* ===== Projects rail fix (no big box, no clipping) ===== */
+/* ===== Projects grid wrapper ===== */
 
 .railWrap {
   position: relative;
-  margin-top: 16px;
-  overflow: visible;
+  margin-top: 24px;
 }
-
-/* Make THIS the scroll container */
 
 .railViewport {
-  margin: 0 -28px;
-  padding: 0 28px 26px;
-  background: transparent;
-  border-radius: 0;
   overflow: visible;
-  overflow-x: auto;
-  overflow-y: visible;
-  scroll-behavior: smooth;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
 }
 
-.railViewport::-webkit-scrollbar {
-  display: none;
-}
-
-/* Cards container should NOT scroll */
-
+/* 2-column grid — all projects visible */
 .workGrid.rail {
-  display: flex;
-  gap: 22px;
-  margin: 0;
-  padding: 0;
-  overflow: visible;
-  overflow-x: auto;
-  scroll-behavior: smooth;
-  scrollbar-width: none;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* ===== Rail arrows ===== */
-
-.railArrow {
-  position: absolute;
-  top: 50%;
-  z-index: 5;
   display: grid;
-  place-items: center;
-  width: 52px;
-  height: 52px;
-  font-size: 22px;
-  line-height: 1;
-  color: var(--text);
-  background: color-mix(in srgb, var(--glass) 86%, transparent);
-  opacity: 0;
-  border: 1px solid color-mix(in srgb, var(--stroke) 75%, transparent);
-  border-radius: 999px;
-  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
-  cursor: pointer;
-  transform: translateY(-50%);
-  transition:
-    opacity 0.25s ease,
-    transform 0.25s ease;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
 }
 
-.railArrow--right {
-  right: 10px;
+/* Rail arrows hidden — not needed for grid */
+.railArrow {
+  display: none !important;
 }
 
-.railArrow--left {
-  left: 10px;
-}
-
-.railArrow:hover {
-  transform: translateY(-50%) translateY(-1px);
-}
-
-@media (max-width: 640px) {
-  .railArrow {
-    width: 46px;
-    height: 46px;
+@media (max-width: 680px) {
+  .workGrid.rail {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -5854,28 +5879,50 @@ html.noReveal .r,
   }
 }
 
-/* Mobile: stack */
+/* Mobile: stack tiles cleanly — must override the per-tile left: X% rules too */
 @media (max-width: 740px) {
-  .aboutHoverDeck {
-    height: auto;
-    display: grid;
-    gap: 12px;
+  /* Hide the hover hint — no hover on touch devices */
+  .aboutCard--info.aboutHover .aboutInfoHint {
+    display: none;
   }
 
-  .aboutHoverTile {
-    position: relative;
-    top: auto;
-    left: auto;
-    width: auto;
-    min-height: auto;
+  .aboutHoverDeck {
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 0;
+  }
+
+  /* Generic + per-index overrides in one block so specificity always wins */
+  .aboutHoverTile,
+  .aboutHoverTile[data-idx="0"],
+  .aboutHoverTile[data-idx="1"],
+  .aboutHoverTile[data-idx="2"] {
+    position: relative !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    min-height: auto !important;
     transform: none !important;
     opacity: 1 !important;
     filter: none !important;
+    border-radius: 14px;
+  }
+
+  /* Always reveal full text on touch — there's no hover state */
+  .aboutHoverShort {
+    display: none;
   }
 
   .aboutHoverFull {
-    max-height: 0;
-    opacity: 0;
+    max-height: 300px !important;
+    opacity: 1 !important;
+  }
+
+  /* Keep the ::after gradient overlay subtle */
+  .aboutHoverTile::after {
+    opacity: 0.4;
   }
 }
 
@@ -6170,11 +6217,76 @@ html.noReveal .r,
   }
 }
 
-/* tablet: make info row 3 cols earlier */
+/* ── Tablet bento: 2-column layout (600 – 979 px) ── */
 
-@media (min-width: 760px) and (max-width: 979px) {
+@media (min-width: 600px) and (max-width: 979px) {
+  .aboutGrid {
+    grid-template-columns: 1fr 1fr;
+    grid-auto-rows: auto;
+  }
+
+  /* Row 1: name left, info spans right (full width feels better than two equal halves) */
+  .aboutCard--name {
+    grid-column: 1;
+    grid-row: 1;
+    min-height: 160px;
+  }
+
+  .aboutCard--info {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  /* Row 2: mindset left, portrait right */
+  .aboutCard--mindset {
+    grid-column: 1;
+    grid-row: 2;
+    min-height: 320px;
+  }
+
+  .aboutCard--portrait {
+    grid-column: 2;
+    grid-row: 2;
+    min-height: 0;
+  }
+
+  /* Row 3: craft left, location right */
+  .aboutCard--craft {
+    grid-column: 1;
+    grid-row: 3;
+    min-height: 320px;
+  }
+
+  .aboutCard--location {
+    grid-column: 2;
+    grid-row: 3;
+  }
+
+  /* Portrait fills its half-column */
+  .aboutPortrait {
+    height: 100%;
+    min-height: 300px;
+  }
+
+  /* Info hover tiles: 3 cols on tablet too */
   .aboutInfoRow {
     grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ── Mobile bento: give portrait a sensible height, don't let it dominate ── */
+
+@media (max-width: 599px) {
+  /* Portrait standalone: cap it so it doesn't feel like a wasted full-screen photo */
+  .aboutPortrait {
+    min-height: 220px;
+    max-height: 260px;
+  }
+
+  /* Tighten the tall cards a little on small screens */
+  .aboutCard--mindset,
+  .aboutCard--craft {
+    min-height: 280px;
   }
 }
 

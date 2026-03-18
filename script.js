@@ -713,72 +713,60 @@ function makeProjectCard(p, index) {
   el.className = "projectCard r" + (p.featured ? " featured" : "");
   el.tabIndex = 0;
 
-  const img = p.imageUrl
-    ? `
-    <img src="${p.imageUrl}" alt="" onerror="this.style.display='none'">
-    <div class="mediaGlow" aria-hidden="true"></div>
-  `
-    : `
-    <div class="mediaGlow" aria-hidden="true"></div>
-  `;
+  const imgHtml = p.imageUrl
+    ? `<img src="${p.imageUrl}" alt="${escapeHtml(p.name)}" onerror="this.style.display='none'">`
+    : "";
+
+  const liveBtn =
+    p.demoUrl && p.demoUrl !== "x"
+      ? `<a class="overlayBtn live" href="${p.demoUrl}" target="_blank" rel="noopener" tabindex="-1">↗ Live</a>`
+      : "";
+  const codeBtn =
+    p.repoUrl && p.repoUrl !== "x"
+      ? `<a class="overlayBtn" href="${p.repoUrl}" target="_blank" rel="noopener" tabindex="-1">{ } Code</a>`
+      : "";
 
   el.innerHTML = `
-    <div class="projectTop">
-      <div class="pNum">${String(index + 1).padStart(2, "0")}</div>
-      ${p.featured ? `<div class="pBadge">Featured</div>` : ``}
+    <div class="cardMedia">
+      ${imgHtml}
+      <div class="cardOverlay" aria-hidden="true">
+        <div class="overlayLinks">${liveBtn}${codeBtn}</div>
+      </div>
+      <div class="cardNum">${String(index + 1).padStart(2, "0")}</div>
+      ${p.featured ? `<div class="pBadge">Featured</div>` : ""}
     </div>
-
-    <div class="projectMedia">
-      ${img}
-    </div>
-
-    <div class="projectBody">
-      <div class="pTitle">${escapeHtml(p.name)}</div>
-      <div class="pDesc">${escapeHtml(p.description || "")}</div>
-
+    <div class="cardBody">
       <div class="tagRow">
         ${(p.tags || [])
           .slice(0, 4)
           .map((t) => `<span class="tag">${escapeHtml(t)}</span>`)
           .join("")}
       </div>
-
-      <div class="pMeta">
-        <div>${formatDate(p.date)}</div>
-        <div class="pLinks">
-          ${
-            p.demoUrl
-              ? `<a class="btn tiny primary" href="${p.demoUrl}" target="_blank" rel="noopener">Live</a>`
-              : ``
-          }
-          ${
-            p.repoUrl
-              ? `<a class="btn tiny" href="${p.repoUrl}" target="_blank" rel="noopener">Code</a>`
-              : ``
-          }
-        </div>
-      </div>
+      <div class="cardTitle">${escapeHtml(p.name)}</div>
+      <div class="cardDesc">${escapeHtml(p.description || "")}</div>
+      <div class="cardMeta">${formatDate(p.date)}</div>
     </div>
   `;
 
-  // hover tilt
-  const reset = () => {
-    el.style.transform = "";
-  };
-  el.addEventListener("mousemove", (e) => {
-    const r = el.getBoundingClientRect();
-    const x = (e.clientX - r.left) / r.width - 0.5;
-    const y = (e.clientY - r.top) / r.height - 0.5;
-    el.style.transform = `perspective(800px) rotateX(${(-y * 5).toFixed(
-      2,
-    )}deg) rotateY(${(x * 6).toFixed(2)}deg) translateY(-2px)`;
-  });
-  el.addEventListener("mouseleave", reset);
+  // 3D tilt on hover (desktop only)
+  if (window.matchMedia("(hover: hover)").matches) {
+    el.addEventListener("mousemove", (e) => {
+      const r = el.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width - 0.5;
+      const y = (e.clientY - r.top) / r.height - 0.5;
+      el.style.transform = `perspective(1000px) rotateX(${(-y * 3.5).toFixed(2)}deg) rotateY(${(x * 4.5).toFixed(2)}deg) translateY(-3px)`;
+    });
+    el.addEventListener("mouseleave", () => {
+      el.style.transform = "";
+    });
+  }
 
   el.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
-      if (p.demoUrl) window.open(p.demoUrl, "_blank", "noopener");
-      else if (p.repoUrl) window.open(p.repoUrl, "_blank", "noopener");
+      if (p.demoUrl && p.demoUrl !== "x")
+        window.open(p.demoUrl, "_blank", "noopener");
+      else if (p.repoUrl && p.repoUrl !== "x")
+        window.open(p.repoUrl, "_blank", "noopener");
     }
   });
 
@@ -836,23 +824,13 @@ function renderWork() {
   if (proj) proj.textContent = String(state.projects.length);
   if (tags) tags.textContent = String(Math.max(0, state.tags.length - 1));
 
+  // Grid layout — no arrows needed
   const prev = document.getElementById("railPrev");
   const next = document.getElementById("railNext");
+  if (prev) prev.hidden = true;
+  if (next) next.hidden = true;
 
-  // If no cards, hide arrows completely
-  if (list.length === 0) {
-    if (prev) prev.hidden = true;
-    if (next) next.hidden = true;
-    return;
-  }
-
-  const viewport = document.querySelector(".railViewport");
-  if (viewport) viewport.scrollLeft = 0;
-
-  // Force arrow refresh after render + scroll reset
-  requestAnimationFrame(() => {
-    grid.dispatchEvent(new Event("scroll"));
-  });
+  if (list.length === 0) return;
 
   // Animate cards only when section has been entered
   if (state.workEntered) {
