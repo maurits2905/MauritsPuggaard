@@ -1105,12 +1105,48 @@ function renderCareer() {
     raf = requestAnimationFrame(updateFromScroll);
   }
 
+  function updateLineWrap() {
+    if (!lineWrap || !rowsRoot) return;
+
+    // Stretch lineWrap to cover the full height of the rows container.
+    // (grid-row: 1/-1 only covers explicit rows; display:contents creates
+    //  implicit rows, so we must set height manually.)
+    lineWrap.style.height = rowsRoot.offsetHeight + "px";
+
+    // Position horizontally:
+    //  - desktop (>1040px): centre in the gap between year col and desc col
+    //  - tablet/mobile    : left edge of the grid (column 1 space)
+    if (window.innerWidth > 1040 && yearEls.length && rightEls.length) {
+      const rowsRect = rowsRoot.getBoundingClientRect();
+      const yearRect = yearEls[0].getBoundingClientRect();
+      const rightRect = rightEls[0].getBoundingClientRect();
+      const midX = (yearRect.right + rightRect.left) / 2;
+      const leftPx = midX - rowsRect.left - lineWrap.offsetWidth / 2;
+      lineWrap.style.left = Math.max(0, leftPx) + "px";
+    } else {
+      lineWrap.style.left = "0px";
+    }
+
+    updateFromScroll();
+  }
+
+  // Add top margin between entries on compact layouts for readability
+  leftBtns.forEach((btn, i) => {
+    if (i > 0 && window.innerWidth <= 1040) btn.style.marginTop = "20px";
+  });
+
   window.addEventListener("scroll", onScroll, { passive: true });
-  window.addEventListener("resize", () => updateFromScroll());
+  window.addEventListener("resize", () => {
+    leftBtns.forEach((btn, i) => {
+      btn.style.marginTop =
+        i > 0 && window.innerWidth <= 1040 ? "20px" : "";
+    });
+    updateLineWrap();
+  });
 
   requestAnimationFrame(() => {
     setActive(0, true);
-    updateFromScroll();
+    updateLineWrap();
   });
 }
 
@@ -1400,13 +1436,17 @@ function initBgStars() {
 
       ctx.beginPath();
       ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255,255,255,${s.a})`;
+      const isLight = document.documentElement.getAttribute("data-theme") === "light";
+      ctx.fillStyle = isLight ? `rgba(20,15,10,${s.a})` : `rgba(255,255,255,${s.a})`;
       ctx.fill();
     }
 
-    // vignette
-    ctx.fillStyle = vignette;
-    ctx.fillRect(0, 0, w, h);
+    // vignette only in dark mode
+    const isLight = document.documentElement.getAttribute("data-theme") === "light";
+    if (!isLight) {
+      ctx.fillStyle = vignette;
+      ctx.fillRect(0, 0, w, h);
+    }
   }
 
   let raf = 0;
