@@ -2163,86 +2163,78 @@ html.noReveal .r,
   opacity: 1;
 }
 
-/* ===== Project cards — grid redesign ===== */
+/* ===== Project cards — horizontal showcase ===== */
 
 .projectCard {
-  position: relative;
-  background: #07080d;
-  border: 1px solid rgba(255, 32, 68, 0.14);
-  border-radius: 18px;
+  display: grid;
+  grid-template-columns: 55fr 45fr;
+  min-height: 360px;
+  border-radius: 20px;
   overflow: hidden;
+  border: 1px solid rgba(255, 32, 68, 0.14);
+  background: #07080d;
   cursor: pointer;
   transition:
-    border-color 280ms ease,
-    box-shadow 280ms ease,
+    border-color 300ms ease,
+    box-shadow 300ms ease,
     transform 200ms ease;
   will-change: transform;
-  transform-style: preserve-3d;
 }
 
 @media (hover: hover) and (pointer: fine) {
   .projectCard:hover {
-    border-color: rgba(255, 32, 68, 0.48);
+    border-color: rgba(255, 32, 68, 0.42);
     box-shadow:
-      0 0 0 1px rgba(255, 32, 68, 0.1),
-      0 28px 80px rgba(0, 0, 0, 0.55),
-      0 0 55px rgba(255, 32, 68, 0.08);
+      0 24px 80px rgba(0, 0, 0, 0.52),
+      0 0 0 1px rgba(255, 32, 68, 0.08);
+    transform: translateY(-2px);
   }
 }
 
-/* Featured spans full row */
-.projectCard.featured {
-  grid-column: span 2;
-}
+/* ── Left panel: screenshot ── */
 
-@media (max-width: 680px) {
-  .projectCard.featured {
-    grid-column: span 1;
-  }
-}
-
-/* ── Card media (image + overlays) ── */
-
-.cardMedia {
+.cardLeft {
   position: relative;
-  height: 220px;
   overflow: hidden;
-  background: rgba(0, 0, 0, 0.3);
+  min-height: 300px;
 }
 
-.projectCard.featured .cardMedia {
-  height: 300px;
+.cardImgWrap {
+  position: absolute;
+  inset: 20px 0 0 20px;
+  border-radius: 12px 0 0 0;
+  overflow: hidden;
+  box-shadow:
+    -6px -6px 28px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(255, 255, 255, 0.06);
 }
 
-.cardMedia img {
+.cardImg {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  opacity: 0.88;
-  transition: transform 420ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
-              opacity 280ms ease;
+  object-position: top center;
+  transition: transform 520ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .projectCard:hover .cardMedia img {
-    transform: scale(1.05);
-    opacity: 1;
+  .projectCard:hover .cardImg {
+    transform: scale(1.04);
   }
 }
 
-/* Hover overlay with action links */
+/* Hover overlay on left panel */
 .cardOverlay {
   position: absolute;
   inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(5px);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  background: rgba(0, 0, 0, 0.62);
-  backdrop-filter: blur(6px);
   opacity: 0;
-  transition: opacity 240ms ease;
+  transition: opacity 260ms ease;
   z-index: 4;
 }
 
@@ -2252,102 +2244,166 @@ html.noReveal .r,
   }
 }
 
-/* On touch devices always show subtle links instead */
-@media (hover: none) {
-  .cardOverlay {
-    position: static;
-    opacity: 1;
-    background: transparent;
-    backdrop-filter: none;
-    justify-content: flex-start;
-    padding: 0 18px 14px;
-    gap: 10px;
-  }
-}
-
-.overlayLinks {
-  display: flex;
-  gap: 12px;
-}
-
-.overlayBtn {
-  padding: 10px 20px;
-  font-size: 13px;
+.overlayLabel {
+  padding: 12px 26px;
+  font-size: 14px;
   font-weight: 750;
-  letter-spacing: 0.01em;
-  color: rgba(255, 255, 255, 0.9);
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 999px;
-  text-decoration: none;
-  transition:
-    background 180ms ease,
-    border-color 180ms ease,
-    transform 180ms ease;
-  white-space: nowrap;
-}
-
-.overlayBtn:hover {
-  background: rgba(255, 255, 255, 0.18);
-  transform: translateY(-1px);
-}
-
-.overlayBtn.live {
-  background: rgba(255, 32, 68, 0.82);
-  border-color: transparent;
-}
-
-.overlayBtn.live:hover {
-  background: rgba(255, 32, 68, 1);
-}
-
-/* Number badge on image */
-.cardNum {
-  position: absolute;
-  top: 12px;
-  left: 14px;
-  padding: 4px 9px;
-  font-size: 11px;
-  font-weight: 900;
-  letter-spacing: 0.14em;
-  color: rgba(255, 255, 255, 0.82);
-  background: rgba(0, 0, 0, 0.48);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 999px;
-  backdrop-filter: blur(6px);
-  z-index: 3;
-}
-
-/* Featured badge on image */
-.pBadge {
-  position: absolute;
-  top: 12px;
-  right: 14px;
-  padding: 4px 10px;
-  font-size: 11px;
-  font-weight: 750;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   color: rgba(255, 255, 255, 0.95);
-  background: rgba(255, 32, 68, 0.78);
-  border: 1px solid rgba(255, 32, 68, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 999px;
-  backdrop-filter: blur(6px);
-  z-index: 3;
+  backdrop-filter: blur(4px);
 }
 
-/* ── Card body ── */
+/* Spinning "VISIT PROJECT" circular badge */
+.visitBadge {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  width: 82px;
+  height: 82px;
+  display: grid;
+  place-items: center;
+  text-decoration: none;
+  z-index: 5;
+  transition: transform 300ms ease;
+}
 
-.cardBody {
+.visitBadge:hover {
+  transform: scale(1.1);
+}
+
+.visitRing {
+  position: absolute;
+  inset: 0;
+  animation: visitSpin 14s linear infinite;
+  overflow: visible;
+}
+
+.visitText {
+  fill: rgba(255, 255, 255, 0.62);
+  font-size: 10.5px;
+  letter-spacing: 2.8px;
+  font-weight: 650;
+  font-family: inherit;
+}
+
+@keyframes visitSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.visitArrow {
+  position: relative;
+  z-index: 1;
+  font-size: 20px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+/* ── Right panel: text content ── */
+
+.cardRight {
   display: flex;
   flex-direction: column;
-  padding: 16px 18px 18px;
+  padding: 28px 32px 26px;
+  border-left: 1px solid rgba(255, 32, 68, 0.1);
+}
+
+.cardRightTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.cardAccentLine {
+  width: 26px;
+  height: 3px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.cardNumRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cardNum {
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.pBadge {
+  padding: 3px 9px;
+  font-size: 10.5px;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 32, 68, 0.72);
+  border: 1px solid rgba(255, 32, 68, 0.35);
+  border-radius: 999px;
+}
+
+.cardTitle {
+  font-size: clamp(20px, 2.2vw, 26px);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+
+.cardDesc {
+  display: -webkit-box;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--muted);
+  margin-bottom: 14px;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.cardHighlights {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cardHighlightItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: color-mix(in srgb, var(--text) 72%, transparent);
+}
+
+.highlightPlus {
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1.3;
+  flex-shrink: 0;
+}
+
+.cardBottom {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .projectCard .tagRow {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-bottom: 10px;
 }
 
 .projectCard .tagRow .tag {
@@ -2355,61 +2411,114 @@ html.noReveal .r,
   font-size: 11px;
 }
 
-.cardTitle {
-  font-size: 17px;
-  font-weight: 900;
-  letter-spacing: -0.025em;
-  line-height: 1.25;
-  color: var(--text);
+.cardLinks {
+  display: flex;
+  gap: 10px;
 }
 
-.projectCard.featured .cardTitle {
-  font-size: 21px;
+.cardLink {
+  padding: 9px 20px;
+  font-size: 12.5px;
+  font-weight: 750;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  text-decoration: none;
+  transition:
+    background 180ms ease,
+    border-color 180ms ease;
+  white-space: nowrap;
 }
 
-.cardDesc {
-  display: -webkit-box;
-  margin-top: 8px;
-  font-size: 13.5px;
-  line-height: 1.55;
-  color: var(--muted);
-  overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+.cardLink:hover {
+  background: rgba(255, 255, 255, 0.13);
+  border-color: rgba(255, 255, 255, 0.28);
 }
 
-.projectCard.featured .cardDesc {
-  -webkit-line-clamp: 3;
+.cardLink.live {
+  background: rgba(255, 32, 68, 0.78);
+  border-color: transparent;
+  color: white;
 }
 
-.cardMeta {
-  margin-top: 14px;
-  font-size: 11.5px;
-  color: color-mix(in srgb, var(--muted) 65%, transparent);
-  letter-spacing: 0.03em;
+.cardLink.live:hover {
+  background: rgba(255, 32, 68, 1);
 }
 
-/* ── Light mode overrides ── */
+/* ── Responsive ── */
+
+@media (max-width: 860px) {
+  .projectCard {
+    grid-template-columns: 1fr;
+    min-height: unset;
+  }
+
+  .cardLeft {
+    height: 260px;
+    min-height: unset;
+  }
+
+  .cardImgWrap {
+    inset: 14px 0 0 14px;
+  }
+
+  .cardRight {
+    border-left: none;
+    border-top: 1px solid rgba(255, 32, 68, 0.1);
+    padding: 22px 22px 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .cardLeft {
+    height: 200px;
+  }
+
+  .cardTitle {
+    font-size: 18px;
+  }
+
+  .cardRight {
+    padding: 18px;
+  }
+
+  .visitBadge {
+    width: 68px;
+    height: 68px;
+  }
+}
+
+/* ── Light mode ── */
 
 [data-theme="light"] .projectCard {
-  background: rgba(255, 255, 255, 0.88);
+  background: rgba(255, 255, 255, 0.9);
   border-color: rgba(12, 10, 8, 0.1);
-  box-shadow: 0 4px 24px rgba(12, 10, 8, 0.06);
+  box-shadow: 0 4px 24px rgba(12, 10, 8, 0.07);
 }
 
 [data-theme="light"] .projectCard:hover {
-  border-color: rgba(232, 51, 42, 0.45);
-  box-shadow: 0 12px 48px rgba(12, 10, 8, 0.1), 0 0 40px rgba(232, 51, 42, 0.06);
+  border-color: rgba(232, 51, 42, 0.4);
+  box-shadow: 0 16px 60px rgba(12, 10, 8, 0.1);
 }
 
-[data-theme="light"] .cardTitle {
-  color: rgba(12, 10, 8, 0.92);
+[data-theme="light"] .cardRight {
+  border-left-color: rgba(12, 10, 8, 0.08);
 }
 
-[data-theme="light"] .cardNum {
-  color: rgba(12, 10, 8, 0.75);
-  background: rgba(255, 255, 255, 0.7);
-  border-color: rgba(12, 10, 8, 0.12);
+[data-theme="light"] .cardLink {
+  color: rgba(12, 10, 8, 0.8);
+  background: rgba(12, 10, 8, 0.05);
+  border-color: rgba(12, 10, 8, 0.14);
+}
+
+[data-theme="light"] .cardLink:hover {
+  background: rgba(12, 10, 8, 0.09);
+}
+
+[data-theme="light"] .visitText {
+  fill: rgba(12, 10, 8, 0.55);
 }
 
 .empty {
@@ -3563,33 +3672,27 @@ html.noReveal .r,
   }
 }
 
-/* ===== Projects grid wrapper ===== */
+/* ===== Projects showcase wrapper ===== */
 
 .railWrap {
   position: relative;
-  margin-top: 24px;
+  margin-top: 28px;
 }
 
 .railViewport {
   overflow: visible;
 }
 
-/* 2-column grid — all projects visible */
+/* Vertical stack — one full-width card per row */
 .workGrid.rail {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: 20px;
 }
 
-/* Rail arrows hidden — not needed for grid */
+/* Rail arrows hidden */
 .railArrow {
   display: none !important;
-}
-
-@media (max-width: 680px) {
-  .workGrid.rail {
-    grid-template-columns: 1fr;
-  }
 }
 
 /* ------------------------------

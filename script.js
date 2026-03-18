@@ -713,49 +713,85 @@ function makeProjectCard(p, index) {
   el.className = "projectCard r" + (p.featured ? " featured" : "");
   el.tabIndex = 0;
 
+  // Per-card accent palette — cycles through a set of dark-toned backgrounds
+  const palettes = [
+    { bg: "linear-gradient(135deg,#1a0406 0%,#2d0810 100%)", accent: "#ff3352" },
+    { bg: "linear-gradient(135deg,#03081e 0%,#081028 100%)", accent: "#3a80ff" },
+    { bg: "linear-gradient(135deg,#0a0318 0%,#130528 100%)", accent: "#9b5cf6" },
+    { bg: "linear-gradient(135deg,#021808 0%,#032010 100%)", accent: "#22c55e" },
+    { bg: "linear-gradient(135deg,#1a0c02 0%,#241404 100%)", accent: "#f97316" },
+    { bg: "linear-gradient(135deg,#001a18 0%,#022420 100%)", accent: "#2dd4bf" },
+    { bg: "linear-gradient(135deg,#1a1002 0%,#241802 100%)", accent: "#facc15" },
+    { bg: "linear-gradient(135deg,#02101a 0%,#041824 100%)", accent: "#38bdf8" },
+    { bg: "linear-gradient(135deg,#180204 0%,#200408 100%)", accent: "#e11d48" },
+  ];
+  const pal = palettes[index % palettes.length];
+
   const imgHtml = p.imageUrl
-    ? `<img src="${p.imageUrl}" alt="${escapeHtml(p.name)}" onerror="this.style.display='none'">`
+    ? `<img class="cardImg" src="${p.imageUrl}" alt="${escapeHtml(p.name)}" onerror="this.style.display='none'">`
     : "";
 
-  const liveBtn =
+  // Circular spinning badge
+  const circleId = `cp${index}`;
+  const visitBadge =
     p.demoUrl && p.demoUrl !== "x"
-      ? `<a class="overlayBtn live" href="${p.demoUrl}" target="_blank" rel="noopener" tabindex="-1">↗ Live</a>`
-      : "";
-  const codeBtn =
-    p.repoUrl && p.repoUrl !== "x"
-      ? `<a class="overlayBtn" href="${p.repoUrl}" target="_blank" rel="noopener" tabindex="-1">{ } Code</a>`
+      ? `<a class="visitBadge" href="${p.demoUrl}" target="_blank" rel="noopener" aria-label="Visit project">
+           <svg class="visitRing" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+             <path id="${circleId}" fill="none" d="M50,50 m-32,0 a32,32 0 1,1 64,0 a32,32 0 1,1 -64,0"/>
+             <text class="visitText"><textPath href="#${circleId}">VISIT PROJECT · VISIT PROJECT · </textPath></text>
+           </svg>
+           <span class="visitArrow" style="color:${pal.accent}">↗</span>
+         </a>`
       : "";
 
+  // Highlights bullet list (max 3)
+  const highlights = (p.highlights || [])
+    .filter((h) => h && h !== "x")
+    .slice(0, 3)
+    .map(
+      (h) =>
+        `<li class="cardHighlightItem"><span class="highlightPlus" style="color:${pal.accent}">+</span>${escapeHtml(h)}</li>`,
+    )
+    .join("");
+
+  const tags = (p.tags || [])
+    .slice(0, 5)
+    .map((t) => `<span class="tag">${escapeHtml(t)}</span>`)
+    .join("");
+
   el.innerHTML = `
-    <div class="cardMedia">
-      ${imgHtml}
-      <div class="cardOverlay" aria-hidden="true">
-        <div class="overlayLinks">${liveBtn}${codeBtn}</div>
-      </div>
-      <div class="cardNum">${String(index + 1).padStart(2, "0")}</div>
-      ${p.featured ? `<div class="pBadge">Featured</div>` : ""}
+    <div class="cardLeft" style="background:${pal.bg}">
+      <div class="cardImgWrap">${imgHtml}</div>
+      <div class="cardOverlay"><span class="overlayLabel">View Project</span></div>
+      ${visitBadge}
     </div>
-    <div class="cardBody">
-      <div class="tagRow">
-        ${(p.tags || [])
-          .slice(0, 4)
-          .map((t) => `<span class="tag">${escapeHtml(t)}</span>`)
-          .join("")}
+
+    <div class="cardRight">
+      <div class="cardRightTop">
+        <div class="cardNumRow">
+          <span class="cardNum" style="color:${pal.accent}">${String(index + 1).padStart(2, "0")}</span>
+          ${p.featured ? `<span class="pBadge">Featured</span>` : ""}
+        </div>
+        <div class="cardAccentLine" style="background:${pal.accent}"></div>
       </div>
-      <div class="cardTitle">${escapeHtml(p.name)}</div>
-      <div class="cardDesc">${escapeHtml(p.description || "")}</div>
-      <div class="cardMeta">${formatDate(p.date)}</div>
+
+      <h3 class="cardTitle">${escapeHtml(p.name)}</h3>
+      <p class="cardDesc">${escapeHtml(p.description || "")}</p>
+
+      ${highlights ? `<ul class="cardHighlights">${highlights}</ul>` : ""}
+
+      <div class="cardBottom">
+        <div class="tagRow">${tags}</div>
+        <div class="cardLinks">
+          ${p.demoUrl && p.demoUrl !== "x" ? `<a class="cardLink live" href="${p.demoUrl}" target="_blank" rel="noopener">↗ Live</a>` : ""}
+          ${p.repoUrl && p.repoUrl !== "x" ? `<a class="cardLink" href="${p.repoUrl}" target="_blank" rel="noopener">{ } Code</a>` : ""}
+        </div>
+      </div>
     </div>
   `;
 
-  // 3D tilt on hover (desktop only)
+  // Subtle lift on hover (no tilt — horizontal card doesn't benefit from tilt)
   if (window.matchMedia("(hover: hover)").matches) {
-    el.addEventListener("mousemove", (e) => {
-      const r = el.getBoundingClientRect();
-      const x = (e.clientX - r.left) / r.width - 0.5;
-      const y = (e.clientY - r.top) / r.height - 0.5;
-      el.style.transform = `perspective(1000px) rotateX(${(-y * 3.5).toFixed(2)}deg) rotateY(${(x * 4.5).toFixed(2)}deg) translateY(-3px)`;
-    });
     el.addEventListener("mouseleave", () => {
       el.style.transform = "";
     });
