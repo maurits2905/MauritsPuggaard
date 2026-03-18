@@ -1537,6 +1537,99 @@ function initBgStars() {
   else draw();
 }
 
+/* ── Hero particle network canvas ── */
+function initHeroNet() {
+  const canvas = document.getElementById("heroNet");
+  if (!canvas) return;
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  const ctx = canvas.getContext("2d");
+  let W = 0, H = 0, dpr = 1;
+  const DOTS = 70;
+  const CONNECT_DIST = 140;
+  const ACCENT_COUNT = 8;
+  let dots = [];
+  let raf = 0;
+
+  function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = canvas.offsetWidth;
+    H = canvas.offsetHeight;
+    canvas.width  = W * dpr;
+    canvas.height = H * dpr;
+    ctx.scale(dpr, dpr);
+    buildDots();
+  }
+
+  function buildDots() {
+    dots = [];
+    for (let i = 0; i < DOTS; i++) {
+      dots.push({
+        x:  Math.random() * W,
+        y:  Math.random() * H,
+        vx: (Math.random() - 0.5) * 0.28,
+        vy: (Math.random() - 0.5) * 0.28,
+        r:  Math.random() * 1.2 + 0.4,
+        accent: i < ACCENT_COUNT,
+      });
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // connections
+    for (let i = 0; i < dots.length; i++) {
+      for (let j = i + 1; j < dots.length; j++) {
+        const dx = dots[i].x - dots[j].x;
+        const dy = dots[i].y - dots[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist > CONNECT_DIST) continue;
+        const alpha = (1 - dist / CONNECT_DIST) * 0.1;
+        const isRed = dots[i].accent || dots[j].accent;
+        ctx.strokeStyle = isRed
+          ? `rgba(255,32,68,${alpha * 1.8})`
+          : `rgba(255,255,255,${alpha})`;
+        ctx.lineWidth = 0.6;
+        ctx.beginPath();
+        ctx.moveTo(dots[i].x, dots[i].y);
+        ctx.lineTo(dots[j].x, dots[j].y);
+        ctx.stroke();
+      }
+    }
+
+    // dots
+    for (const d of dots) {
+      ctx.beginPath();
+      ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+      ctx.fillStyle = d.accent
+        ? "rgba(255,60,80,0.7)"
+        : "rgba(255,255,255,0.45)";
+      ctx.fill();
+
+      d.x += d.vx;
+      d.y += d.vy;
+      if (d.x < -10) d.x = W + 10;
+      if (d.x > W + 10) d.x = -10;
+      if (d.y < -10) d.y = H + 10;
+      if (d.y > H + 10) d.y = -10;
+    }
+
+    raf = requestAnimationFrame(draw);
+  }
+
+  const ro = new ResizeObserver(() => {
+    cancelAnimationFrame(raf);
+    ctx.resetTransform();
+    resize();
+    draw();
+  });
+  ro.observe(canvas);
+
+  resize();
+  draw();
+}
+
 /* ------------------------------
    Hero earth FX (aurora + subtle parallax)
    - drives CSS vars --hx/--hy used by .heroEarth
@@ -1748,6 +1841,7 @@ async function init() {
   loadTo(28);
 
   initBgStars();
+  initHeroNet();
   initHeroEarthFX();
   initHeroSkillTicker();
 

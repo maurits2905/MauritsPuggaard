@@ -6791,244 +6791,317 @@ html.noReveal .r,
 }
 
 /* ================================================
-   HERO REDESIGN — Editorial Split Layout
-   (overrides older centered hero styles above)
+   HERO v2 — Atmospheric Orbs + Particle Net + Cinematic Type
 ================================================ */
 
-/* Re-layout the inner wrapper: left-aligned, wider */
+/* ── Inner wrapper: centered, full-width feel ── */
 .heroSpaceInner {
-  width: min(1100px, 94vw);
-  padding-top: calc(var(--navH) + 60px);
+  position: relative;
+  z-index: 3;
+  width: min(1060px, 94vw);
+  padding-top: calc(var(--navH) + 56px);
   padding-bottom: 0;
-  text-align: left;
+  text-align: center;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 0;
 }
 
-/* Two-column split: text | portrait */
-.heroRow {
-  display: grid;
-  grid-template-columns: 1fr 310px;
-  align-items: center;
-  gap: 52px;
+/* ── Chip stays centered ── */
+.heroSpaceInner .heroNewRow {
+  justify-content: center;
+  margin-bottom: 28px;
 }
 
-/* ── Left chip: left-align ── */
-.heroContent .heroNewRow {
-  justify-content: flex-start;
-  margin-bottom: 24px;
+/* ── Atmosphere orbs ── */
+.heroOrb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(90px);
+  will-change: transform, opacity;
 }
 
-/* ── Massive name ── */
+.heroOrb--red {
+  width: clamp(500px, 55vw, 820px);
+  height: clamp(500px, 55vw, 820px);
+  top: -18%;
+  left: -12%;
+  background: radial-gradient(closest-side,
+    rgba(220, 20, 55, 0.22) 0%,
+    rgba(180, 10, 35, 0.1) 45%,
+    transparent 100%
+  );
+  animation: orbFloat1 20s ease-in-out infinite;
+}
+
+.heroOrb--purple {
+  width: clamp(350px, 38vw, 580px);
+  height: clamp(350px, 38vw, 580px);
+  top: -10%;
+  right: -8%;
+  background: radial-gradient(closest-side,
+    rgba(110, 40, 200, 0.16) 0%,
+    rgba(80, 20, 150, 0.07) 50%,
+    transparent 100%
+  );
+  animation: orbFloat2 26s ease-in-out infinite;
+}
+
+.heroOrb--blue {
+  width: clamp(280px, 30vw, 460px);
+  height: clamp(280px, 30vw, 460px);
+  top: 30%;
+  right: 20%;
+  background: radial-gradient(closest-side,
+    rgba(20, 60, 200, 0.1) 0%,
+    rgba(10, 30, 120, 0.04) 55%,
+    transparent 100%
+  );
+  animation: orbFloat3 32s ease-in-out infinite;
+}
+
+@keyframes orbFloat1 {
+  0%,100% { transform: translate(0,0)   scale(1);    opacity: 0.8; }
+  33%      { transform: translate(6%,4%) scale(1.08); opacity: 1;   }
+  66%      { transform: translate(-4%,7%) scale(0.94); opacity: 0.7; }
+}
+@keyframes orbFloat2 {
+  0%,100% { transform: translate(0,0)    scale(1);    opacity: 0.65; }
+  40%      { transform: translate(-5%,3%) scale(1.1);  opacity: 0.9;  }
+  70%      { transform: translate(3%,-5%) scale(0.92); opacity: 0.55; }
+}
+@keyframes orbFloat3 {
+  0%,100% { transform: translate(0,0)    scale(1);   opacity: 0.5; }
+  50%      { transform: translate(-3%,-4%) scale(1.12); opacity: 0.75; }
+}
+
+/* ── Particle network canvas ── */
+.heroNetCanvas {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0.65;
+}
+
+/* ── Dot grid ── */
+.heroDotGrid {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background-image: radial-gradient(circle, rgba(255,255,255,0.055) 1px, transparent 1px);
+  background-size: 36px 36px;
+  pointer-events: none;
+  mask-image: linear-gradient(to bottom,
+    transparent 0%,
+    rgba(0,0,0,0.8) 15%,
+    rgba(0,0,0,0.8) 65%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(to bottom,
+    transparent 0%,
+    rgba(0,0,0,0.8) 15%,
+    rgba(0,0,0,0.8) 65%,
+    transparent 100%
+  );
+}
+
+/* ── Giant name ── */
 .heroNameBlock {
   display: flex;
   flex-direction: column;
-  line-height: 0.86;
+  line-height: 0.87;
   letter-spacing: -0.04em;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
+  text-align: center;
 }
 
 .heroNameFill {
   display: block;
-  font-size: clamp(56px, 9.8vw, 138px);
+  font-size: clamp(60px, 14.5vw, 200px);
   font-weight: 900;
-  color: rgba(255, 255, 255, 0.97);
   text-transform: uppercase;
   font-family: var(--font);
+  background: linear-gradient(
+    160deg,
+    rgba(255,255,255,1)    0%,
+    rgba(255,255,255,0.95) 35%,
+    rgba(255,130,150,0.55) 68%,
+    rgba(255,255,255,0.9)  100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .heroNameOutline {
   display: block;
-  font-size: clamp(56px, 9.8vw, 138px);
+  font-size: clamp(60px, 14.5vw, 200px);
   font-weight: 900;
-  color: transparent;
-  -webkit-text-stroke: 1.5px rgba(255, 255, 255, 0.26);
   text-transform: uppercase;
   font-family: var(--font);
+  color: transparent;
+  -webkit-text-stroke: 1.5px rgba(255,255,255,0.22);
 }
 
-/* ── Role + tagline ── */
-.heroRoleRow {
+/* ── Glowing divider ── */
+.heroDivider {
+  position: relative;
+  width: min(700px, 90%);
+  height: 1px;
+  margin: 18px auto 28px;
+}
+
+.heroDividerLine {
+  display: block;
+  height: 1px;
+  width: 100%;
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(255,255,255,0.12) 20%,
+    rgba(255,32,68,0.35) 50%,
+    rgba(255,255,255,0.12) 80%,
+    transparent 100%
+  );
+}
+
+.heroDividerGlow {
+  display: block;
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 30%;
+  height: 9px;
+  background: rgba(255,32,68,0.35);
+  filter: blur(8px);
+  border-radius: 50%;
+}
+
+/* ── Bottom strip: portrait + role text + CTAs ── */
+.heroStrip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  width: 100%;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+
+.heroStripLeft {
   display: flex;
   align-items: center;
   gap: 14px;
+  text-align: left;
+}
+
+.heroStripRight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   flex-wrap: wrap;
-  margin-bottom: 28px;
+}
+
+/* Mini circular portrait */
+.heroPortraitMini {
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1.5px solid rgba(255,32,68,0.4);
+  box-shadow: 0 0 18px rgba(255,32,68,0.25), 0 0 0 3px rgba(255,32,68,0.08);
+}
+
+.heroPortraitMiniImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 10%;
+}
+
+.heroStripText {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
 }
 
 .heroTagline {
-  font-size: 0.88rem;
-  color: rgba(255, 255, 255, 0.44);
-  line-height: 1.65;
-  max-width: 38ch;
+  font-size: 0.82rem;
+  color: rgba(255,255,255,0.42);
+  line-height: 1.5;
+  max-width: 28ch;
   margin: 0;
 }
 
-/* ── CTA + stats in one row ── */
-.heroCTAStatRow {
-  display: flex;
-  align-items: center;
-  gap: 28px;
-  flex-wrap: wrap;
-}
-
-.heroCTAStatRow .heroConnectRow {
-  justify-content: flex-start;
-  margin-top: 0;
-  gap: 10px;
-}
-
-/* Primary CTA: red tint */
-.heroCtaBtn.heroPrimary {
-  background: rgba(255, 32, 68, 0.16);
-  border-color: rgba(255, 32, 68, 0.4);
-  color: rgba(255, 210, 215, 0.95);
-}
-
-.heroCtaBtn.heroPrimary:hover {
-  background: rgba(255, 32, 68, 0.26);
-  border-color: rgba(255, 32, 68, 0.62);
-  box-shadow: 0 0 32px rgba(255, 32, 68, 0.2);
-}
-
-/* ── Stats row ── */
+/* ── Stats ── */
 .heroStatsRow {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 18px;
+  margin-bottom: 0;
+  opacity: 0.85;
 }
 
 .heroStat {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  align-items: center;
+  gap: 2px;
 }
 
 .heroStatNum {
-  font-size: 1.3rem;
+  font-size: 1.35rem;
   font-weight: 800;
-  color: rgba(255, 255, 255, 0.92);
+  color: rgba(255,255,255,0.92);
   line-height: 1;
   letter-spacing: -0.02em;
 }
 
 .heroStatLabel {
-  font-size: 0.64rem;
-  color: rgba(255, 255, 255, 0.35);
+  font-size: 0.62rem;
+  color: rgba(255,255,255,0.32);
   text-transform: uppercase;
   letter-spacing: 0.1em;
 }
 
 .heroStatDivider {
   width: 1px;
-  height: 26px;
-  background: rgba(255, 255, 255, 0.1);
+  height: 24px;
+  background: rgba(255,255,255,0.1);
   flex-shrink: 0;
 }
 
-/* ── RIGHT: Portrait ── */
-.heroPortraitWrap {
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding-top: 12px;
+/* ── Primary CTA ── */
+.heroCtaBtn.heroPrimary {
+  background: rgba(255,32,68,0.16);
+  border-color: rgba(255,32,68,0.42);
+  color: rgba(255,210,215,0.95);
+}
+.heroCtaBtn.heroPrimary:hover {
+  background: rgba(255,32,68,0.27);
+  border-color: rgba(255,32,68,0.65);
+  box-shadow: 0 0 32px rgba(255,32,68,0.22);
 }
 
-/* Ambient red glow behind photo */
-.heroPortraitGlow {
-  position: absolute;
-  inset: -15%;
-  background: radial-gradient(
-    closest-side,
-    rgba(255, 32, 68, 0.22) 0%,
-    rgba(255, 32, 68, 0.06) 55%,
-    transparent 100%
-  );
-  border-radius: 50%;
-  pointer-events: none;
-  filter: blur(32px);
-  animation: heroPortraitPulse 5s ease-in-out infinite;
-}
-
-@keyframes heroPortraitPulse {
-  0%, 100% { opacity: 0.55; transform: scale(0.94); }
-  50%       { opacity: 1;    transform: scale(1.06); }
-}
-
-/* Photo frame: rounded rect, not a circle */
-.heroPortraitFrame {
-  position: relative;
-  z-index: 1;
-  width: 270px;
-  height: 330px;
-  border-radius: 22px;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow:
-    0 0 0 1px rgba(255, 32, 68, 0.1),
-    0 40px 100px rgba(0, 0, 0, 0.55),
-    0 0 60px rgba(255, 32, 68, 0.08);
-  background: #0d0306;
-}
-
-.heroPortraitImg {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center 10%;
-  display: block;
-}
-
-/* "Available for work" floating badge */
-.heroPortraitBadge {
-  position: absolute;
-  bottom: -18px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 2;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 7px 14px;
-  background: rgba(8, 9, 16, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 999px;
-  font-size: 0.76rem;
-  color: rgba(255, 255, 255, 0.68);
-  white-space: nowrap;
-  backdrop-filter: blur(14px);
-  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.45);
-}
-
-.heroPortraitBadgeDot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #22c55e;
-  box-shadow: 0 0 8px rgba(34, 197, 94, 0.8);
-  flex-shrink: 0;
-  animation: heroBadgeDotPulse 2.2s ease-in-out infinite;
-}
-
-@keyframes heroBadgeDotPulse {
-  0%, 100% { box-shadow: 0 0 5px rgba(34, 197, 94, 0.55); }
-  50%       { box-shadow: 0 0 14px rgba(34, 197, 94, 1); }
-}
-
-/* ── Marquee full-width strip ── */
+/* ── Marquee ── */
 .heroMarqueeOuter {
   position: relative;
   left: 50%;
   width: 100vw;
   transform: translateX(-50%);
   overflow: hidden;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  padding: 13px 0;
-  margin-top: 52px;
-  background: rgba(0, 0, 0, 0.1);
+  border-top:    1px solid rgba(255,255,255,0.06);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  padding: 12px 0;
+  margin-top: 36px;
+  background: rgba(0,0,0,0.12);
 }
 
 .heroMarquee {
@@ -7044,8 +7117,8 @@ html.noReveal .r,
 
 .heroMarqueeTrack {
   display: inline-block;
-  font-size: 0.73rem;
-  color: rgba(255, 255, 255, 0.26);
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.26);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   white-space: nowrap;
@@ -7058,113 +7131,66 @@ html.noReveal .r,
 }
 
 /* ── Light mode ── */
+[data-theme="light"] .heroOrb--red {
+  background: radial-gradient(closest-side, rgba(220,20,55,0.12) 0%, transparent 100%);
+}
+[data-theme="light"] .heroOrb--purple {
+  background: radial-gradient(closest-side, rgba(110,40,200,0.08) 0%, transparent 100%);
+}
+[data-theme="light"] .heroOrb--blue {
+  background: radial-gradient(closest-side, rgba(20,60,200,0.06) 0%, transparent 100%);
+}
+[data-theme="light"] .heroDotGrid {
+  background-image: radial-gradient(circle, rgba(0,0,0,0.07) 1px, transparent 1px);
+}
 [data-theme="light"] .heroNameFill {
-  color: rgba(0, 0, 0, 0.9);
+  background: linear-gradient(160deg, rgba(0,0,0,0.9) 0%, rgba(150,0,30,0.7) 60%, rgba(0,0,0,0.85) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
-
 [data-theme="light"] .heroNameOutline {
-  -webkit-text-stroke: 1.5px rgba(0, 0, 0, 0.18);
+  -webkit-text-stroke: 1.5px rgba(0,0,0,0.2);
 }
-
+[data-theme="light"] .heroDividerLine {
+  background: linear-gradient(to right, transparent, rgba(0,0,0,0.1) 20%, rgba(200,0,30,0.3) 50%, rgba(0,0,0,0.1) 80%, transparent);
+}
 [data-theme="light"] .heroTagline {
-  color: rgba(0, 0, 0, 0.42);
+  color: rgba(0,0,0,0.42);
 }
+[data-theme="light"] .heroStatNum  { color: rgba(0,0,0,0.85); }
+[data-theme="light"] .heroStatLabel { color: rgba(0,0,0,0.35); }
+[data-theme="light"] .heroStatDivider { background: rgba(0,0,0,0.12); }
+[data-theme="light"] .heroMarqueeTrack { color: rgba(0,0,0,0.22); }
+[data-theme="light"] .heroMarqueeOuter { border-color: rgba(0,0,0,0.07); background: rgba(0,0,0,0.03); }
+[data-theme="light"] .heroNetCanvas { opacity: 0.3; }
+[data-theme="light"] .heroPortraitMini { border-color: rgba(200,0,30,0.35); box-shadow: 0 0 14px rgba(200,0,30,0.15); }
 
-[data-theme="light"] .heroStatNum {
-  color: rgba(0, 0, 0, 0.85);
-}
-
-[data-theme="light"] .heroStatLabel {
-  color: rgba(0, 0, 0, 0.36);
-}
-
-[data-theme="light"] .heroStatDivider {
-  background: rgba(0, 0, 0, 0.12);
-}
-
-[data-theme="light"] .heroMarqueeTrack {
-  color: rgba(0, 0, 0, 0.22);
-}
-
-[data-theme="light"] .heroPortraitFrame {
-  background: #f0e4e8;
-  border-color: rgba(0, 0, 0, 0.08);
-  box-shadow:
-    0 0 0 1px rgba(255, 32, 68, 0.12),
-    0 40px 90px rgba(0, 0, 0, 0.15);
-}
-
-[data-theme="light"] .heroPortraitBadge {
-  background: rgba(248, 244, 246, 0.95);
-  border-color: rgba(0, 0, 0, 0.1);
-  color: rgba(0, 0, 0, 0.62);
-}
-
-[data-theme="light"] .heroPortraitGlow {
-  opacity: 0.6;
-}
-
-[data-theme="light"] .heroMarqueeOuter {
-  border-color: rgba(0, 0, 0, 0.07);
-  background: rgba(0, 0, 0, 0.03);
-}
-
-/* ── Tablet (760 – 980px) ── */
-@media (min-width: 761px) and (max-width: 980px) {
-  .heroRow {
-    grid-template-columns: 1fr 230px;
-    gap: 36px;
-  }
-
-  .heroPortraitFrame {
-    width: 210px;
-    height: 256px;
-  }
-}
-
-/* ── Mobile (≤ 760px) ── */
-@media (max-width: 760px) {
+/* ── Mobile ── */
+@media (max-width: 660px) {
   .heroSpaceInner {
-    padding-top: calc(var(--navH) + 36px);
+    padding-top: calc(var(--navH) + 28px);
   }
-
-  .heroRow {
-    grid-template-columns: 1fr;
-    gap: 0;
+  .heroNameFill, .heroNameOutline {
+    font-size: clamp(52px, 18vw, 100px);
   }
-
-  /* Portrait above text on mobile */
-  .heroPortraitWrap {
-    order: -1;
-    margin-bottom: 28px;
+  .heroStrip {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
   }
-
-  .heroPortraitFrame {
-    width: 150px;
-    height: 185px;
-    border-radius: 16px;
+  .heroStripRight {
+    width: 100%;
   }
-
-  .heroPortraitBadge {
-    bottom: -14px;
-    font-size: 0.7rem;
-    padding: 6px 11px;
-  }
-
-  .heroNameFill,
-  .heroNameOutline {
-    font-size: clamp(48px, 14vw, 80px);
-  }
-
   .heroStatsRow {
-    display: none;
+    gap: 12px;
   }
+  .heroStatNum {
+    font-size: 1.1rem;
+  }
+}
 
-  .heroTagline {
-    display: none;
-  }
-
-  .heroMarqueeOuter {
-    margin-top: 32px;
-  }
+@media (prefers-reduced-motion: reduce) {
+  .heroOrb, .heroMarquee { animation: none !important; }
+  .heroNetCanvas { display: none; }
 }
