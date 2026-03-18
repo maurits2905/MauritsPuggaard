@@ -1537,348 +1537,134 @@ function initBgStars() {
   else draw();
 }
 
-/* ── Hero canvas — plasma orbs, stars, particles, rays ── */
-function initHeroCanvas() {
+/* ── Hero — Three.js iridescent torus ── */
+function initHeroThree() {
   const canvas = document.getElementById('heroCanvas');
-  if (!canvas) return;
+  if (!canvas || typeof THREE === 'undefined') return;
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-  const ctx = canvas.getContext('2d');
   const isMobile = window.innerWidth < 760;
-  let W = 0, H = 0, dpr = 1;
-  const mouse = { x: -9999, y: -9999 };
-  let raf = 0;
-  let t0 = 0;
 
-  /* ── Orbs ── */
-  const ORB_DEFS = [
-    { rgb: [255, 22, 55],  r: isMobile ? 90 : 145, px: 0.22, py: 0.38, phase: 0 },
-    { rgb: [175, 20, 215], r: isMobile ? 78 : 118, px: 0.78, py: 0.28, phase: 2.1 },
-    { rgb: [255, 88, 18],  r: isMobile ? 70 : 105, px: 0.52, py: 0.62, phase: 4.2 },
+  /* ── Renderer ── */
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.15;
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+  /* ── Scene + Camera ── */
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x060a18);
+
+  const camera = new THREE.PerspectiveCamera(48, 1, 0.1, 100);
+  camera.position.z = 5.2;
+
+  /* ── Lights ── */
+  scene.add(new THREE.AmbientLight(0x1a1540, 1.2));
+
+  const L1 = new THREE.PointLight(0x0055ff, 18, 10); L1.position.set(-3.2, 2.5, 3);
+  const L2 = new THREE.PointLight(0xff1060, 14, 9);  L2.position.set(3.0, -1.5, 3);
+  const L3 = new THREE.PointLight(0xff6600, 10, 8);  L3.position.set(0.5, -4, 2);
+  const L4 = new THREE.PointLight(0x4400cc, 6, 7);   L4.position.set(-1, 3.5, -2);
+  const L5 = new THREE.PointLight(0xffffff, 3, 6);   L5.position.set(0, 0, 5);
+  scene.add(L1, L2, L3, L4, L5);
+
+  /* ── Torus with gradient vertex colours ── */
+  const geo = new THREE.TorusGeometry(1.25, 0.46, 160, 320);
+
+  /* Build vertex colour gradient around tube cross-section */
+  const uvAttr  = geo.attributes.uv;
+  const colData  = new Float32Array(uvAttr.count * 3);
+  const colAttr  = new THREE.BufferAttribute(colData, 3);
+
+  /* Gradient stops around tube (u = 0→1 = outer→inner→outer) */
+  const STOPS = [
+    { u: 0.00, r: 0.00, g: 0.30, b: 1.00 }, // cobalt blue
+    { u: 0.12, r: 0.00, g: 0.55, b: 1.00 }, // electric blue
+    { u: 0.28, r: 0.15, g: 0.08, b: 0.95 }, // blue-violet
+    { u: 0.42, r: 0.95, g: 0.06, b: 0.55 }, // hot pink
+    { u: 0.52, r: 1.00, g: 0.28, b: 0.08 }, // orange-red
+    { u: 0.62, r: 1.00, g: 0.45, b: 0.00 }, // orange
+    { u: 0.75, r: 0.55, g: 0.08, b: 0.85 }, // purple
+    { u: 0.88, r: 0.10, g: 0.20, b: 1.00 }, // deep blue
+    { u: 1.00, r: 0.00, g: 0.30, b: 1.00 }, // back to cobalt
   ];
-  let orbs = [];
 
-  function buildOrbs() {
-    orbs = ORB_DEFS.map(d => ({
-      x: d.px * W, y: d.py * H,
-      vx: (Math.random() - 0.5) * 0.45,
-      vy: (Math.random() - 0.5) * 0.45,
-      r: d.r, rgb: d.rgb, phase: d.phase,
-    }));
-  }
-
-  /* ── Stars ── */
-  const STAR_N = isMobile ? 80 : 190;
-  let stars = [];
-
-  function buildStars() {
-    stars = [];
-    for (let i = 0; i < STAR_N; i++) {
-      const isRed = Math.random() < 0.18;
-      const big   = isRed && Math.random() < 0.38;
-      stars.push({
-        x: Math.random() * W, y: Math.random() * H,
-        r: big ? Math.random() * 2 + 1.4 : Math.random() * 1.1 + 0.25,
-        a: Math.random() * 0.5 + 0.12,
-        ta: 0,
-        tw: Math.random() * 0.012 + 0.003,
-        isRed, big,
-      });
-      stars[stars.length - 1].ta = stars[stars.length - 1].a;
+  function lerpStops(u) {
+    for (let i = 0; i < STOPS.length - 1; i++) {
+      const a = STOPS[i], b = STOPS[i + 1];
+      if (u >= a.u && u <= b.u) {
+        const t = (u - a.u) / (b.u - a.u);
+        return {
+          r: a.r + (b.r - a.r) * t,
+          g: a.g + (b.g - a.g) * t,
+          b: a.b + (b.b - a.b) * t,
+        };
+      }
     }
+    return STOPS[STOPS.length - 1];
   }
 
-  /* ── Particles ── */
-  const PART_N = isMobile ? 100 : 240;
-  let parts = [];
-
-  function mkParticle() {
-    const o = orbs[Math.floor(Math.random() * orbs.length)];
-    const ang = Math.random() * Math.PI * 2;
-    const spd = Math.random() * 0.95 + 0.15;
-    const d   = Math.random() * o.r * 0.55;
-    return {
-      x: o.x + Math.cos(ang) * d,
-      y: o.y + Math.sin(ang) * d,
-      vx: Math.cos(ang) * spd,
-      vy: Math.sin(ang) * spd,
-      life: 1,
-      decay: Math.random() * 0.0055 + 0.002,
-      r: Math.random() * 1.7 + 0.35,
-      rgb: o.rgb,
-    };
+  for (let i = 0; i < uvAttr.count; i++) {
+    const u = uvAttr.getX(i);
+    const c = lerpStops(u);
+    colAttr.setXYZ(i, c.r, c.g, c.b);
   }
+  geo.setAttribute('color', colAttr);
 
-  function buildParts() {
-    parts = [];
-    for (let i = 0; i < PART_N; i++) {
-      const p = mkParticle();
-      p.life = Math.random();
-      parts.push(p);
-    }
-  }
+  const mat = new THREE.MeshPhongMaterial({
+    vertexColors: true,
+    shininess: 120,
+    specular: new THREE.Color(0xaaaaff),
+  });
+
+  const torus = new THREE.Mesh(geo, mat);
+  torus.rotation.x = 0.32;
+  torus.rotation.z = 0.08;
+  scene.add(torus);
+
+  /* ── Mouse parallax ── */
+  const mouse = { tx: 0, ty: 0, x: 0, y: 0 };
+  const hero = document.getElementById('hero');
+  hero.addEventListener('mousemove', e => {
+    const r = canvas.getBoundingClientRect();
+    mouse.tx = ((e.clientX - r.left) / r.width  - 0.5) * 0.5;
+    mouse.ty = ((e.clientY - r.top)  / r.height - 0.5) * -0.35;
+  });
 
   /* ── Resize ── */
   function resize() {
-    dpr = Math.min(window.devicePixelRatio || 1, 2);
-    W = canvas.offsetWidth;
-    H = canvas.offsetHeight;
-    canvas.width  = W * dpr;
-    canvas.height = H * dpr;
-    ctx.scale(dpr, dpr);
+    const w = canvas.offsetWidth, h = canvas.offsetHeight;
+    renderer.setSize(w, h);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
   }
-
-  /* ── Draw nebula ── */
-  function drawNebula(t) {
-    ctx.globalCompositeOperation = 'source-over';
-    const blobs = [
-      { cx: W * (0.15 + Math.sin(t * 0.00014) * 0.07), cy: H * (0.3 + Math.cos(t * 0.00019) * 0.1),  rr: W * 0.52, c: [185, 10, 42],  a: 0.075 },
-      { cx: W * (0.83 + Math.cos(t * 0.00011) * 0.06), cy: H * (0.24 + Math.sin(t * 0.00016) * 0.09), rr: W * 0.40, c: [105, 18, 168], a: 0.058 },
-      { cx: W * (0.5  + Math.sin(t * 0.00008) * 0.05), cy: H * (0.72 + Math.cos(t * 0.00013) * 0.06), rr: W * 0.38, c: [210, 45, 18],  a: 0.048 },
-    ];
-    for (const b of blobs) {
-      const g = ctx.createRadialGradient(b.cx, b.cy, 0, b.cx, b.cy, b.rr);
-      g.addColorStop(0,   'rgba(' + b.c + ',' + b.a + ')');
-      g.addColorStop(0.5, 'rgba(' + b.c + ',' + (b.a * 0.35) + ')');
-      g.addColorStop(1,   'transparent');
-      ctx.fillStyle = g;
-      ctx.fillRect(0, 0, W, H);
-    }
-  }
-
-  /* ── Draw stars ── */
-  function drawStars() {
-    ctx.globalCompositeOperation = 'source-over';
-    for (const s of stars) {
-      if (Math.random() < 0.008) s.ta = Math.random() * 0.6 + 0.08;
-      s.a += (s.ta - s.a) * s.tw;
-
-      if (s.big) {
-        const gh = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.r * 8);
-        gh.addColorStop(0,   'rgba(255,75,75,' + (s.a * 0.42) + ')');
-        gh.addColorStop(0.4, 'rgba(255,55,55,' + (s.a * 0.1)  + ')');
-        gh.addColorStop(1,   'transparent');
-        ctx.fillStyle = gh;
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, s.r * 8, 0, Math.PI * 2);
-        ctx.fill();
-        const fl = s.r * 11 * s.a;
-        ctx.strokeStyle = 'rgba(255,115,100,' + (s.a * 0.28) + ')';
-        ctx.lineWidth = 0.55;
-        ctx.beginPath();
-        ctx.moveTo(s.x - fl, s.y); ctx.lineTo(s.x + fl, s.y);
-        ctx.moveTo(s.x, s.y - fl); ctx.lineTo(s.x, s.y + fl);
-        ctx.stroke();
-      }
-
-      ctx.beginPath();
-      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-      ctx.fillStyle = s.isRed
-        ? 'rgba(255,88,78,' + s.a + ')'
-        : 'rgba(255,255,255,' + (s.a * 0.62) + ')';
-      ctx.fill();
-    }
-  }
-
-  /* ── Draw orb light rays ── */
-  function drawRays(o, t) {
-    const RAY_N = isMobile ? 6 : 10;
-    ctx.globalCompositeOperation = 'screen';
-    for (let i = 0; i < RAY_N; i++) {
-      const ang = (i / RAY_N) * Math.PI * 2 + t * 0.00038 + o.phase;
-      const len = o.r * 2.6 + Math.sin(t * 0.0009 + i * 1.35) * o.r * 0.75;
-      const wid = o.r * 0.075 + Math.sin(t * 0.0018 + i) * o.r * 0.02;
-      ctx.save();
-      ctx.translate(o.x, o.y);
-      ctx.rotate(ang);
-      const gr = ctx.createLinearGradient(o.r * 0.22, 0, len, 0);
-      gr.addColorStop(0,   'rgba(' + o.rgb + ',0.2)');
-      gr.addColorStop(0.3, 'rgba(' + o.rgb + ',0.07)');
-      gr.addColorStop(1,   'transparent');
-      ctx.beginPath();
-      ctx.moveTo(o.r * 0.22, -wid);
-      ctx.lineTo(len, -wid * 0.08);
-      ctx.lineTo(len,  wid * 0.08);
-      ctx.lineTo(o.r * 0.22,  wid);
-      ctx.fillStyle = gr;
-      ctx.fill();
-      ctx.restore();
-    }
-    ctx.globalCompositeOperation = 'source-over';
-  }
-
-  /* ── Draw glowing bridges between close orbs ── */
-  function drawConnections() {
-    const CDIST = 360;
-    for (let i = 0; i < orbs.length; i++) {
-      for (let j = i + 1; j < orbs.length; j++) {
-        const dx = orbs[i].x - orbs[j].x, dy = orbs[i].y - orbs[j].y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist > CDIST) continue;
-        const a = (1 - dist / CDIST) * 0.38;
-        const gc = ctx.createLinearGradient(orbs[i].x, orbs[i].y, orbs[j].x, orbs[j].y);
-        gc.addColorStop(0, 'rgba(' + orbs[i].rgb + ',' + a + ')');
-        gc.addColorStop(1, 'rgba(' + orbs[j].rgb + ',' + a + ')');
-        ctx.globalCompositeOperation = 'screen';
-        ctx.strokeStyle = gc;
-        ctx.lineWidth = (1 - dist / CDIST) * 2.8;
-        ctx.beginPath();
-        ctx.moveTo(orbs[i].x, orbs[i].y);
-        ctx.lineTo(orbs[j].x, orbs[j].y);
-        ctx.stroke();
-        ctx.globalCompositeOperation = 'source-over';
-      }
-    }
-  }
-
-  /* ── Draw orbs with screen-blend merging effect ── */
-  function drawOrbs(t) {
-    for (const o of orbs) {
-      const pulse = 1 + Math.sin(t * 0.00075 + o.phase) * 0.13;
-      const pr = o.r * pulse;
-      drawRays(o, t);
-
-      ctx.globalCompositeOperation = 'screen';
-
-      // Outer ambient halo
-      const go = ctx.createRadialGradient(o.x, o.y, 0, o.x, o.y, pr * 3.0);
-      go.addColorStop(0,   'rgba(' + o.rgb + ',0.2)');
-      go.addColorStop(0.4, 'rgba(' + o.rgb + ',0.07)');
-      go.addColorStop(1,   'transparent');
-      ctx.fillStyle = go;
-      ctx.beginPath(); ctx.arc(o.x, o.y, pr * 3.0, 0, Math.PI * 2); ctx.fill();
-
-      // Core body
-      const gc2 = ctx.createRadialGradient(o.x, o.y, 0, o.x, o.y, pr);
-      gc2.addColorStop(0,    'rgba(255,255,255,0.38)');
-      gc2.addColorStop(0.18, 'rgba(' + o.rgb + ',0.65)');
-      gc2.addColorStop(0.55, 'rgba(' + o.rgb + ',0.22)');
-      gc2.addColorStop(1,    'transparent');
-      ctx.fillStyle = gc2;
-      ctx.beginPath(); ctx.arc(o.x, o.y, pr, 0, Math.PI * 2); ctx.fill();
-
-      ctx.globalCompositeOperation = 'source-over';
-    }
-  }
-
-  /* ── Draw particles ── */
-  function drawParticles() {
-    ctx.globalCompositeOperation = 'screen';
-    for (let i = 0; i < parts.length; i++) {
-      const p = parts[i];
-      p.life -= p.decay;
-      if (p.life <= 0) { parts[i] = mkParticle(); continue; }
-
-      // Mouse repulsion
-      const mdx = p.x - mouse.x, mdy = p.y - mouse.y;
-      const md = Math.sqrt(mdx * mdx + mdy * mdy);
-      if (md < 115 && md > 0) {
-        const f = (1 - md / 115) * 0.55;
-        p.vx += (mdx / md) * f;
-        p.vy += (mdy / md) * f;
-      }
-
-      p.vx *= 0.982; p.vy *= 0.982;
-      p.x += p.vx;   p.y += p.vy;
-
-      if (p.x < -8) p.x = W + 8; if (p.x > W + 8) p.x = -8;
-      if (p.y < -8) p.y = H + 8; if (p.y > H + 8) p.y = -8;
-
-      const a = p.life * 0.72;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r * p.life, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(' + p.rgb + ',' + a + ')';
-      ctx.fill();
-    }
-    ctx.globalCompositeOperation = 'source-over';
-  }
-
-  /* ── Physics update for orbs ── */
-  function updateOrbs() {
-    const cx = W * 0.5, cy = H * 0.44;
-    for (const o of orbs) {
-      o.vx += (cx - o.x) * 0.000045;
-      o.vy += (cy - o.y) * 0.000045;
-
-      const mdx = mouse.x - o.x, mdy = mouse.y - o.y;
-      const md = Math.sqrt(mdx * mdx + mdy * mdy);
-      if (md < 380 && md > 8) {
-        o.vx += (mdx / md) * 0.022;
-        o.vy += (mdy / md) * 0.022;
-      }
-
-      for (const b of orbs) {
-        if (b === o) continue;
-        const dx = o.x - b.x, dy = o.y - b.y;
-        const d = Math.sqrt(dx * dx + dy * dy);
-        if (d < o.r * 1.6 && d > 0) {
-          const f = ((o.r * 1.6 - d) / (o.r * 1.6)) * 0.07;
-          o.vx += (dx / d) * f;
-          o.vy += (dy / d) * f;
-        }
-      }
-
-      const pad = o.r * 1.1;
-      if (o.x < pad)     o.vx += (pad - o.x)     * 0.009;
-      if (o.x > W - pad) o.vx += (W - pad - o.x) * 0.009;
-      if (o.y < pad)     o.vy += (pad - o.y)      * 0.009;
-      if (o.y > H - pad) o.vy += (H - pad - o.y)  * 0.009;
-
-      o.vx *= 0.968; o.vy *= 0.968;
-      const spd = Math.sqrt(o.vx * o.vx + o.vy * o.vy);
-      if (spd > 1.1) { o.vx *= 1.1 / spd; o.vy *= 1.1 / spd; }
-      o.x += o.vx; o.y += o.vy;
-    }
-  }
-
-  /* ── Main loop ── */
-  let lastTs = 0;
-  function frame(ts) {
-    raf = requestAnimationFrame(frame);
-    if (ts - lastTs < 14) return;
-    lastTs = ts;
-    const t = ts - t0;
-
-    ctx.fillStyle = '#040508';
-    ctx.fillRect(0, 0, W, H);
-
-    drawNebula(t);
-    drawStars();
-    drawConnections();
-    drawParticles();
-    drawOrbs(t);
-    updateOrbs();
-  }
-
-  /* ── Mouse / touch ── */
-  const hero = document.getElementById('hero');
-  const onMove = (e) => {
-    const r = canvas.getBoundingClientRect();
-    const cx = e.touches ? e.touches[0].clientX : e.clientX;
-    const cy = e.touches ? e.touches[0].clientY : e.clientY;
-    mouse.x = (cx - r.left) / r.width  * W;
-    mouse.y = (cy - r.top)  / r.height * H;
-  };
-  hero.addEventListener('mousemove',  onMove);
-  hero.addEventListener('touchmove',  onMove, { passive: true });
-  hero.addEventListener('mouseleave', () => { mouse.x = -9999; mouse.y = -9999; });
-
-  /* ── Resize observer ── */
-  const ro = new ResizeObserver(() => {
-    cancelAnimationFrame(raf);
-    ctx.resetTransform();
-    resize();
-    if (!t0) t0 = performance.now();
-    raf = requestAnimationFrame(frame);
-  });
+  const ro = new ResizeObserver(resize);
   ro.observe(canvas);
-
   resize();
-  buildOrbs();
-  buildStars();
-  buildParts();
-  t0 = performance.now();
-  raf = requestAnimationFrame(frame);
+
+  /* ── Animate ── */
+  let elapsed = 0, lastTs = 0;
+  function frame(ts) {
+    requestAnimationFrame(frame);
+    const dt = Math.min(ts - lastTs, 50); lastTs = ts;
+    elapsed += dt * 0.001;
+
+    mouse.x += (mouse.tx - mouse.x) * 0.04;
+    mouse.y += (mouse.ty - mouse.y) * 0.04;
+
+    torus.rotation.y = elapsed * 0.38 + mouse.x;
+    torus.rotation.x = 0.32 + mouse.y;
+    torus.rotation.z = 0.08 + mouse.x * 0.15;
+
+    /* subtle light orbit */
+    L1.position.x = -3.2 + Math.sin(elapsed * 0.3) * 0.6;
+    L2.position.x =  3.0 + Math.cos(elapsed * 0.25) * 0.5;
+    L3.position.y = -4.0 + Math.sin(elapsed * 0.2) * 0.4;
+
+    renderer.render(scene, camera);
+  }
+  requestAnimationFrame(frame);
 }
 
 /* ------------------------------
@@ -2092,7 +1878,7 @@ async function init() {
   loadTo(28);
 
   initBgStars();
-  initHeroCanvas();
+  initHeroThree();
   initHeroSkillTicker();
 
   loadTo(40);

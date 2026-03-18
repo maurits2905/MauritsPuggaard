@@ -6791,15 +6791,21 @@ html.noReveal .r,
 }
 
 /* ================================================
-   HERO v3 — Full Canvas Background + Clean Type
+   HERO v4 — Three.js Torus + Serif Editorial
 ================================================ */
 
-/* Hero section: dark base, canvas fills everything */
+/* Hero base */
 #hero.heroSpace {
-  background: #040508 !important;
+  position: relative !important;
+  background: radial-gradient(ellipse at 50% 38%, #0d1535 0%, #07091a 55%, #030508 100%) !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
-/* Canvas covers the full hero */
+/* Three.js canvas fills entire hero */
 .heroCanvas {
   position: absolute;
   inset: 0;
@@ -6809,151 +6815,169 @@ html.noReveal .r,
   pointer-events: none;
 }
 
-/* Content sits above the canvas */
-.heroSpaceInner {
+/* Announcement chip — top left */
+.heroChip {
+  position: absolute;
+  top: calc(var(--navH) + 22px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px 6px 10px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 999px;
+  text-decoration: none;
+  font-size: 12px;
+  color: rgba(255,255,255,0.65);
+  letter-spacing: 0.03em;
+  backdrop-filter: blur(8px);
+  transition: background 200ms, border-color 200ms;
+  white-space: nowrap;
+}
+.heroChip:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.18);
+}
+.heroChipDot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #ff2044;
+  box-shadow: 0 0 8px #ff2044;
+  animation: chipPulse 2s ease-in-out infinite;
+}
+@keyframes chipPulse {
+  0%,100% { opacity: 1; }
+  50%      { opacity: 0.45; }
+}
+.heroChipArrow { opacity: 0.5; font-size: 14px; }
+
+/* Main content — sits in lower-center of viewport, overlays torus */
+.heroContent {
   position: relative;
   z-index: 3;
-  width: min(1060px, 94vw);
-  padding-top: calc(var(--navH) + 64px);
-  padding-bottom: 0;
   text-align: center;
+  padding: 0 24px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0;
+  gap: 10px;
+  /* Push into lower portion so torus shows above */
+  margin-top: 32vh;
 }
 
-/* Chip centered */
-.heroSpaceInner .heroNewRow {
-  justify-content: center;
-  margin-bottom: 32px;
+/* Small label above name */
+.heroLabel {
+  font-family: var(--font);
+  font-size: clamp(10px, 1.1vw, 13px);
+  font-weight: 500;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.35);
+  margin: 0;
 }
 
-/* ── Giant name ── */
-.heroNameBlock {
+/* Giant serif name */
+.heroName {
+  font-family: 'Playfair Display', 'Georgia', serif;
+  font-weight: 700;
+  line-height: 0.9;
+  letter-spacing: -0.01em;
+  margin: 0;
   display: flex;
   flex-direction: column;
-  line-height: 0.86;
-  letter-spacing: -0.04em;
-  margin-bottom: 20px;
-  text-align: center;
+  align-items: center;
 }
 
-.heroNameFill {
+.heroNameLine {
   display: block;
-  font-size: clamp(62px, 14.5vw, 200px);
-  font-weight: 900;
-  text-transform: uppercase;
-  font-family: var(--font);
-  background: linear-gradient(
-    160deg,
-    rgba(255,255,255,1)    0%,
-    rgba(255,255,255,0.95) 38%,
-    rgba(255,110,130,0.55) 66%,
-    rgba(255,255,255,0.92) 100%
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  font-size: clamp(52px, 10vw, 148px);
+  color: rgba(255,255,255,0.95);
+  text-shadow: 0 0 80px rgba(100,120,255,0.15);
 }
 
-.heroNameOutline {
-  display: block;
-  font-size: clamp(62px, 14.5vw, 200px);
-  font-weight: 900;
-  text-transform: uppercase;
-  font-family: var(--font);
+.heroNameLine--outline {
   color: transparent;
-  -webkit-text-stroke: 1.5px rgba(255,255,255,0.18);
+  -webkit-text-stroke: 1.5px rgba(255,255,255,0.3);
+  font-style: italic;
 }
 
-/* ── Glowing divider ── */
-.heroDivider {
-  position: relative;
-  width: min(640px, 88%);
-  height: 1px;
-  margin: 20px auto 30px;
+/* Colored subtitle */
+.heroSub {
+  font-family: var(--font);
+  font-size: clamp(9px, 1vw, 12px);
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(180,140,255,0.7);
+  margin: 4px 0 0;
 }
 
-.heroDividerLine {
-  display: block;
-  height: 1px;
-  width: 100%;
-  background: linear-gradient(
-    to right,
-    transparent 0%,
-    rgba(255,255,255,0.1) 18%,
-    rgba(255,32,68,0.5)   50%,
-    rgba(255,255,255,0.1) 82%,
-    transparent 100%
-  );
-}
-
-.heroDividerGlow {
-  display: block;
-  position: absolute;
-  top: -5px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 28%;
-  height: 10px;
-  background: rgba(255,32,68,0.38);
-  filter: blur(9px);
-  border-radius: 50%;
-}
-
-/* ── Compact CTA row ── */
-.heroCTARow {
+/* CTA buttons — minimal text style */
+.heroBtns {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-bottom: 0;
+  gap: 28px;
+  margin-top: 14px;
 }
 
-/* Primary CTA: red tint */
-.heroCtaBtn.heroPrimary {
-  background: rgba(255,32,68,0.16);
-  border-color: rgba(255,32,68,0.42);
-  color: rgba(255,210,215,0.95);
+.heroBtnLink {
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: rgba(255,255,255,0.55);
+  transition: color 200ms;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
-.heroCtaBtn.heroPrimary:hover {
-  background: rgba(255,32,68,0.28);
-  border-color: rgba(255,32,68,0.68);
-  box-shadow: 0 0 36px rgba(255,32,68,0.24);
+.heroBtnLink:hover { color: rgba(255,255,255,0.9); }
+.heroBtnLink--primary {
+  color: rgba(255,255,255,0.85);
+  padding: 9px 22px;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(6px);
+}
+.heroBtnLink--primary:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.28);
+  color: #fff;
 }
 
-/* ── Marquee ── */
+/* Marquee */
 .heroMarqueeOuter {
-  position: relative;
-  left: 50%;
-  width: 100vw;
-  transform: translateX(-50%);
+  position: absolute;
+  bottom: 48px;
+  left: 0;
+  right: 0;
+  z-index: 4;
   overflow: hidden;
-  border-top:    1px solid rgba(255,255,255,0.06);
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-  padding: 12px 0;
-  margin-top: 40px;
-  background: rgba(0,0,0,0.15);
+  border-top:    1px solid rgba(255,255,255,0.05);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  padding: 10px 0;
+  background: rgba(0,0,0,0.12);
 }
 
 .heroMarquee {
   display: flex;
   width: max-content;
-  animation: heroMarqueeScroll 42s linear infinite;
+  animation: heroMarqueeScroll 44s linear infinite;
   will-change: transform;
 }
-
-.heroMarqueeOuter:hover .heroMarquee {
-  animation-play-state: paused;
-}
+.heroMarqueeOuter:hover .heroMarquee { animation-play-state: paused; }
 
 .heroMarqueeTrack {
   display: inline-block;
-  font-size: 0.72rem;
-  color: rgba(255,255,255,0.26);
-  letter-spacing: 0.1em;
+  font-size: 0.68rem;
+  color: rgba(255,255,255,0.2);
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   white-space: nowrap;
   padding: 0 16px;
@@ -6964,40 +6988,63 @@ html.noReveal .r,
   to   { transform: translateX(-50%); }
 }
 
-/* ── Light mode ── */
-[data-theme=light] .heroNameFill {
-  background: linear-gradient(160deg, rgba(0,0,0,0.9) 0%, rgba(160,0,30,0.65) 58%, rgba(0,0,0,0.88) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+/* Scroll cue */
+.heroScrollCue {
+  position: absolute;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
 }
-[data-theme=light] .heroNameOutline {
-  -webkit-text-stroke: 1.5px rgba(0,0,0,0.16);
+.heroScrollCue .line {
+  display: block;
+  width: 1px;
+  height: 36px;
+  background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.3));
+  animation: scrollLineGrow 1.8s ease-in-out infinite;
 }
-[data-theme=light] .heroCanvas {
-  opacity: 0.4;
+@keyframes scrollLineGrow {
+  0%,100% { transform: scaleY(1); opacity: 0.5; }
+  50%      { transform: scaleY(1.3); opacity: 1; }
 }
-[data-theme=light] .heroMarqueeTrack  { color: rgba(0,0,0,0.22); }
-[data-theme=light] .heroMarqueeOuter  { border-color: rgba(0,0,0,0.07); background: rgba(0,0,0,0.03); }
-[data-theme=light] #hero.heroSpace    { background: #f8f4f6 !important; }
+.heroScrollCue .txt {
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.25);
+}
 
-/* ── Mobile ── */
+/* Light mode override */
+[data-theme="light"] #hero.heroSpace {
+  background: radial-gradient(ellipse at 50% 38%, #e8eaf6 0%, #d0d4e8 55%, #c8ccdc 100%) !important;
+}
+[data-theme="light"] .heroCanvas { opacity: 0.55; }
+[data-theme="light"] .heroNameLine { color: rgba(10,15,40,0.92); text-shadow: none; }
+[data-theme="light"] .heroNameLine--outline { -webkit-text-stroke: 1.5px rgba(10,15,40,0.25); }
+[data-theme="light"] .heroLabel { color: rgba(10,15,40,0.45); }
+[data-theme="light"] .heroSub { color: rgba(80,40,180,0.7); }
+[data-theme="light"] .heroMarqueeTrack { color: rgba(10,15,40,0.25); }
+[data-theme="light"] .heroScrollCue .txt { color: rgba(10,15,40,0.3); }
+[data-theme="light"] .heroChip {
+  background: rgba(10,15,40,0.06);
+  border-color: rgba(10,15,40,0.1);
+  color: rgba(10,15,40,0.6);
+}
+
+/* Mobile */
 @media (max-width: 660px) {
-  .heroSpaceInner {
-    padding-top: calc(var(--navH) + 28px);
-  }
-  .heroNameFill, .heroNameOutline {
-    font-size: clamp(50px, 18vw, 100px);
-  }
-  .heroCTARow {
-    gap: 8px;
-  }
-  .heroMarqueeOuter {
-    margin-top: 28px;
-  }
+  .heroContent { margin-top: 26vh; gap: 8px; }
+  .heroNameLine { font-size: clamp(44px, 14vw, 80px); }
+  .heroBtns { gap: 16px; }
+  .heroMarqueeOuter { bottom: 42px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .heroMarquee    { animation: none !important; }
+  .heroMarquee, .heroChipDot, .heroScrollCue .line { animation: none !important; }
   .heroCanvas     { display: none; }
 }
