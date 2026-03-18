@@ -67,7 +67,7 @@
       }
     </style>
 
-    <link rel="stylesheet" href="styles.css?v=6" />
+    <link rel="stylesheet" href="styles.css?v=7" />
   </head>
 
   <body data-bg="stars" class="isLoading">
@@ -157,41 +157,96 @@
     </header>
 
     <main class="wrap" id="top">
-      <!-- 1) HERO (video-style) -->
+      <!-- 1) HERO -->
       <section class="heroSpace" id="hero">
         <div class="heroSpaceInner">
-          <div class="heroNewRow">
-            <a class="heroNewChip" href="#work">
-              <span class="newBadge">New</span>
-              <span class="newText">Excel Merger is live!</span>
-              <span class="chipArrow" aria-hidden="true">›</span>
-            </a>
-          </div>
 
-          <h1 class="heroSpaceTitle heroTitle">
-            I design and build products that<br />
-            deliver <span class="fxWord">real</span> impact
-          </h1>
+          <!-- Split row: copy left / portrait right -->
+          <div class="heroRow">
 
-          <div class="heroHelloRow">
-            <div class="heroHelloLine">Hello, I’m <strong>Maurits</strong></div>
-            <div class="heroRolePill skillPill" id="skillPill">
-              Problem Solver
+            <!-- LEFT: text -->
+            <div class="heroContent">
+              <!-- Announcement chip -->
+              <div class="heroNewRow">
+                <a class="heroNewChip" href="#work">
+                  <span class="newBadge">New</span>
+                  <span class="newText">Excel Merger is live!</span>
+                  <span class="chipArrow" aria-hidden="true">›</span>
+                </a>
+              </div>
+
+              <!-- Oversized name -->
+              <div class="heroNameBlock">
+                <span class="heroNameFill">MAURITS</span>
+                <span class="heroNameOutline">PUGGAARD</span>
+              </div>
+
+              <!-- Role pill + tagline -->
+              <div class="heroRoleRow">
+                <div class="heroRolePill skillPill" id="skillPill">Problem Solver</div>
+                <p class="heroTagline">
+                  I design &amp; build products that bridge enterprise systems and modern web.
+                </p>
+              </div>
+
+              <!-- CTAs + stat numbers -->
+              <div class="heroCTAStatRow">
+                <div class="heroConnectRow">
+                  <a class="heroCtaBtn heroPrimary" href="#contact">
+                    <span>Let’s Connect</span>
+                    <span class="ctaDot" aria-hidden="true">→</span>
+                  </a>
+                  <a class="heroCtaBtn" href="#work">
+                    <span>View Projects</span>
+                    <span class="ctaDot" aria-hidden="true">↓</span>
+                  </a>
+                </div>
+                <div class="heroStatsRow">
+                  <div class="heroStat">
+                    <span class="heroStatNum">5+</span>
+                    <span class="heroStatLabel">Years</span>
+                  </div>
+                  <div class="heroStatDivider"></div>
+                  <div class="heroStat">
+                    <span class="heroStatNum">20+</span>
+                    <span class="heroStatLabel">Projects</span>
+                  </div>
+                  <div class="heroStatDivider"></div>
+                  <div class="heroStat">
+                    <span class="heroStatNum">9</span>
+                    <span class="heroStatLabel">Tools</span>
+                  </div>
+                </div>
+              </div>
+            </div><!-- /heroContent -->
+
+            <!-- RIGHT: portrait -->
+            <div class="heroPortraitWrap">
+              <div class="heroPortraitGlow"></div>
+              <div class="heroPortraitFrame">
+                <img
+                  class="heroPortraitImg"
+                  src="assets/me.jpeg"
+                  alt="Maurits Puggaard"
+                />
+              </div>
+              <div class="heroPortraitBadge">
+                <span class="heroPortraitBadgeDot"></span>
+                Available for work
+              </div>
+            </div>
+
+          </div><!-- /heroRow -->
+
+          <!-- Full-width scrolling tech strip -->
+          <div class="heroMarqueeOuter" aria-hidden="true">
+            <div class="heroMarquee">
+              <span class="heroMarqueeTrack">SAP &nbsp;·&nbsp; ABAP &nbsp;·&nbsp; Fiori &nbsp;·&nbsp; React &nbsp;·&nbsp; Node.js &nbsp;·&nbsp; Python &nbsp;·&nbsp; AI Tooling &nbsp;·&nbsp; HANA &nbsp;·&nbsp; TypeScript &nbsp;·&nbsp; CAP &nbsp;·&nbsp; BTP &nbsp;·&nbsp; REST APIs &nbsp;·&nbsp; Automation &nbsp;·&nbsp; SAP &nbsp;·&nbsp; ABAP &nbsp;·&nbsp; Fiori &nbsp;·&nbsp; React &nbsp;·&nbsp; Node.js &nbsp;·&nbsp; Python &nbsp;·&nbsp; AI Tooling &nbsp;·&nbsp; HANA &nbsp;·&nbsp; TypeScript &nbsp;·&nbsp; CAP &nbsp;·&nbsp; BTP &nbsp;·&nbsp; REST APIs &nbsp;·&nbsp; Automation &nbsp;·&nbsp;</span>
+              <span class="heroMarqueeTrack">SAP &nbsp;·&nbsp; ABAP &nbsp;·&nbsp; Fiori &nbsp;·&nbsp; React &nbsp;·&nbsp; Node.js &nbsp;·&nbsp; Python &nbsp;·&nbsp; AI Tooling &nbsp;·&nbsp; HANA &nbsp;·&nbsp; TypeScript &nbsp;·&nbsp; CAP &nbsp;·&nbsp; BTP &nbsp;·&nbsp; REST APIs &nbsp;·&nbsp; Automation &nbsp;·&nbsp; SAP &nbsp;·&nbsp; ABAP &nbsp;·&nbsp; Fiori &nbsp;·&nbsp; React &nbsp;·&nbsp; Node.js &nbsp;·&nbsp; Python &nbsp;·&nbsp; AI Tooling &nbsp;·&nbsp; HANA &nbsp;·&nbsp; TypeScript &nbsp;·&nbsp; CAP &nbsp;·&nbsp; BTP &nbsp;·&nbsp; REST APIs &nbsp;·&nbsp; Automation &nbsp;·&nbsp;</span>
             </div>
           </div>
 
-          <div class="heroConnectRow">
-            <a class="heroCtaBtn" href="#contact">
-              <span>Let’s Connect</span>
-              <span class="ctaDot" aria-hidden="true">→</span>
-            </a>
-
-            <a class="heroMailPill" href="mailto:maurits.pug@gmail.com">
-              <span class="mailIcon" aria-hidden="true">✉</span>
-              <span>maurits.pug@gmail.com</span>
-            </a>
-          </div>
-        </div>
+        </div><!-- /heroSpaceInner -->
 
         <!-- earth / horizon glow -->
         <div class="heroEarth" aria-hidden="true">
@@ -200,7 +255,7 @@
         </div>
 
         <!-- scroll cue -->
-        <a class="heroScrollCue" href="#career" aria-label="Scroll to Career">
+        <a class="heroScrollCue" href="#about" aria-label="Scroll down">
           <span class="line"></span>
           <span class="txt">Scroll</span>
         </a>
@@ -1108,7 +1163,7 @@
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
 
-    <script src="script.js?v=6"></script>
+    <script src="script.js?v=7"></script>
     <script src="avatar.js"></script>
   </body>
 </html>
