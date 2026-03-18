@@ -564,11 +564,14 @@ function initStory() {
 /* ------------------------------
    Projects rendering
 ------------------------------ */
+const WORK_PREVIEW = 3; // cards shown before "Show more"
+
 const state = {
   projects: [],
   tags: [],
   query: "",
   workEntered: false,
+  workExpanded: false,
   activeTag: "All",
 };
 
@@ -848,11 +851,43 @@ function renderWork() {
   const list = filteredProjects();
   const grid = document.getElementById("workGrid");
   const empty = document.getElementById("emptyState");
+  const showMoreWrap = document.getElementById("workShowMoreWrap");
+  const showMoreLabel = document.getElementById("workShowMoreLabel");
+  const totalBadge = document.getElementById("workTotalCount");
   if (!grid || !empty) return;
 
+  // When search/tag filter is active show everything; otherwise respect preview
+  const isFiltered =
+    state.activeTag !== "All" || state.query.trim() !== "";
+  const visibleList =
+    isFiltered || state.workExpanded ? list : list.slice(0, WORK_PREVIEW);
+
   grid.innerHTML = "";
-  list.forEach((p, i) => grid.appendChild(makeProjectCard(p, i)));
+  visibleList.forEach((p, i) => grid.appendChild(makeProjectCard(p, i)));
   empty.hidden = list.length !== 0;
+
+  // Total count badge in subtitle
+  if (totalBadge) {
+    totalBadge.textContent =
+      state.projects.length > 0 ? `${state.projects.length} projects` : "";
+  }
+
+  // Show More / Show Less button
+  const hasHidden = !isFiltered && list.length > WORK_PREVIEW;
+  if (showMoreWrap) {
+    showMoreWrap.hidden = !hasHidden;
+  }
+  if (showMoreLabel && hasHidden) {
+    if (state.workExpanded) {
+      showMoreLabel.textContent = "Show less";
+      const svg = showMoreLabel.nextElementSibling;
+      if (svg) svg.style.transform = "rotate(180deg)";
+    } else {
+      showMoreLabel.textContent = `Show all ${list.length} projects`;
+      const svg = showMoreLabel.nextElementSibling;
+      if (svg) svg.style.transform = "";
+    }
+  }
 
   // Always update pinned story stats
   const proj = document.getElementById("statProjects");
@@ -860,7 +895,7 @@ function renderWork() {
   if (proj) proj.textContent = String(state.projects.length);
   if (tags) tags.textContent = String(Math.max(0, state.tags.length - 1));
 
-  // Grid layout — no arrows needed
+  // Hide rail arrows (not needed)
   const prev = document.getElementById("railPrev");
   const next = document.getElementById("railNext");
   if (prev) prev.hidden = true;
@@ -1985,6 +2020,21 @@ async function init() {
       } else {
         tagsDrawer.removeAttribute("hidden");
         tagsToggle.setAttribute("aria-expanded", "true");
+      }
+    });
+  }
+
+  // Show More / Show Less
+  const showMoreBtn = document.getElementById("workShowMore");
+  if (showMoreBtn) {
+    showMoreBtn.addEventListener("click", () => {
+      state.workExpanded = !state.workExpanded;
+      renderWork();
+      // Scroll back to section top when collapsing
+      if (!state.workExpanded) {
+        document
+          .getElementById("work")
+          ?.scrollIntoView({ behavior: "smooth", block: "start" });
       }
     });
   }

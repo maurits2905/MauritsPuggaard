@@ -1875,6 +1875,58 @@ html.noReveal .r,
   opacity: 0.72;
 }
 
+/* Total project count badge in subtitle */
+.workTotalBadge {
+  display: inline-block;
+  padding: 2px 9px;
+  margin-left: 6px;
+  font-size: 12px;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--glass) 80%, transparent);
+  border: 1px solid color-mix(in srgb, var(--stroke) 80%, transparent);
+  border-radius: 999px;
+  vertical-align: middle;
+}
+
+/* Show More button */
+.workShowMoreWrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 28px;
+}
+
+.workShowMoreBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 28px;
+  font-size: 14px;
+  font-weight: 750;
+  letter-spacing: 0.02em;
+  color: var(--text);
+  background: color-mix(in srgb, var(--glass) 80%, transparent);
+  border: 1px solid color-mix(in srgb, var(--stroke) 90%, transparent);
+  border-radius: 999px;
+  cursor: pointer;
+  transition:
+    background 200ms ease,
+    border-color 200ms ease,
+    transform 200ms ease;
+}
+
+.workShowMoreBtn:hover {
+  background: color-mix(in srgb, var(--glass) 100%, transparent);
+  border-color: rgba(255, 32, 68, 0.4);
+  transform: translateY(-1px);
+}
+
+.workShowMoreBtn svg {
+  transition: transform 300ms ease;
+  flex-shrink: 0;
+}
+
 /* ===== Projects: minimal search + hidden tags ===== */
 
 .workControls {

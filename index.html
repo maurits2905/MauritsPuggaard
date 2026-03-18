@@ -67,7 +67,7 @@
       }
     </style>
 
-    <link rel="stylesheet" href="styles.css?v=4" />
+    <link rel="stylesheet" href="styles.css?v=5" />
   </head>
 
   <body data-bg="stars" class="isLoading">
@@ -470,7 +470,7 @@
             <h2 class="sectionTitle">
               My <span class="gradWord">Projects</span>
             </h2>
-            <p class="p">Live demos first. Code next.</p>
+            <p class="p">Live demos first. Code next. <span id="workTotalCount" class="workTotalBadge"></span></p>
           </div>
 
           <div class="workControls r">
@@ -561,6 +561,15 @@
         <div class="empty" id="emptyState" hidden>
           <div class="emptyTitle">No matches</div>
           <div class="emptyText">Try clearing search or changing tags.</div>
+        </div>
+
+        <div class="workShowMoreWrap" id="workShowMoreWrap" hidden>
+          <button class="workShowMoreBtn" id="workShowMore" type="button">
+            <span id="workShowMoreLabel">Show all projects</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
         </div>
       </section>
 
@@ -1076,7 +1085,7 @@
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
 
-    <script src="script.js?v=4"></script>
+    <script src="script.js?v=5"></script>
     <script src="avatar.js"></script>
   </body>
 </html>
