@@ -1537,20 +1537,88 @@ function initBgStars() {
   else draw();
 }
 
-/* ── Hero particle network canvas ── */
-function initHeroNet() {
-  const canvas = document.getElementById("heroNet");
+/* ── Hero canvas — plasma orbs, stars, particles, rays ── */
+function initHeroCanvas() {
+  const canvas = document.getElementById('heroCanvas');
   if (!canvas) return;
-  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-  const ctx = canvas.getContext("2d");
+  const ctx = canvas.getContext('2d');
+  const isMobile = window.innerWidth < 760;
   let W = 0, H = 0, dpr = 1;
-  const DOTS = 70;
-  const CONNECT_DIST = 140;
-  const ACCENT_COUNT = 8;
-  let dots = [];
+  const mouse = { x: -9999, y: -9999 };
   let raf = 0;
+  let t0 = 0;
 
+  /* ── Orbs ── */
+  const ORB_DEFS = [
+    { rgb: [255, 22, 55],  r: isMobile ? 90 : 145, px: 0.22, py: 0.38, phase: 0 },
+    { rgb: [175, 20, 215], r: isMobile ? 78 : 118, px: 0.78, py: 0.28, phase: 2.1 },
+    { rgb: [255, 88, 18],  r: isMobile ? 70 : 105, px: 0.52, py: 0.62, phase: 4.2 },
+  ];
+  let orbs = [];
+
+  function buildOrbs() {
+    orbs = ORB_DEFS.map(d => ({
+      x: d.px * W, y: d.py * H,
+      vx: (Math.random() - 0.5) * 0.45,
+      vy: (Math.random() - 0.5) * 0.45,
+      r: d.r, rgb: d.rgb, phase: d.phase,
+    }));
+  }
+
+  /* ── Stars ── */
+  const STAR_N = isMobile ? 80 : 190;
+  let stars = [];
+
+  function buildStars() {
+    stars = [];
+    for (let i = 0; i < STAR_N; i++) {
+      const isRed = Math.random() < 0.18;
+      const big   = isRed && Math.random() < 0.38;
+      stars.push({
+        x: Math.random() * W, y: Math.random() * H,
+        r: big ? Math.random() * 2 + 1.4 : Math.random() * 1.1 + 0.25,
+        a: Math.random() * 0.5 + 0.12,
+        ta: 0,
+        tw: Math.random() * 0.012 + 0.003,
+        isRed, big,
+      });
+      stars[stars.length - 1].ta = stars[stars.length - 1].a;
+    }
+  }
+
+  /* ── Particles ── */
+  const PART_N = isMobile ? 100 : 240;
+  let parts = [];
+
+  function mkParticle() {
+    const o = orbs[Math.floor(Math.random() * orbs.length)];
+    const ang = Math.random() * Math.PI * 2;
+    const spd = Math.random() * 0.95 + 0.15;
+    const d   = Math.random() * o.r * 0.55;
+    return {
+      x: o.x + Math.cos(ang) * d,
+      y: o.y + Math.sin(ang) * d,
+      vx: Math.cos(ang) * spd,
+      vy: Math.sin(ang) * spd,
+      life: 1,
+      decay: Math.random() * 0.0055 + 0.002,
+      r: Math.random() * 1.7 + 0.35,
+      rgb: o.rgb,
+    };
+  }
+
+  function buildParts() {
+    parts = [];
+    for (let i = 0; i < PART_N; i++) {
+      const p = mkParticle();
+      p.life = Math.random();
+      parts.push(p);
+    }
+  }
+
+  /* ── Resize ── */
   function resize() {
     dpr = Math.min(window.devicePixelRatio || 1, 2);
     W = canvas.offsetWidth;
@@ -1558,76 +1626,259 @@ function initHeroNet() {
     canvas.width  = W * dpr;
     canvas.height = H * dpr;
     ctx.scale(dpr, dpr);
-    buildDots();
   }
 
-  function buildDots() {
-    dots = [];
-    for (let i = 0; i < DOTS; i++) {
-      dots.push({
-        x:  Math.random() * W,
-        y:  Math.random() * H,
-        vx: (Math.random() - 0.5) * 0.28,
-        vy: (Math.random() - 0.5) * 0.28,
-        r:  Math.random() * 1.2 + 0.4,
-        accent: i < ACCENT_COUNT,
-      });
+  /* ── Draw nebula ── */
+  function drawNebula(t) {
+    ctx.globalCompositeOperation = 'source-over';
+    const blobs = [
+      { cx: W * (0.15 + Math.sin(t * 0.00014) * 0.07), cy: H * (0.3 + Math.cos(t * 0.00019) * 0.1),  rr: W * 0.52, c: [185, 10, 42],  a: 0.075 },
+      { cx: W * (0.83 + Math.cos(t * 0.00011) * 0.06), cy: H * (0.24 + Math.sin(t * 0.00016) * 0.09), rr: W * 0.40, c: [105, 18, 168], a: 0.058 },
+      { cx: W * (0.5  + Math.sin(t * 0.00008) * 0.05), cy: H * (0.72 + Math.cos(t * 0.00013) * 0.06), rr: W * 0.38, c: [210, 45, 18],  a: 0.048 },
+    ];
+    for (const b of blobs) {
+      const g = ctx.createRadialGradient(b.cx, b.cy, 0, b.cx, b.cy, b.rr);
+      g.addColorStop(0,   'rgba(' + b.c + ',' + b.a + ')');
+      g.addColorStop(0.5, 'rgba(' + b.c + ',' + (b.a * 0.35) + ')');
+      g.addColorStop(1,   'transparent');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, W, H);
     }
   }
 
-  function draw() {
-    ctx.clearRect(0, 0, W, H);
+  /* ── Draw stars ── */
+  function drawStars() {
+    ctx.globalCompositeOperation = 'source-over';
+    for (const s of stars) {
+      if (Math.random() < 0.008) s.ta = Math.random() * 0.6 + 0.08;
+      s.a += (s.ta - s.a) * s.tw;
 
-    // connections
-    for (let i = 0; i < dots.length; i++) {
-      for (let j = i + 1; j < dots.length; j++) {
-        const dx = dots[i].x - dots[j].x;
-        const dy = dots[i].y - dots[j].y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist > CONNECT_DIST) continue;
-        const alpha = (1 - dist / CONNECT_DIST) * 0.1;
-        const isRed = dots[i].accent || dots[j].accent;
-        ctx.strokeStyle = isRed
-          ? `rgba(255,32,68,${alpha * 1.8})`
-          : `rgba(255,255,255,${alpha})`;
-        ctx.lineWidth = 0.6;
+      if (s.big) {
+        const gh = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.r * 8);
+        gh.addColorStop(0,   'rgba(255,75,75,' + (s.a * 0.42) + ')');
+        gh.addColorStop(0.4, 'rgba(255,55,55,' + (s.a * 0.1)  + ')');
+        gh.addColorStop(1,   'transparent');
+        ctx.fillStyle = gh;
         ctx.beginPath();
-        ctx.moveTo(dots[i].x, dots[i].y);
-        ctx.lineTo(dots[j].x, dots[j].y);
+        ctx.arc(s.x, s.y, s.r * 8, 0, Math.PI * 2);
+        ctx.fill();
+        const fl = s.r * 11 * s.a;
+        ctx.strokeStyle = 'rgba(255,115,100,' + (s.a * 0.28) + ')';
+        ctx.lineWidth = 0.55;
+        ctx.beginPath();
+        ctx.moveTo(s.x - fl, s.y); ctx.lineTo(s.x + fl, s.y);
+        ctx.moveTo(s.x, s.y - fl); ctx.lineTo(s.x, s.y + fl);
         ctx.stroke();
       }
-    }
 
-    // dots
-    for (const d of dots) {
       ctx.beginPath();
-      ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
-      ctx.fillStyle = d.accent
-        ? "rgba(255,60,80,0.7)"
-        : "rgba(255,255,255,0.45)";
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = s.isRed
+        ? 'rgba(255,88,78,' + s.a + ')'
+        : 'rgba(255,255,255,' + (s.a * 0.62) + ')';
       ctx.fill();
-
-      d.x += d.vx;
-      d.y += d.vy;
-      if (d.x < -10) d.x = W + 10;
-      if (d.x > W + 10) d.x = -10;
-      if (d.y < -10) d.y = H + 10;
-      if (d.y > H + 10) d.y = -10;
     }
-
-    raf = requestAnimationFrame(draw);
   }
 
+  /* ── Draw orb light rays ── */
+  function drawRays(o, t) {
+    const RAY_N = isMobile ? 6 : 10;
+    ctx.globalCompositeOperation = 'screen';
+    for (let i = 0; i < RAY_N; i++) {
+      const ang = (i / RAY_N) * Math.PI * 2 + t * 0.00038 + o.phase;
+      const len = o.r * 2.6 + Math.sin(t * 0.0009 + i * 1.35) * o.r * 0.75;
+      const wid = o.r * 0.075 + Math.sin(t * 0.0018 + i) * o.r * 0.02;
+      ctx.save();
+      ctx.translate(o.x, o.y);
+      ctx.rotate(ang);
+      const gr = ctx.createLinearGradient(o.r * 0.22, 0, len, 0);
+      gr.addColorStop(0,   'rgba(' + o.rgb + ',0.2)');
+      gr.addColorStop(0.3, 'rgba(' + o.rgb + ',0.07)');
+      gr.addColorStop(1,   'transparent');
+      ctx.beginPath();
+      ctx.moveTo(o.r * 0.22, -wid);
+      ctx.lineTo(len, -wid * 0.08);
+      ctx.lineTo(len,  wid * 0.08);
+      ctx.lineTo(o.r * 0.22,  wid);
+      ctx.fillStyle = gr;
+      ctx.fill();
+      ctx.restore();
+    }
+    ctx.globalCompositeOperation = 'source-over';
+  }
+
+  /* ── Draw glowing bridges between close orbs ── */
+  function drawConnections() {
+    const CDIST = 360;
+    for (let i = 0; i < orbs.length; i++) {
+      for (let j = i + 1; j < orbs.length; j++) {
+        const dx = orbs[i].x - orbs[j].x, dy = orbs[i].y - orbs[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist > CDIST) continue;
+        const a = (1 - dist / CDIST) * 0.38;
+        const gc = ctx.createLinearGradient(orbs[i].x, orbs[i].y, orbs[j].x, orbs[j].y);
+        gc.addColorStop(0, 'rgba(' + orbs[i].rgb + ',' + a + ')');
+        gc.addColorStop(1, 'rgba(' + orbs[j].rgb + ',' + a + ')');
+        ctx.globalCompositeOperation = 'screen';
+        ctx.strokeStyle = gc;
+        ctx.lineWidth = (1 - dist / CDIST) * 2.8;
+        ctx.beginPath();
+        ctx.moveTo(orbs[i].x, orbs[i].y);
+        ctx.lineTo(orbs[j].x, orbs[j].y);
+        ctx.stroke();
+        ctx.globalCompositeOperation = 'source-over';
+      }
+    }
+  }
+
+  /* ── Draw orbs with screen-blend merging effect ── */
+  function drawOrbs(t) {
+    for (const o of orbs) {
+      const pulse = 1 + Math.sin(t * 0.00075 + o.phase) * 0.13;
+      const pr = o.r * pulse;
+      drawRays(o, t);
+
+      ctx.globalCompositeOperation = 'screen';
+
+      // Outer ambient halo
+      const go = ctx.createRadialGradient(o.x, o.y, 0, o.x, o.y, pr * 3.0);
+      go.addColorStop(0,   'rgba(' + o.rgb + ',0.2)');
+      go.addColorStop(0.4, 'rgba(' + o.rgb + ',0.07)');
+      go.addColorStop(1,   'transparent');
+      ctx.fillStyle = go;
+      ctx.beginPath(); ctx.arc(o.x, o.y, pr * 3.0, 0, Math.PI * 2); ctx.fill();
+
+      // Core body
+      const gc2 = ctx.createRadialGradient(o.x, o.y, 0, o.x, o.y, pr);
+      gc2.addColorStop(0,    'rgba(255,255,255,0.38)');
+      gc2.addColorStop(0.18, 'rgba(' + o.rgb + ',0.65)');
+      gc2.addColorStop(0.55, 'rgba(' + o.rgb + ',0.22)');
+      gc2.addColorStop(1,    'transparent');
+      ctx.fillStyle = gc2;
+      ctx.beginPath(); ctx.arc(o.x, o.y, pr, 0, Math.PI * 2); ctx.fill();
+
+      ctx.globalCompositeOperation = 'source-over';
+    }
+  }
+
+  /* ── Draw particles ── */
+  function drawParticles() {
+    ctx.globalCompositeOperation = 'screen';
+    for (let i = 0; i < parts.length; i++) {
+      const p = parts[i];
+      p.life -= p.decay;
+      if (p.life <= 0) { parts[i] = mkParticle(); continue; }
+
+      // Mouse repulsion
+      const mdx = p.x - mouse.x, mdy = p.y - mouse.y;
+      const md = Math.sqrt(mdx * mdx + mdy * mdy);
+      if (md < 115 && md > 0) {
+        const f = (1 - md / 115) * 0.55;
+        p.vx += (mdx / md) * f;
+        p.vy += (mdy / md) * f;
+      }
+
+      p.vx *= 0.982; p.vy *= 0.982;
+      p.x += p.vx;   p.y += p.vy;
+
+      if (p.x < -8) p.x = W + 8; if (p.x > W + 8) p.x = -8;
+      if (p.y < -8) p.y = H + 8; if (p.y > H + 8) p.y = -8;
+
+      const a = p.life * 0.72;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r * p.life, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(' + p.rgb + ',' + a + ')';
+      ctx.fill();
+    }
+    ctx.globalCompositeOperation = 'source-over';
+  }
+
+  /* ── Physics update for orbs ── */
+  function updateOrbs() {
+    const cx = W * 0.5, cy = H * 0.44;
+    for (const o of orbs) {
+      o.vx += (cx - o.x) * 0.000045;
+      o.vy += (cy - o.y) * 0.000045;
+
+      const mdx = mouse.x - o.x, mdy = mouse.y - o.y;
+      const md = Math.sqrt(mdx * mdx + mdy * mdy);
+      if (md < 380 && md > 8) {
+        o.vx += (mdx / md) * 0.022;
+        o.vy += (mdy / md) * 0.022;
+      }
+
+      for (const b of orbs) {
+        if (b === o) continue;
+        const dx = o.x - b.x, dy = o.y - b.y;
+        const d = Math.sqrt(dx * dx + dy * dy);
+        if (d < o.r * 1.6 && d > 0) {
+          const f = ((o.r * 1.6 - d) / (o.r * 1.6)) * 0.07;
+          o.vx += (dx / d) * f;
+          o.vy += (dy / d) * f;
+        }
+      }
+
+      const pad = o.r * 1.1;
+      if (o.x < pad)     o.vx += (pad - o.x)     * 0.009;
+      if (o.x > W - pad) o.vx += (W - pad - o.x) * 0.009;
+      if (o.y < pad)     o.vy += (pad - o.y)      * 0.009;
+      if (o.y > H - pad) o.vy += (H - pad - o.y)  * 0.009;
+
+      o.vx *= 0.968; o.vy *= 0.968;
+      const spd = Math.sqrt(o.vx * o.vx + o.vy * o.vy);
+      if (spd > 1.1) { o.vx *= 1.1 / spd; o.vy *= 1.1 / spd; }
+      o.x += o.vx; o.y += o.vy;
+    }
+  }
+
+  /* ── Main loop ── */
+  let lastTs = 0;
+  function frame(ts) {
+    raf = requestAnimationFrame(frame);
+    if (ts - lastTs < 14) return;
+    lastTs = ts;
+    const t = ts - t0;
+
+    ctx.fillStyle = '#040508';
+    ctx.fillRect(0, 0, W, H);
+
+    drawNebula(t);
+    drawStars();
+    drawConnections();
+    drawParticles();
+    drawOrbs(t);
+    updateOrbs();
+  }
+
+  /* ── Mouse / touch ── */
+  const hero = document.getElementById('hero');
+  const onMove = (e) => {
+    const r = canvas.getBoundingClientRect();
+    const cx = e.touches ? e.touches[0].clientX : e.clientX;
+    const cy = e.touches ? e.touches[0].clientY : e.clientY;
+    mouse.x = (cx - r.left) / r.width  * W;
+    mouse.y = (cy - r.top)  / r.height * H;
+  };
+  hero.addEventListener('mousemove',  onMove);
+  hero.addEventListener('touchmove',  onMove, { passive: true });
+  hero.addEventListener('mouseleave', () => { mouse.x = -9999; mouse.y = -9999; });
+
+  /* ── Resize observer ── */
   const ro = new ResizeObserver(() => {
     cancelAnimationFrame(raf);
     ctx.resetTransform();
     resize();
-    draw();
+    if (!t0) t0 = performance.now();
+    raf = requestAnimationFrame(frame);
   });
   ro.observe(canvas);
 
   resize();
-  draw();
+  buildOrbs();
+  buildStars();
+  buildParts();
+  t0 = performance.now();
+  raf = requestAnimationFrame(frame);
 }
 
 /* ------------------------------
@@ -1841,8 +2092,7 @@ async function init() {
   loadTo(28);
 
   initBgStars();
-  initHeroNet();
-  initHeroEarthFX();
+  initHeroCanvas();
   initHeroSkillTicker();
 
   loadTo(40);
