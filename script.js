@@ -1538,99 +1538,181 @@ function initBgStars() {
 }
 
 /* ── Hero — Three.js iridescent torus ── */
+/* ── Hero — Three.js iridescent torus (custom shader) ── */
 function initHeroThree() {
   const canvas = document.getElementById('heroCanvas');
   if (!canvas || typeof THREE === 'undefined') return;
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-  const isMobile = window.innerWidth < 760;
-
   /* ── Renderer ── */
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+  const renderer = new THREE.WebGLRenderer({
+    canvas, antialias: true, alpha: false, powerPreference: 'high-performance'
+  });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.15;
+  renderer.toneMappingExposure = 1.25;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
 
   /* ── Scene + Camera ── */
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x060a18);
 
-  const camera = new THREE.PerspectiveCamera(48, 1, 0.1, 100);
-  camera.position.z = 5.2;
+  const camera = new THREE.PerspectiveCamera(46, 1, 0.1, 100);
+  camera.position.set(0, 0.55, 5.5); // raised slightly so torus sits lower in viewport
 
-  /* ── Lights ── */
-  scene.add(new THREE.AmbientLight(0x1a1540, 1.2));
+  /* ── Mutable light positions (updated each frame) ── */
+  const lp1 = new THREE.Vector3(-4.0,  3.0, 4.0);
+  const lp2 = new THREE.Vector3( 3.5, -0.5, 3.5);
+  const lp3 = new THREE.Vector3( 1.0, -5.0, 2.0);
 
-  const L1 = new THREE.PointLight(0x0055ff, 18, 10); L1.position.set(-3.2, 2.5, 3);
-  const L2 = new THREE.PointLight(0xff1060, 14, 9);  L2.position.set(3.0, -1.5, 3);
-  const L3 = new THREE.PointLight(0xff6600, 10, 8);  L3.position.set(0.5, -4, 2);
-  const L4 = new THREE.PointLight(0x4400cc, 6, 7);   L4.position.set(-1, 3.5, -2);
-  const L5 = new THREE.PointLight(0xffffff, 3, 6);   L5.position.set(0, 0, 5);
-  scene.add(L1, L2, L3, L4, L5);
+  /* ── Custom ShaderMaterial ── */
+  const mat = new THREE.ShaderMaterial({
+    transparent: true,
+    depthWrite: false,
+    side: THREE.FrontSide,
+    uniforms: {
+      uCamPos: { value: camera.position },
+      uL1:     { value: lp1 },
+      uL2:     { value: lp2 },
+      uL3:     { value: lp3 },
+      uTime:   { value: 0 },
+    },
 
-  /* ── Torus with gradient vertex colours ── */
-  const geo = new THREE.TorusGeometry(1.25, 0.46, 160, 320);
-
-  /* Build vertex colour gradient around tube cross-section */
-  const uvAttr  = geo.attributes.uv;
-  const colData  = new Float32Array(uvAttr.count * 3);
-  const colAttr  = new THREE.BufferAttribute(colData, 3);
-
-  /* Gradient stops around tube (u = 0→1 = outer→inner→outer) */
-  const STOPS = [
-    { u: 0.00, r: 0.00, g: 0.30, b: 1.00 }, // cobalt blue
-    { u: 0.12, r: 0.00, g: 0.55, b: 1.00 }, // electric blue
-    { u: 0.28, r: 0.15, g: 0.08, b: 0.95 }, // blue-violet
-    { u: 0.42, r: 0.95, g: 0.06, b: 0.55 }, // hot pink
-    { u: 0.52, r: 1.00, g: 0.28, b: 0.08 }, // orange-red
-    { u: 0.62, r: 1.00, g: 0.45, b: 0.00 }, // orange
-    { u: 0.75, r: 0.55, g: 0.08, b: 0.85 }, // purple
-    { u: 0.88, r: 0.10, g: 0.20, b: 1.00 }, // deep blue
-    { u: 1.00, r: 0.00, g: 0.30, b: 1.00 }, // back to cobalt
-  ];
-
-  function lerpStops(u) {
-    for (let i = 0; i < STOPS.length - 1; i++) {
-      const a = STOPS[i], b = STOPS[i + 1];
-      if (u >= a.u && u <= b.u) {
-        const t = (u - a.u) / (b.u - a.u);
-        return {
-          r: a.r + (b.r - a.r) * t,
-          g: a.g + (b.g - a.g) * t,
-          b: a.b + (b.b - a.b) * t,
-        };
+    vertexShader: `
+      varying vec2  vUv;
+      varying vec3  vNormal;
+      varying vec3  vWorldPos;
+      void main() {
+        vUv      = uv;
+        vNormal  = normalize((modelMatrix * vec4(normal, 0.0)).xyz);
+        vWorldPos = (modelMatrix * vec4(position, 1.0)).xyz;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
       }
-    }
-    return STOPS[STOPS.length - 1];
-  }
+    `,
 
-  for (let i = 0; i < uvAttr.count; i++) {
-    const u = uvAttr.getX(i);
-    const c = lerpStops(u);
-    colAttr.setXYZ(i, c.r, c.g, c.b);
-  }
-  geo.setAttribute('color', colAttr);
+    fragmentShader: `
+      precision highp float;
+      uniform vec3  uCamPos;
+      uniform vec3  uL1, uL2, uL3;
+      uniform float uTime;
+      varying vec2  vUv;
+      varying vec3  vNormal;
+      varying vec3  vWorldPos;
 
-  const mat = new THREE.MeshPhongMaterial({
-    vertexColors: true,
-    shininess: 120,
-    specular: new THREE.Color(0xaaaaff),
+      /* ── Tube cross-section gradient (u = 0→1) ──────────────────
+         u = 0.0 : outer face       → deep cobalt blue
+         u = 0.18: upper outer      → electric blue
+         u = 0.34: upper inner edge → hot pink / magenta
+         u = 0.50: inner face       → warm glassy white (backlit look)
+         u = 0.64: lower inner      → vivid orange
+         u = 0.80: lower outer      → deep purple
+         u = 1.00: back to outer    → deep cobalt blue                 */
+      vec3 tubeCol(float u) {
+        vec3 c[7];
+        c[0] = vec3(0.00, 0.16, 0.92);  // cobalt blue
+        c[1] = vec3(0.00, 0.48, 1.00);  // electric blue
+        c[2] = vec3(0.80, 0.04, 0.58);  // hot pink/magenta
+        c[3] = vec3(1.00, 0.90, 0.80);  // warm white (inner glass)
+        c[4] = vec3(1.00, 0.32, 0.04);  // orange
+        c[5] = vec3(0.48, 0.04, 0.88);  // deep purple
+        c[6] = vec3(0.00, 0.16, 0.92);  // back to cobalt
+        float t = clamp(u, 0.0, 1.0) * 6.0;
+        int   i = int(t);
+        float f = fract(t);
+        i = clamp(i, 0, 5);
+        return mix(c[i], c[i+1], f);
+      }
+
+      /* ── Blinn-Phong specular ── */
+      vec3 blinnSpec(vec3 N, vec3 V, vec3 lPos, vec3 lCol, float shiny) {
+        vec3 L = normalize(lPos - vWorldPos);
+        vec3 H = normalize(L + V);
+        float s = pow(max(dot(N, H), 0.0), shiny);
+        return lCol * s;
+      }
+
+      void main() {
+        vec3  N   = normalize(vNormal);
+        vec3  V   = normalize(uCamPos - vWorldPos);
+        float NdV = max(dot(N, V), 0.0);
+
+        /* Base gradient colour */
+        vec3 base = tubeCol(vUv.x);
+
+        /* Soft diffuse from each light */
+        vec3 L1n = normalize(uL1 - vWorldPos);
+        vec3 L2n = normalize(uL2 - vWorldPos);
+        vec3 L3n = normalize(uL3 - vWorldPos);
+        float d1 = max(dot(N, L1n), 0.0);
+        float d2 = max(dot(N, L2n), 0.0);
+        float d3 = max(dot(N, L3n), 0.0);
+        vec3 diff = base * (
+          d1 * vec3(0.18, 0.38, 1.00) * 0.40 +
+          d2 * vec3(1.00, 0.18, 0.52) * 0.30 +
+          d3 * vec3(1.00, 0.50, 0.10) * 0.22
+        );
+
+        /* Sharp coloured specular highlights */
+        vec3 s1 = blinnSpec(N, V, uL1, vec3(0.28, 0.52, 1.00), 320.0) * 2.2; // blue
+        vec3 s2 = blinnSpec(N, V, uL2, vec3(1.00, 0.18, 0.62), 200.0) * 1.8; // pink
+        vec3 s3 = blinnSpec(N, V, uL3, vec3(1.00, 0.52, 0.08), 250.0) * 1.5; // orange
+        /* Clearcoat-style white hot highlight */
+        vec3 s4 = blinnSpec(N, V, vec3(0.0, 1.5, 6.5), vec3(1.0, 1.0, 1.0), 1400.0) * 0.65;
+
+        /* Fresnel — brightens grazing edges */
+        float fr   = pow(1.0 - NdV, 3.2);
+        vec3  fCol = base * 1.6 + vec3(0.08, 0.12, 0.50) * 0.5;  // base tint + blue rim
+
+        /* Ambient */
+        vec3 amb = base * 0.06;
+
+        /* Combine */
+        vec3 col = amb + diff + (s1 + s2 + s3) * 1.6 + s4 + fr * fCol;
+
+        /* Inner-face glass transparency
+           vUv.x near 0.5 = inner tube wall facing the ring hole.
+           Gradually make it semi-transparent to reveal the dark background
+           and give that glassy "see-through" appearance.              */
+        float innerness = 1.0 - smoothstep(0.28, 0.50, abs(vUv.x - 0.50));
+        /* Add a bright inner-edge glow to simulate light catching the glass rim */
+        float rimGlow = smoothstep(0.32, 0.42, abs(vUv.x - 0.50));
+        col += (1.0 - rimGlow) * vec3(1.0, 0.72, 0.55) * 0.45;
+        float alpha = 1.0 - innerness * 0.60;
+
+        /* Filmic tone compress + gamma */
+        col = col / (col + vec3(0.60));
+        col = pow(max(col, 0.0), vec3(0.44));
+
+        gl_FragColor = vec4(col, alpha);
+      }
+    `,
   });
 
+  /* ── Torus geometry ── */
+  const isMobile = window.innerWidth < 760;
+  const geo = new THREE.TorusGeometry(
+    1.32,                        // ring radius
+    0.50,                        // tube radius (fatter = more impressive)
+    isMobile ? 128 : 256,        // radial segments
+    isMobile ? 256 : 512         // tubular segments
+  );
   const torus = new THREE.Mesh(geo, mat);
-  torus.rotation.x = 0.32;
-  torus.rotation.z = 0.08;
+  torus.rotation.x = 0.34;      // tilt forward
+  torus.rotation.z = 0.06;      // slight roll
+  torus.position.y = -0.30;     // shift down so ring sits lower in viewport
   scene.add(torus);
 
-  /* ── Mouse parallax ── */
+  /* ── Mouse / touch parallax ── */
   const mouse = { tx: 0, ty: 0, x: 0, y: 0 };
   const hero = document.getElementById('hero');
-  hero.addEventListener('mousemove', e => {
+  const onMove = (cx, cy) => {
     const r = canvas.getBoundingClientRect();
-    mouse.tx = ((e.clientX - r.left) / r.width  - 0.5) * 0.5;
-    mouse.ty = ((e.clientY - r.top)  / r.height - 0.5) * -0.35;
-  });
+    mouse.tx = ((cx - r.left) / r.width  - 0.5) *  0.52;
+    mouse.ty = ((cy - r.top)  / r.height - 0.5) * -0.38;
+  };
+  hero.addEventListener('mousemove', e => onMove(e.clientX, e.clientY));
+  hero.addEventListener('touchmove',  e => onMove(e.touches[0].clientX, e.touches[0].clientY), { passive: true });
+  hero.addEventListener('mouseleave', () => { mouse.tx = 0; mouse.ty = 0; });
 
   /* ── Resize ── */
   function resize() {
@@ -1639,38 +1721,51 @@ function initHeroThree() {
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
   }
-  const ro = new ResizeObserver(resize);
-  ro.observe(canvas);
+  new ResizeObserver(resize).observe(canvas);
   resize();
 
   /* ── Animate ── */
+  const baseL1 = lp1.clone(), baseL2 = lp2.clone(), baseL3 = lp3.clone();
   let elapsed = 0, lastTs = 0;
+
   function frame(ts) {
     requestAnimationFrame(frame);
     const dt = Math.min(ts - lastTs, 50); lastTs = ts;
     elapsed += dt * 0.001;
 
-    mouse.x += (mouse.tx - mouse.x) * 0.04;
-    mouse.y += (mouse.ty - mouse.y) * 0.04;
+    /* Smooth mouse lerp */
+    mouse.x += (mouse.tx - mouse.x) * 0.045;
+    mouse.y += (mouse.ty - mouse.y) * 0.045;
 
-    torus.rotation.y = elapsed * 0.38 + mouse.x;
-    torus.rotation.x = 0.32 + mouse.y;
-    torus.rotation.z = 0.08 + mouse.x * 0.15;
+    /* Rotate torus */
+    torus.rotation.y = elapsed * 0.34 + mouse.x;
+    torus.rotation.x = 0.34 + mouse.y;
+    torus.rotation.z = 0.06 + mouse.x * 0.14;
 
-    /* subtle light orbit */
-    L1.position.x = -3.2 + Math.sin(elapsed * 0.3) * 0.6;
-    L2.position.x =  3.0 + Math.cos(elapsed * 0.25) * 0.5;
-    L3.position.y = -4.0 + Math.sin(elapsed * 0.2) * 0.4;
+    /* Slowly orbit lights — creates dynamic moving highlights */
+    lp1.set(
+      baseL1.x + Math.sin(elapsed * 0.27) * 1.1,
+      baseL1.y + Math.cos(elapsed * 0.21) * 0.8,
+      baseL1.z
+    );
+    lp2.set(
+      baseL2.x + Math.cos(elapsed * 0.23) * 1.0,
+      baseL2.y + Math.sin(elapsed * 0.17) * 0.9,
+      baseL2.z
+    );
+    lp3.set(
+      baseL3.x + Math.sin(elapsed * 0.31) * 0.6,
+      baseL3.y,
+      baseL3.z
+    );
 
+    mat.uniforms.uTime.value = elapsed;
     renderer.render(scene, camera);
   }
   requestAnimationFrame(frame);
 }
 
-/* ------------------------------
-   Hero earth FX (aurora + subtle parallax)
-   - drives CSS vars --hx/--hy used by .heroEarth
------------------------------- */
+
 function initHeroEarthFX() {
   const hero = document.getElementById("hero");
   const earth = document.querySelector(".heroEarth");

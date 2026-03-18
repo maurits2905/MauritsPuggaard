@@ -6865,7 +6865,7 @@ html.noReveal .r,
   align-items: center;
   gap: 10px;
   /* Push into lower portion so torus shows above */
-  margin-top: 32vh;
+  margin-top: 16vh;
 }
 
 /* Small label above name */
