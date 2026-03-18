@@ -67,7 +67,7 @@
       }
     </style>
 
-    <link rel="stylesheet" href="styles.css?v=5" />
+    <link rel="stylesheet" href="styles.css?v=6" />
   </head>
 
   <body data-bg="stars" class="isLoading">
@@ -591,38 +591,61 @@
       <section id="ask" class="section">
         <div class="askHead r">
           <h2 class="sectionTitle">Ask <span class="gradWord">me</span></h2>
+          <p class="askSub">Powered by AI — ask anything about my work, projects, or experience</p>
         </div>
 
-        <div class="askWrap r askWrap--simple">
-          <div class="askStage">
-            <div class="askToken">
-              <img
-                class="askTokenImg"
-                src="assets/me.jpeg"
-                alt="Maurits portrait"
-              />
+        <div class="askPanel r">
+          <!-- Left: Identity & topic chips -->
+          <div class="askIdentity">
+            <div class="askAvatarWrap">
+              <div class="askAvatarRing"></div>
+              <img class="askAvatar" src="assets/me.jpeg" alt="Maurits portrait" />
+              <span class="askOnlineDot" title="AI online"></span>
             </div>
 
-            <div class="askBubble">
-              Hi — ask me anything about my projects, SAP work, or tools.
+            <div class="askIdMeta">
+              <span class="askIdName">Maurits Puggaard</span>
+              <span class="askIdRole">SAP Consultant · Developer</span>
+            </div>
+
+            <p class="askIdBio">
+              Ask me anything — projects, SAP work, tools, tech stack, or background.
+            </p>
+
+            <div class="askChips">
+              <button type="button" class="askChip" data-q="What SAP projects have you worked on?">SAP work</button>
+              <button type="button" class="askChip" data-q="What tools have you built?">Tools I built</button>
+              <button type="button" class="askChip" data-q="What's your tech stack?">Tech stack</button>
+              <button type="button" class="askChip" data-q="Tell me about your background and experience">Background</button>
             </div>
           </div>
 
-          <div class="askChat" id="askChat" aria-live="polite"></div>
+          <!-- Right: Chat window -->
+          <div class="askChatPanel">
+            <div class="askChatMessages" id="askChat" aria-live="polite">
+              <div class="askMsg bot">
+                Hi — ask me anything about my projects, SAP work, or tools.
+              </div>
+            </div>
 
-          <form class="askInputWrap searchBar searchNeo" id="askForm">
-            <span class="searchIcon" aria-hidden="true">⌕</span>
+            <div class="askMeta" id="askMeta" hidden>Thinking…</div>
 
-            <input
-              id="askInput"
-              type="text"
-              placeholder="Ask me about anything."
-            />
-
-            <button id="askSend" class="askSendBtn" type="submit">Send</button>
-          </form>
-
-          <div class="askMeta" id="askMeta" hidden></div>
+            <form class="askFormRow" id="askForm">
+              <input
+                id="askInput"
+                type="text"
+                class="askInputField"
+                placeholder="Ask me anything…"
+                autocomplete="off"
+              />
+              <button id="askSend" class="askSendBtn" type="submit" aria-label="Send">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="22" y1="2" x2="11" y2="13"/>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                </svg>
+              </button>
+            </form>
+          </div>
         </div>
       </section>
 
@@ -1085,7 +1108,7 @@
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
 
-    <script src="script.js?v=5"></script>
+    <script src="script.js?v=6"></script>
     <script src="avatar.js"></script>
   </body>
 </html>

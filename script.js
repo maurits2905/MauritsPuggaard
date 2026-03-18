@@ -1234,6 +1234,14 @@ function initAskMe() {
     meta.hidden = !show;
   };
 
+  // Topic chip quick-sends
+  document.querySelectorAll(".askChip").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      input.value = chip.dataset.q || "";
+      form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+    });
+  });
+
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 

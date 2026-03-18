@@ -3997,209 +3997,395 @@ html.noReveal .r,
   z-index: 1;
 }
 
-/* ------------------------------
-   Ask me – layout polish
-   Paste at the bottom of styles.css
------------------------------- */
-
-/* Center the whole ask block nicely */
-
-.askWrap {
-  display: grid;
-  place-items: center;
-  max-width: 920px;
-  margin: 18px auto 28px;
-  padding: 18px;
-  text-align: center;
-  background: var(--glass2);
-  border: 1px solid var(--stroke);
-  border-radius: var(--r1);
-  box-shadow: var(--shadow);
-}
-
-/* Keep the header aligned like other sections */
+/* ==============================
+   Ask Me — redesigned split panel
+============================== */
 
 .askHead {
-  margin-bottom: 18px;
+  margin-bottom: 10px;
   text-align: center;
 }
 
-/* Token + bubble as one centered unit */
-
-.askStage {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 18px;
-  grid-template-columns: 160px 1fr;
-  width: min(980px, 92vw);
-  margin: 18px auto 20px;
-  perspective: 900px;
+.askSub {
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin: 6px 0 36px;
+  letter-spacing: 0.01em;
 }
 
-/* Token size + slightly stronger presence */
+/* Main panel — card split into two columns */
 
-.askToken {
-  position: relative;
+.askPanel {
   display: grid;
-  flex: 0 0 auto;
-  place-items: center;
+  grid-template-columns: 290px 1fr;
+  max-width: 960px;
+  margin: 0 auto;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 32, 68, 0.15);
+  background: #07080d;
+  min-height: 480px;
+  box-shadow: 0 32px 90px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 32, 68, 0.06);
+}
+
+/* ---- LEFT: Identity panel ---- */
+
+.askIdentity {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 36px 24px 28px;
+  background: linear-gradient(165deg, #130407 0%, #0c0308 55%, #07080d 100%);
+  border-right: 1px solid rgba(255, 32, 68, 0.12);
+  gap: 14px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Ambient glow blob behind avatar */
+
+.askIdentity::before {
+  content: “”;
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(closest-side, rgba(255, 32, 68, 0.14) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+/* Avatar with animated conic ring */
+
+.askAvatarWrap {
+  position: relative;
   width: 96px;
   height: 96px;
-  border-radius: 999px;
-  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
-  animation: tokenSway 5.8s ease-in-out infinite;
-  transform-style: preserve-3d;
+  flex-shrink: 0;
+  margin-bottom: 4px;
 }
 
-/* Make the portrait sit perfectly in the token */
+.askAvatarRing {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, #ff2044 0%, #ff7a5a 35%, transparent 55%, transparent 70%, #ff2044 100%);
+  opacity: 0.55;
+  animation: askRingSpin 7s linear infinite;
+}
 
-.askTokenImg {
+@keyframes askRingSpin {
+  to { transform: rotate(360deg); }
+}
+
+.askAvatar {
+  position: relative;
+  z-index: 1;
   width: 100%;
   height: 100%;
-  background: color-mix(in srgb, var(--glass) 70%, transparent);
-  border: 1px solid color-mix(in srgb, var(--stroke) 70%, transparent);
-  border-radius: 999px;
-  transform: translateZ(18px);
+  border-radius: 50%;
   object-fit: cover;
+  border: 2px solid rgba(255, 32, 68, 0.28);
+  background: #1a0507;
 }
 
-/* Bubble: a bit cleaner + slightly smaller */
-
-.askBubble {
-  position: relative;
-  max-width: 560px;
-  padding: 12px 16px;
-  text-align: left;
-  color: color-mix(in srgb, var(--text) 92%, transparent);
-  background: color-mix(in srgb, var(--glass2) 88%, transparent);
-  border: 1px solid color-mix(in srgb, var(--stroke) 80%, transparent);
-  border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(10px);
-}
-
-/* Bubble tail – top-left of bubble, pointing toward token */
-
-.askBubble::before {
+.askOnlineDot {
   position: absolute;
-  top: 14px;
-  left: -8px;
+  bottom: 4px;
+  right: 4px;
+  z-index: 2;
   width: 14px;
   height: 14px;
-  background: inherit;
-  transform: rotate(45deg);
-  border-bottom: 1px solid color-mix(in srgb, var(--stroke) 80%, transparent);
-  border-bottom-left-radius: 3px;
-  border-left: 1px solid color-mix(in srgb, var(--stroke) 80%, transparent);
-  content: "";
+  border-radius: 50%;
+  background: #22c55e;
+  border: 2px solid #07080d;
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.65);
+  animation: askDotPulse 2.5s ease-in-out infinite;
 }
 
-/* Make the input feel “AI search”-ish (clean + readable) */
-
-.askInput {
-  height: 52px;
-  padding: 0 14px;
-  padding-left: 18px;
-  font-size: 16px;
-  color: var(--text);
-  background: color-mix(in srgb, var(--glass) 58%, transparent);
-  border: 1px solid color-mix(in srgb, var(--stroke) 85%, transparent);
-  outline: none;
-  border-radius: 16px;
-  transition:
-    border-color 180ms ease,
-    box-shadow 180ms ease;
+@keyframes askDotPulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(34, 197, 94, 0.5); }
+  50%       { box-shadow: 0 0 16px rgba(34, 197, 94, 0.9); }
 }
 
-/* Send button: make it match your pill style */
+.askIdMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
 
-.askSend {
-  height: 52px;
-  padding: 10px 16px;
+.askIdName {
+  display: block;
+  font-size: 1rem;
+  font-weight: 650;
   color: var(--text);
-  background: color-mix(in srgb, var(--glass2) 92%, transparent);
-  border: 1px solid color-mix(in srgb, var(--stroke) 80%, transparent);
-  border-radius: 14px;
+  letter-spacing: -0.01em;
+}
+
+.askIdRole {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--hot);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.askIdBio {
+  font-size: 0.83rem;
+  color: var(--muted);
+  line-height: 1.6;
+  margin: 2px 0;
+}
+
+/* Topic chips */
+
+.askChips {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  margin-top: auto;
+  padding-top: 6px;
+}
+
+.askChip {
+  width: 100%;
+  padding: 9px 14px;
+  background: rgba(255, 32, 68, 0.05);
+  border: 1px solid rgba(255, 32, 68, 0.16);
+  border-radius: 10px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-family: var(--font);
   cursor: pointer;
-  transition:
-    transform 160ms ease,
-    border-color 160ms ease,
-    background 160ms ease;
+  text-align: left;
+  transition: background 180ms ease, border-color 180ms ease, color 180ms ease, transform 160ms ease;
 }
 
-.askSend:hover {
-  border-color: rgba(160, 140, 255, 0.45);
-  transform: translateY(-1px);
-}
-
-.askSend:active {
-  transform: translateY(0);
-}
-
-/* Mobile: stack token above bubble */
-
-@media (max-width: 720px) {
-  .askStage {
-    flex-direction: column;
-    gap: 14px;
-  }
-
-  .askBubble {
-    text-align: center;
-  }
-
-  .askBubble::before {
-    left: 50%;
-    top: -8px;
-    transform: translateX(-50%) rotate(135deg);
-    border-left: 1px solid color-mix(in srgb, var(--stroke) 80%, transparent);
-    border-bottom: 1px solid color-mix(in srgb, var(--stroke) 80%, transparent);
-  }
-}
-
-/* Reuse Projects searchBar glow for Ask input */
-
-.askInputWrap.searchBar {
-  width: min(980px, 92vw);
-  margin: 18px auto 0;
-}
-
-/* Input should behave like the Projects search input */
-
-.askInputWrap.searchBar #askInput {
-  flex: 1;
-  padding: 10px 12px;
-  font-size: 16px;
+.askChip:hover {
+  background: rgba(255, 32, 68, 0.12);
+  border-color: rgba(255, 32, 68, 0.38);
   color: var(--text);
-  background: transparent;
-  border: 0;
-  outline: 0;
+  transform: translateX(2px);
 }
 
-/* Send button style (so it doesn’t look like a random white box) */
+/* ---- RIGHT: Chat panel ---- */
+
+.askChatPanel {
+  display: flex;
+  flex-direction: column;
+  min-height: 480px;
+}
+
+.askChatMessages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px 26px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 32, 68, 0.25) transparent;
+}
+
+/* Messages */
+
+.askMsg {
+  max-width: 82%;
+  padding: 11px 15px;
+  border-radius: 14px;
+  font-size: 0.88rem;
+  line-height: 1.58;
+}
+
+.askMsg.bot {
+  align-self: flex-start;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  color: var(--text);
+  border-bottom-left-radius: 4px;
+}
+
+.askMsg.user {
+  align-self: flex-end;
+  background: rgba(255, 32, 68, 0.11);
+  border: 1px solid rgba(255, 32, 68, 0.24);
+  color: var(--text);
+  border-bottom-right-radius: 4px;
+}
+
+/* Thinking status */
+
+.askMeta {
+  padding: 4px 26px 8px;
+  font-size: 0.78rem;
+  color: var(--muted);
+  font-style: italic;
+  opacity: 0.75;
+}
+
+/* Input row */
+
+.askFormRow {
+  display: flex;
+  gap: 10px;
+  padding: 14px 18px;
+  border-top: 1px solid rgba(255, 32, 68, 0.1);
+  background: rgba(0, 0, 0, 0.18);
+  flex-shrink: 0;
+}
+
+.askInputField {
+  flex: 1;
+  height: 44px;
+  padding: 0 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 12px;
+  color: var(--text);
+  font-size: 0.88rem;
+  font-family: var(--font);
+  outline: none;
+  transition: border-color 200ms ease, box-shadow 200ms ease;
+}
+
+.askInputField::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.askInputField:focus {
+  border-color: rgba(255, 32, 68, 0.45);
+  box-shadow: 0 0 0 3px rgba(255, 32, 68, 0.08);
+}
 
 .askSendBtn {
-  height: 36px;
-  padding: 0 14px;
-  color: color-mix(in srgb, var(--text) 88%, transparent);
-  background: color-mix(in srgb, var(--glass2) 90%, transparent);
-  border: 1px solid color-mix(in srgb, var(--stroke) 75%, transparent);
+  width: 44px;
+  height: 44px;
   border-radius: 12px;
+  background: rgba(255, 32, 68, 0.12);
+  border: 1px solid rgba(255, 32, 68, 0.32);
+  color: var(--hot);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  transition:
-    transform 180ms ease,
-    border-color 180ms ease,
-    opacity 180ms ease;
+  flex-shrink: 0;
+  transition: background 160ms ease, transform 160ms ease, box-shadow 160ms ease;
 }
 
 .askSendBtn:hover {
-  border-color: rgba(160, 140, 255, 0.45);
+  background: rgba(255, 32, 68, 0.22);
+  box-shadow: 0 0 18px rgba(255, 32, 68, 0.2);
   transform: translateY(-1px);
 }
 
 .askSendBtn:active {
-  transform: translateY(0px);
+  transform: translateY(0);
+}
+
+/* Light mode adjustments */
+
+[data-theme=”light”] .askPanel {
+  background: #fff8f9;
+  border-color: rgba(255, 32, 68, 0.18);
+}
+
+[data-theme=”light”] .askIdentity {
+  background: linear-gradient(165deg, #fff0f2 0%, #fdf5f6 55%, #fff8f9 100%);
+  border-right-color: rgba(255, 32, 68, 0.14);
+}
+
+[data-theme=”light”] .askIdentity::before {
+  background: radial-gradient(closest-side, rgba(255, 32, 68, 0.1) 0%, transparent 100%);
+}
+
+[data-theme=”light”] .askAvatar {
+  background: #ffe0e4;
+}
+
+[data-theme=”light”] .askOnlineDot {
+  border-color: #fff8f9;
+}
+
+[data-theme=”light”] .askMsg.bot {
+  background: rgba(0, 0, 0, 0.035);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme=”light”] .askMsg.user {
+  background: rgba(255, 32, 68, 0.08);
+  border-color: rgba(255, 32, 68, 0.2);
+}
+
+[data-theme=”light”] .askFormRow {
+  background: rgba(0, 0, 0, 0.04);
+  border-top-color: rgba(255, 32, 68, 0.12);
+}
+
+[data-theme=”light”] .askInputField {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+[data-theme=”light”] .askInputField::placeholder {
+  color: rgba(0, 0, 0, 0.3);
+}
+
+[data-theme=”light”] .askChip {
+  background: rgba(255, 32, 68, 0.04);
+  border-color: rgba(255, 32, 68, 0.18);
+  color: rgba(0, 0, 0, 0.55);
+}
+
+[data-theme=”light”] .askChip:hover {
+  background: rgba(255, 32, 68, 0.1);
+  color: rgba(0, 0, 0, 0.85);
+}
+
+/* Mobile — stack panels vertically */
+
+@media (max-width: 760px) {
+  .askPanel {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .askIdentity {
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 32, 68, 0.12);
+    padding: 28px 20px 22px;
+    gap: 12px;
+  }
+
+  .askChips {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 4px;
+  }
+
+  .askChip {
+    width: auto;
+    flex: 1 1 auto;
+    text-align: center;
+    transform: none !important;
+  }
+
+  .askChatPanel {
+    min-height: 340px;
+  }
+
+  .askChatMessages {
+    padding: 20px 18px 10px;
+  }
+
+  .askFormRow {
+    padding: 12px 14px;
+  }
 }
 
 /* Static story mode for mobile (ONLY when JS adds #story.storyStatic) */
