@@ -1549,33 +1549,33 @@ function initHeroThree() {
     canvas, antialias: true, alpha: false, powerPreference: 'high-performance'
   });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.25;
+  renderer.toneMapping = THREE.NoToneMapping;   // we do our own ACES in shader
   renderer.outputColorSpace = THREE.SRGBColorSpace;
 
   /* ── Scene + Camera ── */
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x060a18);
+  scene.background = new THREE.Color(0x05081a);
 
-  const camera = new THREE.PerspectiveCamera(46, 1, 0.1, 100);
-  camera.position.set(0, 0.55, 5.5); // raised slightly so torus sits lower in viewport
+  const camera = new THREE.PerspectiveCamera(44, 1, 0.1, 100);
+  camera.position.set(0, 0.10, 5.6);
 
-  /* ── Mutable light positions (updated each frame) ── */
-  const lp1 = new THREE.Vector3(-4.0,  3.0, 4.0);
-  const lp2 = new THREE.Vector3( 3.5, -0.5, 3.5);
-  const lp3 = new THREE.Vector3( 1.0, -5.0, 2.0);
+  /* ── 5 orbiting light positions ── */
+  const lp1 = new THREE.Vector3(-3.8,  3.2, 4.2);   // top-left  — cool blue
+  const lp2 = new THREE.Vector3( 3.8,  0.2, 3.8);   // right     — warm pink
+  const lp3 = new THREE.Vector3( 0.5, -4.5, 2.5);   // bottom    — orange
+  const lp4 = new THREE.Vector3( 0.6,  2.0, 6.0);   // front-top — clearcoat white
+  const lp5 = new THREE.Vector3(-2.5, -2.0, 3.5);   // bottom-left — purple rim
 
-  /* ── Custom ShaderMaterial ── */
+  /* ── Custom ShaderMaterial — v4: reference-matched vivid cobalt + orange/magenta ── */
   const mat = new THREE.ShaderMaterial({
     transparent: true,
     depthWrite: false,
-    side: THREE.FrontSide,
+    side: THREE.DoubleSide,
     uniforms: {
       uCamPos: { value: camera.position },
-      uL1:     { value: lp1 },
-      uL2:     { value: lp2 },
-      uL3:     { value: lp3 },
-      uTime:   { value: 0 },
+      uL1: { value: lp1 }, uL2: { value: lp2 }, uL3: { value: lp3 },
+      uL4: { value: lp4 }, uL5: { value: lp5 },
+      uTime: { value: 0 },
     },
 
     vertexShader: `
@@ -1583,8 +1583,8 @@ function initHeroThree() {
       varying vec3  vNormal;
       varying vec3  vWorldPos;
       void main() {
-        vUv      = uv;
-        vNormal  = normalize((modelMatrix * vec4(normal, 0.0)).xyz);
+        vUv       = uv;
+        vNormal   = normalize((modelMatrix * vec4(normal, 0.0)).xyz);
         vWorldPos = (modelMatrix * vec4(position, 1.0)).xyz;
         gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
       }
@@ -1592,96 +1592,210 @@ function initHeroThree() {
 
     fragmentShader: `
       precision highp float;
+      #define PI  3.14159265359
+      #define TAU 6.28318530718
+
       uniform vec3  uCamPos;
-      uniform vec3  uL1, uL2, uL3;
+      uniform vec3  uL1, uL2, uL3, uL4, uL5;
       uniform float uTime;
       varying vec2  vUv;
       varying vec3  vNormal;
       varying vec3  vWorldPos;
 
-      /* ── Tube cross-section gradient (u = 0→1) ──────────────────
-         u = 0.0 : outer face       → deep cobalt blue
-         u = 0.18: upper outer      → electric blue
-         u = 0.34: upper inner edge → hot pink / magenta
-         u = 0.50: inner face       → warm glassy white (backlit look)
-         u = 0.64: lower inner      → vivid orange
-         u = 0.80: lower outer      → deep purple
-         u = 1.00: back to outer    → deep cobalt blue                 */
-      vec3 tubeCol(float u) {
-        vec3 c[7];
-        c[0] = vec3(0.00, 0.16, 0.92);  // cobalt blue
-        c[1] = vec3(0.00, 0.48, 1.00);  // electric blue
-        c[2] = vec3(0.80, 0.04, 0.58);  // hot pink/magenta
-        c[3] = vec3(1.00, 0.90, 0.80);  // warm white (inner glass)
-        c[4] = vec3(1.00, 0.32, 0.04);  // orange
-        c[5] = vec3(0.48, 0.04, 0.88);  // deep purple
-        c[6] = vec3(0.00, 0.16, 0.92);  // back to cobalt
-        float t = clamp(u, 0.0, 1.0) * 6.0;
-        int   i = int(t);
-        float f = fract(t);
-        i = clamp(i, 0, 5);
-        return mix(c[i], c[i+1], f);
+      /* ═══════════════════════════════════════════════════════
+         TUBE COLOUR GRADIENT  (reference-matched)
+         Three.js TorusGeometry:
+           uv.y = poloidal (tube cross-section): 0 = outer eq, 0.5 = inner eq
+           uv.x = toroidal (ring direction)
+         d = |uv.y - 0.5| * 2  →  0 = inner equator, 1 = outer equator
+
+         Reference zones (inner → outer):
+           0.00–0.10  amber-gold glass   (inner hole rim, glassy)
+           0.10–0.30  vivid orange        (backlit warm cavity)
+           0.30–0.46  orange → coral-red  (warm-hot transition)
+           0.46–0.60  coral → hot magenta (YES — reference has magenta!)
+           0.60–0.78  magenta → cobalt    (warm-cool crossover)
+           0.78–1.00  vivid cobalt blue   (outer shell — NOT near-black)
+         ═══════════════════════════════════════════════════════ */
+      vec3 tubeColor(float u) {
+        float d = abs(u - 0.5) * 2.0;
+
+        /* Reference-exact: warm inner cavity → crisp cobalt outer shell.
+           Key: the magenta→cobalt crossover is NARROW (d=0.50→0.56) so
+           the mixed blue-purple zone is tiny.  Cobalt starts vivid. */
+        /* Push cobalt start to d=0.44 (was 0.56) so the outer face is
+           dominated by vivid cobalt, not the wide purple transition zone. */
+        vec3 cGlass  = vec3(1.00, 0.82, 0.45);  // amber-gold glass  d=0.00
+        vec3 cOrange = vec3(1.00, 0.34, 0.06);  // vivid orange      d=0.10
+        vec3 cCoral  = vec3(1.00, 0.10, 0.28);  // hot coral         d=0.26
+        vec3 cMagent = vec3(0.82, 0.02, 0.62);  // hot magenta       d=0.36
+        vec3 cCobalt = vec3(0.06, 0.16, 1.00);  // MAX vivid cobalt  d=0.44 (earlier!)
+        vec3 cDeep   = vec3(0.02, 0.06, 0.60);  // deep cobalt       d=1.00
+
+        /* Very narrow warm→cobalt crossover (0.36→0.44 = only 0.08 wide)
+           keeps the magenta-to-cobalt purple band tiny.
+           Cobalt now occupies d=0.44→1.00 — majority of the outer face. */
+        if (d < 0.10) return mix(cGlass,  cOrange, d / 0.10);
+        if (d < 0.26) return mix(cOrange, cCoral,  (d - 0.10) / 0.16);
+        if (d < 0.36) return mix(cCoral,  cMagent, (d - 0.26) / 0.10);
+        if (d < 0.44) return mix(cMagent, cCobalt, (d - 0.36) / 0.08);
+        if (d < 0.86) return mix(cCobalt, cDeep,   (d - 0.44) / 0.42);
+        return cDeep;
       }
 
-      /* ── Blinn-Phong specular ── */
-      vec3 blinnSpec(vec3 N, vec3 V, vec3 lPos, vec3 lCol, float shiny) {
-        vec3 L = normalize(lPos - vWorldPos);
-        vec3 H = normalize(L + V);
-        float s = pow(max(dot(N, H), 0.0), shiny);
+      /* ═══════════════════════════════════════════════════════
+         BLINN-PHONG SPECULAR  — includes NdL so the highlight
+         only fires when the surface actually faces the light.
+         This prevents broad sheen from washing out the cobalt.
+         ═══════════════════════════════════════════════════════ */
+      vec3 bSpec(vec3 N, vec3 V, vec3 lPos, vec3 lCol, float expo) {
+        vec3  L   = normalize(lPos - vWorldPos);
+        float NdL = max(dot(N, L), 0.0);
+        if (NdL < 0.001) return vec3(0.0);
+        vec3  H   = normalize(L + V);
+        float s   = pow(max(dot(N, H), 0.0), expo) * NdL;
         return lCol * s;
       }
 
+      /* ═══════════════════════════════════════════════════════
+         ACES FILMIC TONE MAP  (Narkowicz 2015)
+         ═══════════════════════════════════════════════════════ */
+      vec3 aces(vec3 x) {
+        return clamp((x*(2.51*x+0.03))/(x*(2.43*x+0.59)+0.14), 0.0, 1.0);
+      }
+
+      /* ══════════════════════════════════════════════════════════
+         MAIN
+         ══════════════════════════════════════════════════════════ */
       void main() {
         vec3  N   = normalize(vNormal);
+        if (!gl_FrontFacing) N = -N;
+
         vec3  V   = normalize(uCamPos - vWorldPos);
         float NdV = max(dot(N, V), 0.0);
 
-        /* Base gradient colour */
-        vec3 base = tubeCol(vUv.x);
+        /* UV: uv.y = tube cross-section, uv.x = ring revolution */
+        float u = vUv.y;
+        float v = vUv.x;
+        float d     = abs(u - 0.5) * 2.0;   // 0=inner … 1=outer
+        float inner = 1.0 - d;
 
-        /* Soft diffuse from each light */
-        vec3 L1n = normalize(uL1 - vWorldPos);
-        vec3 L2n = normalize(uL2 - vWorldPos);
-        vec3 L3n = normalize(uL3 - vWorldPos);
-        float d1 = max(dot(N, L1n), 0.0);
-        float d2 = max(dot(N, L2n), 0.0);
-        float d3 = max(dot(N, L3n), 0.0);
-        vec3 diff = base * (
-          d1 * vec3(0.18, 0.38, 1.00) * 0.40 +
-          d2 * vec3(1.00, 0.18, 0.52) * 0.30 +
-          d3 * vec3(1.00, 0.50, 0.10) * 0.22
+        /* innerGlass — smooth alpha mask across full tube
+           innerSSS   — tight to inner cavity (d < 0.60) for SSS glow */
+        float innerGlass = pow(inner, 0.70);
+        float innerSSS   = pow(clamp((inner - 0.30) / 0.70, 0.0, 1.0), 1.6);
+
+        /* ── A. Base colour ───────────────────────────────────── */
+        vec3 col = tubeColor(u);
+
+        /* ── B. Iridescent shimmer (inner zone only, very subtle) */
+        float iriPhase = v * TAU * 2.2 + NdV * PI * 1.5 + uTime * 0.06;
+        float iriT     = sin(iriPhase) * 0.5 + 0.5;
+        /* Warm shimmer oscillates orange ↔ pink (matches inner gradient) */
+        vec3  iriWarm  = mix(vec3(1.00,0.35,0.06), vec3(0.90,0.10,0.65), iriT);
+        float iriMask  = pow(inner, 1.2) * (1.0 - smoothstep(0.26, 0.44, d));
+        col += iriWarm * iriMask * 0.18;
+
+        /* ── C. Light normals ──────────────────────────────────── */
+        vec3  L1 = normalize(uL1 - vWorldPos);
+        vec3  L2 = normalize(uL2 - vWorldPos);
+        vec3  L3 = normalize(uL3 - vWorldPos);
+        vec3  L4 = normalize(uL4 - vWorldPos);
+        vec3  L5 = normalize(uL5 - vWorldPos);
+        float nd1 = max(dot(N,L1),0.0), nd2 = max(dot(N,L2),0.0);
+        float nd3 = max(dot(N,L3),0.0), nd4 = max(dot(N,L4),0.0);
+        float nd5 = max(dot(N,L5),0.0);
+
+        /* ── D. Diffuse with zone-selective warm light suppression ─
+           Warm lights (L2/L3) are attenuated on the outer cobalt zone.
+           L1 (cool blue) runs at full strength on the outer cobalt →
+           gives vivid cobalt under natural shadow.                    */
+        float warmZone = 1.0 - smoothstep(0.26, 0.44, d);  // 1=inner, 0=outer (matches gradient)
+
+        vec3 diff = col * (
+          nd1 * vec3(0.10, 0.25, 1.00) * 0.80 +             // L1 blue: pure cobalt
+          nd2 * vec3(1.00, 0.26, 0.50) * 0.85 * warmZone +  // L2 warm-pink: inner only (boosted)
+          nd3 * vec3(1.00, 0.52, 0.06) * 0.75 * warmZone +  // L3 orange: inner only (boosted)
+          nd4 * vec3(0.40, 0.60, 1.00) * 0.12 +             // L4 cooler blue: subtle
+          nd5 * vec3(0.18, 0.05, 0.82) * 0.08               // L5 subtle
         );
 
-        /* Sharp coloured specular highlights */
-        vec3 s1 = blinnSpec(N, V, uL1, vec3(0.28, 0.52, 1.00), 320.0) * 2.2; // blue
-        vec3 s2 = blinnSpec(N, V, uL2, vec3(1.00, 0.18, 0.62), 200.0) * 1.8; // pink
-        vec3 s3 = blinnSpec(N, V, uL3, vec3(1.00, 0.52, 0.08), 250.0) * 1.5; // orange
-        /* Clearcoat-style white hot highlight */
-        vec3 s4 = blinnSpec(N, V, vec3(0.0, 1.5, 6.5), vec3(1.0, 1.0, 1.0), 1400.0) * 0.65;
+        /* ── E. Ambient ────────────────────────────────────────── */
+        vec3 amb = col * 0.040;
 
-        /* Fresnel — brightens grazing edges */
-        float fr   = pow(1.0 - NdV, 3.2);
-        vec3  fCol = base * 1.6 + vec3(0.08, 0.12, 0.50) * 0.5;  // base tint + blue rim
+        /* ── F. Specular — 3 layers ───────────────────────────── */
 
-        /* Ambient */
-        vec3 amb = base * 0.06;
+        /* F1: Very subtle sheen */
+        vec3 sheen =
+          bSpec(N,V,uL1, vec3(0.35,0.60,1.00), 80.0) * 0.22 +
+          bSpec(N,V,uL2, vec3(1.00,0.42,0.60), 70.0) * 0.30 * warmZone +  // more vivid warm sheen
+          bSpec(N,V,uL4, vec3(0.60,0.76,1.00), 90.0) * 0.14;
 
-        /* Combine */
-        vec3 col = amb + diff + (s1 + s2 + s3) * 1.6 + s4 + fr * fCol;
+        /* F2: Mid-gloss */
+        vec3 mid =
+          bSpec(N,V,uL1, vec3(0.50,0.72,1.00), 480.0) * 1.20 +
+          bSpec(N,V,uL2, vec3(1.00,0.52,0.70), 420.0) * 1.60 * warmZone +  // vivid warm mid-gloss
+          bSpec(N,V,uL3, vec3(1.00,0.65,0.10), 380.0) * 1.20 * warmZone +  // orange mid-gloss
+          bSpec(N,V,uL4, vec3(0.55,0.72,1.00), 560.0) * 0.45;
 
-        /* Inner-face glass transparency
-           vUv.x near 0.5 = inner tube wall facing the ring hole.
-           Gradually make it semi-transparent to reveal the dark background
-           and give that glassy "see-through" appearance.              */
-        float innerness = 1.0 - smoothstep(0.28, 0.50, abs(vUv.x - 0.50));
-        /* Add a bright inner-edge glow to simulate light catching the glass rim */
-        float rimGlow = smoothstep(0.32, 0.42, abs(vUv.x - 0.50));
-        col += (1.0 - rimGlow) * vec3(1.0, 0.72, 0.55) * 0.45;
-        float alpha = 1.0 - innerness * 0.60;
+        /* F3: Ultra-sharp coat pools — zone-selective colors.
+           Outer cobalt gets BLUE-tinted coat; inner gets white/warm coat.
+           This prevents the white highlight from desaturating the cobalt. */
+        /* On outer cobalt: blue-tinted highlights (not white/green) */
+        vec3 cCoat1 = mix(vec3(0.20,0.48,1.00), vec3(0.78,0.90,1.00), warmZone);
+        vec3 cCoat4 = mix(vec3(0.20,0.48,1.00), vec3(1.00,1.00,1.00), warmZone);
+        vec3 coat =
+          bSpec(N,V,uL1, cCoat1,               8000.0) * 14.0 +
+          bSpec(N,V,uL4, cCoat4,               12000.0) * 18.0 +
+          bSpec(N,V,uL2, vec3(1.00,0.72,0.88),  7000.0) *  9.0 * warmZone +
+          bSpec(N,V,uL3, vec3(1.00,0.82,0.50),  9000.0) *  7.0 * warmZone;
 
-        /* Filmic tone compress + gamma */
-        col = col / (col + vec3(0.60));
-        col = pow(max(col, 0.0), vec3(0.44));
+        /* ── G. Fresnel rim ───────────────────────────────────── */
+        float fr     = pow(1.0 - NdV, 3.2);
+        /* rimOut: pure cobalt — NO green bleed (was 0.38, now 0.10) */
+        vec3  rimOut = vec3(0.04, 0.10, 1.00);
+        vec3  rimIn  = vec3(1.00, 0.48, 0.10);
+        vec3  rim    = mix(rimOut, rimIn, warmZone) * fr * 1.80;
+
+        /* ── H. Inner SSS glow — vivid orange-coral backlit warmth */
+        float breathe = 0.86 + 0.14 * sin(uTime * 0.50 + v * 4.8);
+        vec3  sss = (
+          vec3(1.00, 0.42, 0.04) * 4.00 +    // vivid orange (dominant)
+          vec3(1.00, 0.10, 0.40) * 0.70 +    // coral-pink (secondary)
+          vec3(1.00, 0.65, 0.30) * nd4 * 0.50 // warm amber from front light
+        ) * innerSSS * breathe;
+
+        /* ── I. Outer shimmer ─ cool cobalt blue (no warm bleed) */
+        float sh  = sin(v * TAU * 10.0 + uTime * 1.4) * 0.5 + 0.5;
+              sh *= sin(v * TAU *  6.5 - uTime * 0.8) * 0.5 + 0.5;
+              sh  = pow(sh, 4.5);
+        vec3  shimmer = vec3(0.10, 0.22, 1.0) * sh * d * 0.18;
+
+        /* ── J. outerDark — crushes soft light on outer cobalt.
+           coat + rim bypass (now zone-selective).
+           specSquash^3 kills sheen/mid extra hard on outer zone.  */
+        float outerDark  = 1.0 - pow(d, 0.75) * 0.85;
+        float specSquash = outerDark * outerDark * outerDark;
+        /* rim partially darkened on outer zone */
+        float rimDark    = mix(outerDark, 1.0, 0.40);
+        /* cobaltBoost: small additive push to make outer cobalt vivid/saturated */
+        float cobaltZone = smoothstep(0.40, 0.55, d);
+        vec3  cobaltBoost = vec3(0.00, 0.02, 0.12) * cobaltZone * (1.0 - warmZone);
+        col = amb + diff * outerDark + (sheen + mid) * specSquash + coat + rim * rimDark + sss + shimmer + cobaltBoost;
+
+        /* ── K. Back-face dimming + alpha glass ──────────────────
+           Back faces are visible through the transparent inner glass.
+           Dim their colour to 30% so they don't wash the front face. */
+        if (!gl_FrontFacing) col *= 0.30;
+
+        float faceBoost = gl_FrontFacing ? 1.0 : 0.65;
+        float alpha     = (1.0 - pow(innerGlass, 0.85) * 0.68) * faceBoost;
+        float specLum   = dot(coat, vec3(0.2126, 0.7152, 0.0722));
+        alpha = min(1.0, alpha + specLum * 0.10);
+
+        /* ── L. ACES tone map + gamma ─────────────────────────── */
+        col = aces(col * 1.10);
+        col = pow(col, vec3(1.0 / 2.2));
 
         gl_FragColor = vec4(col, alpha);
       }
@@ -1691,15 +1805,15 @@ function initHeroThree() {
   /* ── Torus geometry ── */
   const isMobile = window.innerWidth < 760;
   const geo = new THREE.TorusGeometry(
-    1.32,                        // ring radius
-    0.50,                        // tube radius (fatter = more impressive)
+    1.38,                        // ring radius
+    0.54,                        // tube radius
     isMobile ? 128 : 256,        // radial segments
     isMobile ? 256 : 512         // tubular segments
   );
   const torus = new THREE.Mesh(geo, mat);
-  torus.rotation.x = 0.34;      // tilt forward
-  torus.rotation.z = 0.06;      // slight roll
-  torus.position.y = -0.30;     // shift down so ring sits lower in viewport
+  torus.rotation.x = 0.40;      // moderate tilt — balances outer cobalt vs inner warm
+  torus.rotation.z = 0.06;
+  torus.position.set(0.20, -0.35, 0);  // slightly right, moved down so top ring is visible
   scene.add(torus);
 
   /* ── Mouse / touch parallax ── */
@@ -1710,7 +1824,7 @@ function initHeroThree() {
     mouse.tx = ((cx - r.left) / r.width  - 0.5) *  0.52;
     mouse.ty = ((cy - r.top)  / r.height - 0.5) * -0.38;
   };
-  hero.addEventListener('mousemove', e => onMove(e.clientX, e.clientY));
+  hero.addEventListener('mousemove',  e => onMove(e.clientX, e.clientY));
   hero.addEventListener('touchmove',  e => onMove(e.touches[0].clientX, e.touches[0].clientY), { passive: true });
   hero.addEventListener('mouseleave', () => { mouse.tx = 0; mouse.ty = 0; });
 
@@ -1725,7 +1839,8 @@ function initHeroThree() {
   resize();
 
   /* ── Animate ── */
-  const baseL1 = lp1.clone(), baseL2 = lp2.clone(), baseL3 = lp3.clone();
+  const baseL1 = lp1.clone(), baseL2 = lp2.clone(),
+        baseL3 = lp3.clone(), baseL4 = lp4.clone(), baseL5 = lp5.clone();
   let elapsed = 0, lastTs = 0;
 
   function frame(ts) {
@@ -1738,25 +1853,35 @@ function initHeroThree() {
     mouse.y += (mouse.ty - mouse.y) * 0.045;
 
     /* Rotate torus */
-    torus.rotation.y = elapsed * 0.34 + mouse.x;
-    torus.rotation.x = 0.34 + mouse.y;
+    torus.rotation.y = elapsed * 0.28 + mouse.x;
+    torus.rotation.x = 0.40 + mouse.y;
     torus.rotation.z = 0.06 + mouse.x * 0.14;
 
-    /* Slowly orbit lights — creates dynamic moving highlights */
+    /* Slowly orbit all 5 lights */
     lp1.set(
-      baseL1.x + Math.sin(elapsed * 0.27) * 1.1,
-      baseL1.y + Math.cos(elapsed * 0.21) * 0.8,
+      baseL1.x + Math.sin(elapsed * 0.27) * 1.2,
+      baseL1.y + Math.cos(elapsed * 0.21) * 0.9,
       baseL1.z
     );
     lp2.set(
-      baseL2.x + Math.cos(elapsed * 0.23) * 1.0,
-      baseL2.y + Math.sin(elapsed * 0.17) * 0.9,
+      baseL2.x + Math.cos(elapsed * 0.23) * 1.1,
+      baseL2.y + Math.sin(elapsed * 0.17) * 1.0,
       baseL2.z
     );
     lp3.set(
-      baseL3.x + Math.sin(elapsed * 0.31) * 0.6,
-      baseL3.y,
+      baseL3.x + Math.sin(elapsed * 0.31) * 0.7,
+      baseL3.y + Math.cos(elapsed * 0.19) * 0.6,
       baseL3.z
+    );
+    lp4.set(
+      baseL4.x + Math.cos(elapsed * 0.18) * 0.5,
+      baseL4.y + Math.sin(elapsed * 0.24) * 0.4,
+      baseL4.z
+    );
+    lp5.set(
+      baseL5.x + Math.sin(elapsed * 0.35) * 0.8,
+      baseL5.y + Math.cos(elapsed * 0.28) * 0.7,
+      baseL5.z
     );
 
     mat.uniforms.uTime.value = elapsed;
