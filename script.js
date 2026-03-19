@@ -1712,10 +1712,12 @@ function initHeroThree() {
            gives vivid cobalt under natural shadow.                    */
         float warmZone = 1.0 - smoothstep(0.26, 0.44, d);  // 1=inner, 0=outer (matches gradient)
 
+        /* ── D. Diffuse — keep warm lights MODERATE so ACES doesn't blow out
+           the inner zone to cream. Vivid colors come from the gradient base. */
         vec3 diff = col * (
-          nd1 * vec3(0.10, 0.25, 1.00) * 0.80 +             // L1 blue: pure cobalt
-          nd2 * vec3(1.00, 0.26, 0.50) * 0.85 * warmZone +  // L2 warm-pink: inner only (boosted)
-          nd3 * vec3(1.00, 0.52, 0.06) * 0.75 * warmZone +  // L3 orange: inner only (boosted)
+          nd1 * vec3(0.10, 0.25, 1.00) * 0.80 +             // L1 blue: outer cobalt
+          nd2 * vec3(1.00, 0.20, 0.05) * 0.45 * warmZone +  // L2 orange-tinted (no pink bleed)
+          nd3 * vec3(1.00, 0.48, 0.04) * 0.40 * warmZone +  // L3 orange: moderate strength
           nd4 * vec3(0.40, 0.60, 1.00) * 0.12 +             // L4 cooler blue: subtle
           nd5 * vec3(0.18, 0.05, 0.82) * 0.08               // L5 subtle
         );
@@ -1728,41 +1730,41 @@ function initHeroThree() {
         /* F1: Very subtle sheen */
         vec3 sheen =
           bSpec(N,V,uL1, vec3(0.35,0.60,1.00), 80.0) * 0.22 +
-          bSpec(N,V,uL2, vec3(1.00,0.42,0.60), 70.0) * 0.30 * warmZone +  // more vivid warm sheen
+          bSpec(N,V,uL2, vec3(1.00,0.35,0.04), 70.0) * 0.25 * warmZone +  // orange sheen (no blue)
           bSpec(N,V,uL4, vec3(0.60,0.76,1.00), 90.0) * 0.14;
 
         /* F2: Mid-gloss */
         vec3 mid =
           bSpec(N,V,uL1, vec3(0.50,0.72,1.00), 480.0) * 1.20 +
-          bSpec(N,V,uL2, vec3(1.00,0.52,0.70), 420.0) * 1.60 * warmZone +  // vivid warm mid-gloss
-          bSpec(N,V,uL3, vec3(1.00,0.65,0.10), 380.0) * 1.20 * warmZone +  // orange mid-gloss
+          bSpec(N,V,uL2, vec3(1.00,0.45,0.06), 420.0) * 1.20 * warmZone +  // orange mid-gloss
+          bSpec(N,V,uL3, vec3(1.00,0.60,0.04), 380.0) * 0.90 * warmZone +  // orange mid-gloss
           bSpec(N,V,uL4, vec3(0.55,0.72,1.00), 560.0) * 0.45;
 
         /* F3: Ultra-sharp coat pools — zone-selective colors.
-           Outer cobalt gets BLUE-tinted coat; inner gets white/warm coat.
-           This prevents the white highlight from desaturating the cobalt. */
-        /* On outer cobalt: blue-tinted highlights (not white/green) */
+           Outer cobalt gets BLUE-tinted coat; inner gets warm coat. */
         vec3 cCoat1 = mix(vec3(0.20,0.48,1.00), vec3(0.78,0.90,1.00), warmZone);
         vec3 cCoat4 = mix(vec3(0.20,0.48,1.00), vec3(1.00,1.00,1.00), warmZone);
         vec3 coat =
           bSpec(N,V,uL1, cCoat1,               8000.0) * 14.0 +
           bSpec(N,V,uL4, cCoat4,               12000.0) * 18.0 +
-          bSpec(N,V,uL2, vec3(1.00,0.72,0.88),  7000.0) *  9.0 * warmZone +
-          bSpec(N,V,uL3, vec3(1.00,0.82,0.50),  9000.0) *  7.0 * warmZone;
+          bSpec(N,V,uL2, vec3(1.00,0.60,0.10),  7000.0) *  9.0 * warmZone +
+          bSpec(N,V,uL3, vec3(1.00,0.75,0.15),  9000.0) *  7.0 * warmZone;
 
         /* ── G. Fresnel rim ───────────────────────────────────── */
         float fr     = pow(1.0 - NdV, 3.2);
-        /* rimOut: pure cobalt — NO green bleed (was 0.38, now 0.10) */
-        vec3  rimOut = vec3(0.04, 0.10, 1.00);
-        vec3  rimIn  = vec3(1.00, 0.48, 0.10);
-        vec3  rim    = mix(rimOut, rimIn, warmZone) * fr * 1.80;
+        vec3  rimOut = vec3(0.04, 0.10, 1.00);     // pure cobalt — no green
+        vec3  rimIn  = vec3(1.00, 0.25, 0.02);     // vivid orange — minimal green/blue
+        vec3  rim    = mix(rimOut, rimIn, warmZone) * fr * 1.20;  // reduced from 1.80
 
-        /* ── H. Inner SSS glow — vivid orange-coral backlit warmth */
-        float breathe = 0.86 + 0.14 * sin(uTime * 0.50 + v * 4.8);
+        /* ── H. Inner SSS glow — carefully bounded so it doesn't wash to cream
+           Orange SSS fades toward inner; magenta SSS ramps in toward outer */
+        float breathe    = 0.86 + 0.14 * sin(uTime * 0.50 + v * 4.8);
+        float sssOrange  = max(0.0, 1.0 - d / 0.28);    // fades out by d=0.28
+        float sssMagenta = smoothstep(0.22, 0.40, d);   // ramps in at d=0.22
         vec3  sss = (
-          vec3(1.00, 0.42, 0.04) * 4.00 +    // vivid orange (dominant)
-          vec3(1.00, 0.10, 0.40) * 0.70 +    // coral-pink (secondary)
-          vec3(1.00, 0.65, 0.30) * nd4 * 0.50 // warm amber from front light
+          vec3(1.00, 0.18, 0.01) * sssOrange * 1.20 +   // vivid pure orange (very low G)
+          vec3(0.92, 0.02, 0.55) * sssMagenta * 0.70 +  // hot magenta (low G, some B)
+          vec3(1.00, 0.50, 0.18) * nd4 * 0.25           // warm amber from front light
         ) * innerSSS * breathe;
 
         /* ── I. Outer shimmer ─ cool cobalt blue (no warm bleed) */
@@ -1853,7 +1855,7 @@ function initHeroThree() {
     mouse.y += (mouse.ty - mouse.y) * 0.045;
 
     /* Rotate torus */
-    torus.rotation.y = elapsed * 0.28 + mouse.x;
+    torus.rotation.y = elapsed * 0.12 + mouse.x;
     torus.rotation.x = 0.40 + mouse.y;
     torus.rotation.z = 0.06 + mouse.x * 0.14;
 
