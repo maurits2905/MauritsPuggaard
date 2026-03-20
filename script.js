@@ -1848,45 +1848,49 @@ function initHeroThree() {
         float r = length(vPos);
 
         /* ── Zones ─────────────────────────────────────────────
-           Sclera R = 5.5. Iris outer edge = 1.84/5.5 ≈ 0.334.
+           Sclera R = 5.5.  Iris outer edge ≈ 0.334 (1.84/5.5).
 
-           band:      defined sclera ring — solid visible color directly
-                      outside the iris with clear inner AND outer edges.
-           outerGlow: dark gradual rolloff beyond the band toward bg.
-           innerGlow: subtle ambient behind the iris (seen thru glass). */
-        float band      = smoothstep(0.32, 0.38, r) * (1.0 - smoothstep(0.40, 0.60, r));
-        float outerGlow = smoothstep(0.32, 0.40, r) * pow(1.0 - smoothstep(0.42, 1.01, r), 2.0);
-        float innerGlow = (1.0 - smoothstep(0.0, 0.34, r)) * 0.40;
+           scleraFill: bright-ish filled disc from iris to outer border.
+           borderRing: DARK ring at a fixed radius — this is the eye's
+                       circular outline that makes the shape readable.
+           outerFade:  subtle dark glow beyond the border, dissolves.
+           innerGlow:  ambient behind the iris.                        */
+        float scleraFill = smoothstep(0.32, 0.38, r) * (1.0 - smoothstep(0.54, 0.63, r));
+        float borderRing = smoothstep(0.60, 0.64, r) * (1.0 - smoothstep(0.66, 0.74, r));
+        float outerFade  = smoothstep(0.68, 0.74, r) * pow(1.0 - smoothstep(0.72, 1.01, r), 2.2);
+        float innerGlow  = (1.0 - smoothstep(0.0, 0.34, r)) * 0.38;
         float limbusWarm = smoothstep(0.38, 0.30, r) * smoothstep(0.20, 0.30, r);
 
-        if (band < 0.001 && outerGlow < 0.001 && innerGlow < 0.001) discard;
+        if (scleraFill < 0.001 && borderRing < 0.001 && outerFade < 0.001 && innerGlow < 0.001) discard;
 
-        /* ── Colours ────────────────────────────────────────────
-           cBand: clearly legible — lighter blue-slate, visibly brighter
-                  than the dark cobalt iris AND the dark background.
-           cOuter: darker, blends back to bg gradually.                  */
-        vec3 cBand  = vec3(0.22, 0.30, 0.65);   /* visible blue-slate sclera */
-        vec3 cOuter = vec3(0.07, 0.11, 0.35);   /* dark outer glow           */
-        vec3 cInner = vec3(0.04, 0.07, 0.26);   /* deep cobalt behind iris   */
-        vec3 cBg    = vec3(0.01, 0.02, 0.07);   /* near-black bg             */
+        /* ── Colours ─────────────────────────────────────────────
+           cSclera: medium blue-slate, clearly brighter than the iris's
+                    dark cobalt and brighter than the dark background —
+                    gives the eye shape its visible filled interior.
+           cBorder: near-black — the circular outline of the eye.       */
+        vec3 cSclera = vec3(0.28, 0.36, 0.72);   /* medium blue-slate */
+        vec3 cBorder = vec3(0.01, 0.02, 0.06);   /* near-black border */
+        vec3 cOuter  = vec3(0.05, 0.09, 0.28);   /* dark outer glow   */
+        vec3 cInner  = vec3(0.04, 0.07, 0.24);   /* cobalt behind iris*/
+        vec3 cBg     = vec3(0.01, 0.02, 0.07);   /* near-black bg     */
 
-        vec3 col = mix(cBg,  cInner, innerGlow);
-        col      = mix(col,  cOuter, outerGlow);
-        col      = mix(col,  cBand,  band);       /* band fully on top */
-        col      = mix(col,  cBg,    pow(r, 3.2) * 0.88);
+        vec3 col = mix(cBg,     cInner,  innerGlow);
+        col      = mix(col,     cSclera, scleraFill);  /* fill the eye white  */
+        col      = mix(col,     cBorder, borderRing);  /* stamp the dark ring */
+        col      = mix(col,     cOuter,  outerFade);   /* fade beyond border  */
+        col      = mix(col,     cBg,     pow(r, 4.0) * 0.85);
 
-        /* Warm orange limbus bleed */
-        col += vec3(0.28, 0.07, 0.01) * limbusWarm * 0.60;
-
-        /* Tiny blue catchlight */
-        float cl = smoothstep(0.06, 0.0, length(vPos - vec2(0.20, 0.25)));
-        col += vec3(0.10, 0.20, 0.60) * cl * band * 3.5;
+        /* Warm orange limbus bleed from iris inner face */
+        col += vec3(0.28, 0.07, 0.01) * limbusWarm * 0.55;
 
         /* Breathing pulse */
         float pulse = 0.97 + 0.03 * sin(uTime * 0.5);
 
-        /* Alpha: band is solid (0.82), outer glow fades, inner subtle */
-        float alpha = max(band * 0.82, max(outerGlow * 0.58, innerGlow * 0.48)) * pulse;
+        /* Solid sclera fill + opaque border + fading outer glow */
+        float alpha = max(scleraFill * 0.80,
+                      max(borderRing * 0.92,
+                      max(outerFade  * 0.48,
+                          innerGlow  * 0.45))) * pulse;
 
         gl_FragColor = vec4(col, alpha);
       }
