@@ -1715,7 +1715,7 @@ function initHeroThree() {
         /* ── D. Diffuse — keep warm lights MODERATE so ACES doesn't blow out
            the inner zone to cream. Vivid colors come from the gradient base. */
         vec3 diff = col * (
-          nd1 * vec3(0.10, 0.25, 1.00) * 0.80 +             // L1 blue: outer cobalt
+          nd1 * vec3(0.10, 0.25, 1.00) * 0.80 * (1.0 - warmZone * 0.75) +  // L1: suppressed in warm zone
           nd2 * vec3(1.00, 0.20, 0.05) * 0.45 * warmZone +  // L2 orange-tinted (no pink bleed)
           nd3 * vec3(1.00, 0.48, 0.04) * 0.40 * warmZone +  // L3 orange: moderate strength
           nd4 * vec3(0.40, 0.60, 1.00) * 0.12 +             // L4 cooler blue: subtle
@@ -1804,13 +1804,23 @@ function initHeroThree() {
     `,
   });
 
-  /* ── Custom torus with outer ridge/shell ──────────────────────
-     Profile: normal circle but the outer equator (cos θ > 0.5) gets
-     a sharp angular shelf — creates a "shouldered" outer edge like
-     the reference image.  UV mapping is identical to TorusGeometry
-     so the existing shader works without changes.
-  ───────────────────────────────────────────────────────────── */
-  function buildRidgedTorus(R, r, tubeSeg, ringSeg) {
+  /* ══════════════════════════════════════════════════════════════
+     TWO-PIECE SHAPE  (matches Simon Sparks reference exactly)
+
+     1. OUTER RING — large, barely tilted, completely STATIC.
+        D-shaped cross-section: outer face fans outward for the
+        angular "shell" shoulder; inner face slightly flattened.
+        Seen nearly face-on → cobalt blue dominates.
+
+     2. INNER RING — smaller, more tilted, gently ROCKS.
+        Standard round tube. Inner cavity faces camera more →
+        warm orange → coral → magenta dominates.
+
+     Both share the same ShaderMaterial.  The outer ring's inner
+     equator is semi-transparent (alpha≈0.32 at d=0), letting the
+     warm inner ring glow through — exactly the layered glass look.
+  ══════════════════════════════════════════════════════════════ */
+  function buildOuterShell(R, r, tubeSeg, ringSeg) {
     const geo = new THREE.BufferGeometry();
     const pos = [], uvArr = [], idx = [];
     const S = tubeSeg + 1;
@@ -1818,12 +1828,14 @@ function initHeroThree() {
       const phi = (i / ringSeg) * Math.PI * 2;
       const cp = Math.cos(phi), sp = Math.sin(phi);
       for (let j = 0; j <= tubeSeg; j++) {
-        const u   = j / tubeSeg;
-        const th  = u * Math.PI * 2;
-        const ct  = Math.cos(th), st = Math.sin(th);
-        /* Shelf: outer 40% of tube (ct > 0.5) fans outward sharply */
-        const t   = ct > 0.5 ? (ct - 0.5) / 0.5 : 0;
-        const rr  = r * (1 + 0.38 * t * t);      // up to 38% wider at outer equator
+        const u  = j / tubeSeg;
+        const th = u * Math.PI * 2;
+        const ct = Math.cos(th), st = Math.sin(th);
+        /* Outer face (ct>0): sharp angular shelf — the "shoulder" */
+        const shelf = ct > 0 ? 1 + 0.42 * ct * ct : 1.0;
+        /* Inner face (ct<0): very slightly pulled in for a D-shape */
+        const flat  = ct < 0 ? 1 - 0.12 * ct * ct  : 1.0;
+        const rr    = r * shelf * flat;
         pos.push((R + rr * ct) * cp, (R + rr * ct) * sp, rr * st);
         uvArr.push(u, i / ringSeg);
       }
@@ -1841,24 +1853,25 @@ function initHeroThree() {
   }
 
   const isMobile = window.innerWidth < 760;
-  const mainGeo  = buildRidgedTorus(1.38, 0.54, isMobile ? 256 : 512, isMobile ? 128 : 256);
-  const mainMesh = new THREE.Mesh(mainGeo, mat);
+  const seg = isMobile ? 256 : 512, rseg = isMobile ? 128 : 256;
 
-  /* Thin outer shell ring — sits right at the outer ridge tip.
-     With the 38% shelf, outer equator is at R + r*1.38 = 2.125.
-     A thin cobalt ring here gives the "outer shell" silhouette. */
-  const shellR   = 1.38 + 0.54 * 1.38;               // = 2.125
-  const shellGeo = new THREE.TorusGeometry(shellR, 0.022, 24, isMobile ? 256 : 512);
-  const shellMesh = new THREE.Mesh(shellGeo, mat);
+  /* ── Outer ring: large, D-shaped, static ── */
+  const outerGeo  = buildOuterShell(1.62, 0.42, seg, rseg);
+  const outerMesh = new THREE.Mesh(outerGeo, mat);
+  outerMesh.rotation.x = 0.18;   // nearly face-on → cobalt outer face dominates
+  outerMesh.rotation.z = 0.05;
+  outerMesh.position.set(0.15, -0.30, 0);
+  outerMesh.renderOrder = 2;
+  scene.add(outerMesh);
 
-  /* Group both so they rotate/move together */
-  const torusGroup = new THREE.Group();
-  torusGroup.add(mainMesh);
-  torusGroup.add(shellMesh);
-  torusGroup.rotation.x = 0.40;
-  torusGroup.rotation.z = 0.06;
-  torusGroup.position.set(0.20, -0.35, 0);
-  scene.add(torusGroup);
+  /* ── Inner ring: smaller, round, rocks back and forth ── */
+  const innerGeo  = new THREE.TorusGeometry(1.02, 0.52, seg, rseg);
+  const innerMesh = new THREE.Mesh(innerGeo, mat);
+  innerMesh.rotation.x = 0.55;   // more tilt → warm inner cavity visible
+  innerMesh.rotation.z = 0.05;
+  innerMesh.position.set(0.15, -0.34, -0.20); // slightly behind outer ring
+  innerMesh.renderOrder = 1;
+  scene.add(innerMesh);
 
   /* ── Mouse / touch parallax ── */
   const mouse = { tx: 0, ty: 0, x: 0, y: 0 };
@@ -1896,10 +1909,13 @@ function initHeroThree() {
     mouse.x += (mouse.tx - mouse.x) * 0.045;
     mouse.y += (mouse.ty - mouse.y) * 0.045;
 
-    /* Rotate group */
-    torusGroup.rotation.y = elapsed * 0.12 + mouse.x;
-    torusGroup.rotation.x = 0.40 + mouse.y;
-    torusGroup.rotation.z = 0.06 + mouse.x * 0.14;
+    /* Outer ring: STATIC — no rotation update (matches reference) */
+
+    /* Inner ring: gentle rocking back and forth (Simon Sparks style)
+       + very subtle mouse parallax for interactivity               */
+    innerMesh.rotation.x = 0.55 + 0.20 * Math.sin(elapsed * 1.1) + mouse.y * 0.5;
+    innerMesh.rotation.y =        0.12 * Math.sin(elapsed * 0.7)  + mouse.x * 0.6;
+    innerMesh.rotation.z = 0.05 + 0.06 * Math.sin(elapsed * 0.9);
 
     /* Slowly orbit all 5 lights */
     lp1.set(
