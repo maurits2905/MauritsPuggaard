@@ -1848,38 +1848,45 @@ function initHeroThree() {
         float r = length(vPos);
 
         /* ── Zones ─────────────────────────────────────────────
-           Sclera radius = 5.5. Iris outer edge = 1.84/5.5 = 0.334.
-           haze: starts just outside iris, rolls off to full screen edge. */
-        float haze      = smoothstep(0.32, 0.38, r) * pow(1.0 - smoothstep(0.36, 1.01, r), 1.4);
-        float innerGlow = (1.0 - smoothstep(0.0, 0.35, r)) * 0.45;
+           Sclera R = 5.5. Iris outer edge = 1.84/5.5 ≈ 0.334.
+
+           band:      defined sclera ring — solid visible color directly
+                      outside the iris with clear inner AND outer edges.
+           outerGlow: dark gradual rolloff beyond the band toward bg.
+           innerGlow: subtle ambient behind the iris (seen thru glass). */
+        float band      = smoothstep(0.32, 0.38, r) * (1.0 - smoothstep(0.40, 0.60, r));
+        float outerGlow = smoothstep(0.32, 0.40, r) * pow(1.0 - smoothstep(0.42, 1.01, r), 2.0);
+        float innerGlow = (1.0 - smoothstep(0.0, 0.34, r)) * 0.40;
         float limbusWarm = smoothstep(0.38, 0.30, r) * smoothstep(0.20, 0.30, r);
 
-        if (haze < 0.001 && innerGlow < 0.001) discard;
+        if (band < 0.001 && outerGlow < 0.001 && innerGlow < 0.001) discard;
 
         /* ── Colours ────────────────────────────────────────────
-           Clearly visible dark cobalt — reads as depth/shadow.
-           User wants it clearly visible, extending to screen edges.     */
-        vec3 cHaze  = vec3(0.08, 0.14, 0.48);   /* visible cobalt  */
-        vec3 cInner = vec3(0.04, 0.07, 0.28);   /* deep cobalt     */
-        vec3 cBg    = vec3(0.01, 0.02, 0.07);   /* near-black bg   */
+           cBand: clearly legible — lighter blue-slate, visibly brighter
+                  than the dark cobalt iris AND the dark background.
+           cOuter: darker, blends back to bg gradually.                  */
+        vec3 cBand  = vec3(0.22, 0.30, 0.65);   /* visible blue-slate sclera */
+        vec3 cOuter = vec3(0.07, 0.11, 0.35);   /* dark outer glow           */
+        vec3 cInner = vec3(0.04, 0.07, 0.26);   /* deep cobalt behind iris   */
+        vec3 cBg    = vec3(0.01, 0.02, 0.07);   /* near-black bg             */
 
-        vec3 col = mix(cBg, cInner, innerGlow);
-        col      = mix(col, cHaze, haze);
-        /* Very gradual colour falloff to bg — so edge is imperceptible */
-        col      = mix(col, cBg, pow(r, 3.5) * 0.92);
+        vec3 col = mix(cBg,  cInner, innerGlow);
+        col      = mix(col,  cOuter, outerGlow);
+        col      = mix(col,  cBand,  band);       /* band fully on top */
+        col      = mix(col,  cBg,    pow(r, 3.2) * 0.88);
 
-        /* Warm orange bleed at limbus — iris glow spilling outward */
-        col += vec3(0.28, 0.07, 0.01) * limbusWarm * 0.65;
+        /* Warm orange limbus bleed */
+        col += vec3(0.28, 0.07, 0.01) * limbusWarm * 0.60;
 
-        /* Subtle blue catchlight near top of sclera */
-        float cl = smoothstep(0.06, 0.0, length(vPos - vec2(0.20, 0.26)));
-        col += vec3(0.08, 0.16, 0.55) * cl * haze * 3.0;
+        /* Tiny blue catchlight */
+        float cl = smoothstep(0.06, 0.0, length(vPos - vec2(0.20, 0.25)));
+        col += vec3(0.10, 0.20, 0.60) * cl * band * 3.5;
 
         /* Breathing pulse */
         float pulse = 0.97 + 0.03 * sin(uTime * 0.5);
 
-        /* Alpha — clearly visible near iris, dissolves imperceptibly */
-        float alpha = max(haze * 0.78, innerGlow * 0.55) * pulse;
+        /* Alpha: band is solid (0.82), outer glow fades, inner subtle */
+        float alpha = max(band * 0.82, max(outerGlow * 0.58, innerGlow * 0.48)) * pulse;
 
         gl_FragColor = vec4(col, alpha);
       }
