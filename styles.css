@@ -6863,8 +6863,7 @@ html.noReveal .r,
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
-  /* Push into lower portion so torus shows above */
+  gap: 12px;
   margin-top: 16vh;
 }
 
@@ -6873,9 +6872,9 @@ html.noReveal .r,
   font-family: var(--font);
   font-size: clamp(10px, 1.1vw, 13px);
   font-weight: 500;
-  letter-spacing: 0.25em;
+  letter-spacing: 0.30em;
   text-transform: uppercase;
-  color: rgba(255,255,255,0.35);
+  color: rgba(200,212,255,0.44);
   margin: 0;
 }
 
@@ -6893,15 +6892,29 @@ html.noReveal .r,
 
 .heroNameLine {
   display: block;
-  font-size: clamp(52px, 10vw, 148px);
-  color: rgba(255,255,255,0.95);
-  text-shadow: 0 0 80px rgba(100,120,255,0.15);
+  font-size: clamp(56px, 10.5vw, 158px);
+  color: rgba(255,255,255,0.96);
+  text-shadow:
+    0 0  70px rgba(80,110,255,0.24),
+    0 2px 50px rgba(40,65,210,0.14),
+    0 0 180px rgba(60,90,230,0.08);
 }
 
 .heroNameLine--outline {
   color: transparent;
-  -webkit-text-stroke: 1.5px rgba(255,255,255,0.3);
+  -webkit-text-stroke: 1px rgba(255,255,255,0.22);
   font-style: italic;
+  text-shadow: 0 0 55px rgba(70,95,225,0.12);
+}
+
+/* Accent divider between name and subtitle */
+.heroSub::before {
+  content: '';
+  display: block;
+  width: 34px;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255,90,20,0.50), rgba(75,105,255,0.50));
+  margin: 6px auto 10px;
 }
 
 /* Colored subtitle */
@@ -6909,10 +6922,10 @@ html.noReveal .r,
   font-family: var(--font);
   font-size: clamp(9px, 1vw, 12px);
   font-weight: 500;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.24em;
   text-transform: uppercase;
-  color: rgba(180,140,255,0.7);
-  margin: 4px 0 0;
+  color: rgba(148,168,255,0.62);
+  margin: 0;
 }
 
 /* CTA buttons — minimal text style */
@@ -6944,10 +6957,12 @@ html.noReveal .r,
   border-radius: 999px;
   background: rgba(255,255,255,0.05);
   backdrop-filter: blur(6px);
+  transition: background 220ms, border-color 220ms, box-shadow 220ms, color 220ms;
 }
 .heroBtnLink--primary:hover {
   background: rgba(255,255,255,0.1);
-  border-color: rgba(255,255,255,0.28);
+  border-color: rgba(255,255,255,0.26);
+  box-shadow: 0 0 28px rgba(80,110,255,0.18), 0 0 8px rgba(80,110,255,0.10);
   color: #fff;
 }
 
@@ -6963,6 +6978,9 @@ html.noReveal .r,
   border-bottom: 1px solid rgba(255,255,255,0.05);
   padding: 10px 0;
   background: rgba(0,0,0,0.12);
+  /* Soft fade at both edges so it doesn't cut hard */
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
+  mask-image:         linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
 }
 
 .heroMarquee {
@@ -7046,5 +7064,37 @@ html.noReveal .r,
 
 @media (prefers-reduced-motion: reduce) {
   .heroMarquee, .heroChipDot, .heroScrollCue .line { animation: none !important; }
-  .heroCanvas     { display: none; }
+  .heroCanvas { display: none; }
+}
+
+/* ── Hero entrance animations ─────────────────────────────────────────
+   Tied to body.isLoading (added by createPreloader, removed when loader
+   fully exits).  Only plays when motion is preferred.                  */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes heroFadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes heroFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  /* Hidden while loader is showing */
+  body.isLoading .heroLabel,
+  body.isLoading .heroName,
+  body.isLoading .heroSub,
+  body.isLoading .heroBtns,
+  body.isLoading .heroMarqueeOuter { opacity: 0; transform: translateY(20px); }
+  body.isLoading .heroChip,
+  body.isLoading .heroScrollCue    { opacity: 0; }
+
+  /* Staggered entrance once loader exits */
+  body:not(.isLoading) .heroChip          { animation: heroFadeIn 0.9s ease-out          0.12s both; }
+  body:not(.isLoading) .heroLabel         { animation: heroFadeUp 0.8s cubic-bezier(0.22,1,0.36,1) 0.28s both; }
+  body:not(.isLoading) .heroName          { animation: heroFadeUp 1.0s cubic-bezier(0.22,1,0.36,1) 0.44s both; }
+  body:not(.isLoading) .heroSub           { animation: heroFadeUp 0.8s cubic-bezier(0.22,1,0.36,1) 0.66s both; }
+  body:not(.isLoading) .heroBtns          { animation: heroFadeUp 0.8s cubic-bezier(0.22,1,0.36,1) 0.84s both; }
+  body:not(.isLoading) .heroMarqueeOuter  { animation: heroFadeUp 0.7s cubic-bezier(0.22,1,0.36,1) 0.96s both; }
+  body:not(.isLoading) .heroScrollCue     { animation: heroFadeIn 0.7s ease-out          1.08s both; }
 }

@@ -2009,13 +2009,16 @@ function initHeroThree() {
     elapsed += dt * 0.001;
 
     /* Smooth mouse lerp */
-    mouse.x += (mouse.tx - mouse.x) * 0.045;
-    mouse.y += (mouse.ty - mouse.y) * 0.045;
+    mouse.x += (mouse.tx - mouse.x) * 0.048;
+    mouse.y += (mouse.ty - mouse.y) * 0.048;
 
     /* Eye group: iris + sclera + pupil all rock together */
     eyeGroup.rotation.x = 0.62 + 0.05 * Math.sin(elapsed * 0.9)  + mouse.y * 0.25;
     eyeGroup.rotation.y =        0.06 * Math.sin(elapsed * 0.55)  + mouse.x * 0.25;
     eyeGroup.rotation.z = -0.22 + 0.02 * Math.sin(elapsed * 0.65);
+
+    /* Gentle camera breathe — adds life without distracting */
+    camera.position.y = 0.10 + 0.013 * Math.sin(elapsed * 0.38);
 
     /* Slowly orbit all 5 lights */
     lp1.set(
