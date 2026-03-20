@@ -1816,26 +1816,153 @@ function initHeroThree() {
   });
 
   /* ══════════════════════════════════════════════════════════════
-     ONE FAT TORUS — matches Simon Sparks reference exactly.
+     EYE COMPOSITION
+     The torus IS the iris.  Around it: a glowing sclera (eye white)
+     fading into the dark background.  A deep pupil disc sits in the
+     transparent inner hole.  The whole group tilts + rocks together.
 
-     The reference is a SINGLE ring, not two pieces.  The key is:
-     • Fat tube: r/R ≈ 0.53 so hole = 30% of outer diameter
-     • Tilted ~28° so outer convex face shows upper-left (cobalt),
-       inner concave face shows center-right (warm orange/coral)
-     • Inner equator (d=0) = nearly transparent amber glass
-     • The "middle rocking" = gentle x oscillation of the whole ring
+     Torus proportions: R=1.20, r=0.64 → outer radius 1.84, hole 0.56
+     Sclera radius 3.0 → iris/sclera ratio ≈ 0.61 (realistic eye)
   ══════════════════════════════════════════════════════════════ */
   const isMobile = window.innerWidth < 760;
   const seg = isMobile ? 256 : 512, rseg = isMobile ? 128 : 256;
 
-  /* R=1.20, r=0.64 → outer radius 1.84, hole radius 0.56
-     hole/outer ratio = 0.56/1.84 = 0.30 — matches reference */
-  const torusGeo = new THREE.TorusGeometry(1.20, 0.64, seg, rseg);
-  const torus    = new THREE.Mesh(torusGeo, mat);
-  torus.rotation.x =  0.62;   // more tilt — shows inner warm face prominently
-  torus.rotation.z = -0.22;   // lean left — outer cobalt face upper-left
-  torus.position.set(0.10, -0.15, 0);
-  scene.add(torus);
+  /* ── Sclera material (eye white, fades into background) ─────── */
+  const scleraMat = new THREE.ShaderMaterial({
+    transparent: true,
+    depthWrite: false,
+    uniforms: { uTime: { value: 0 } },
+    vertexShader: `
+      varying vec2 vPos;
+      void main() {
+        vPos = position.xy / 3.0;   /* normalise to unit radius */
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      precision highp float;
+      uniform float uTime;
+      varying vec2 vPos;
+
+      void main() {
+        float r = length(vPos);
+
+        /* Hard discard beyond soft outer edge */
+        float outerFade = 1.0 - smoothstep(0.68, 0.95, r);
+        if (outerFade < 0.002) discard;
+
+        /* Zone masks ─────────────────────────────────────────── */
+        /* Iris outer edge at r ≈ 0.613 (1.84 / 3.0).
+           scleraZone: white ring just outside the iris, fades quickly */
+        float scleraZone = smoothstep(0.61, 0.70, r) * (1.0 - smoothstep(0.68, 0.93, r));
+        /* innerGlow: very subtle cobalt ambient behind the iris */
+        float innerGlow  = (1.0 - smoothstep(0.0, 0.63, r)) * 0.32;
+        /* limbusWarm: warm bleed at inner sclera edge */
+        float limbusWarm = smoothstep(0.64, 0.57, r) * smoothstep(0.46, 0.57, r);
+
+        /* Colours ─────────────────────────────────────────────── */
+        vec3 cSclera = vec3(0.70, 0.72, 0.80);  /* cool off-white  */
+        vec3 cCobalt = vec3(0.03, 0.06, 0.26);  /* deep cobalt glow */
+        vec3 cDark   = vec3(0.01, 0.02, 0.08);  /* near-black bg   */
+
+        vec3 col = mix(cDark, cCobalt, innerGlow);
+        col = mix(col, cSclera, scleraZone);
+        col = mix(col, cDark, smoothstep(0.66, 0.94, r));
+
+        /* Limbal ring darkening */
+        float limbal = 1.0 - smoothstep(0.57, 0.63, r)
+                           * (1.0 - smoothstep(0.63, 0.72, r)) * 0.60;
+        col *= limbal;
+
+        /* Warm orange bleed from inner iris face */
+        col += vec3(0.35, 0.09, 0.02) * limbusWarm * 0.50;
+
+        /* Upper-right catchlight */
+        float cl1 = smoothstep(0.11, 0.0, length(vPos - vec2(0.34, 0.42)));
+        col = min(vec3(1.0), col + vec3(0.60, 0.65, 0.90) * cl1 * scleraZone * 2.2);
+
+        /* Lower-left blue env reflection */
+        float cl2 = smoothstep(0.14, 0.0, length(vPos - vec2(-0.26, -0.34)));
+        col += vec3(0.04, 0.08, 0.44) * cl2 * scleraZone * 1.0;
+
+        /* Breathing pulse */
+        float pulse = 0.97 + 0.03 * sin(uTime * 0.5);
+
+        /* Alpha — much more subtle, soft fade */
+        float alpha = max(scleraZone * 0.52, innerGlow * 0.70) * outerFade * pulse;
+
+        gl_FragColor = vec4(col, alpha);
+      }
+    `,
+  });
+
+  /* ── Pupil material (deep dark disc in the center hole) ──────── */
+  const pupilMat = new THREE.ShaderMaterial({
+    transparent: true,
+    depthWrite: false,
+    uniforms: { uTime: { value: 0 } },
+    vertexShader: `
+      varying vec2 vPos;
+      void main() {
+        vPos = position.xy / 0.42;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      precision highp float;
+      uniform float uTime;
+      varying vec2 vPos;
+
+      void main() {
+        float r = length(vPos);
+        float alpha = (1.0 - smoothstep(0.78, 1.0, r)) * 0.96;
+        if (alpha < 0.01) discard;
+
+        /* Near-black depth with a subtle inner glow */
+        vec3 col = vec3(0.004, 0.007, 0.022);
+        float depth = 1.0 - smoothstep(0.0, 0.70, r);
+        col += vec3(0.018, 0.032, 0.11) * depth;
+
+        /* Primary catchlight */
+        float c1 = smoothstep(0.10, 0.0, length(vPos - vec2(0.33, 0.38)));
+        col = min(vec3(1.0), col + vec3(0.50, 0.55, 0.72) * c1 * 0.80);
+        /* Tiny secondary catchlight */
+        float c2 = smoothstep(0.05, 0.0, length(vPos - vec2(-0.22, -0.28)));
+        col = min(vec3(1.0), col + vec3(0.20, 0.25, 0.50) * c2 * 0.40);
+
+        gl_FragColor = vec4(col, alpha);
+      }
+    `,
+  });
+
+  /* ── Geometries ─────────────────────────────────────────────── */
+  const torusGeo  = new THREE.TorusGeometry(1.20, 0.64, seg, rseg);
+  const scleraGeo = new THREE.CircleGeometry(3.0, 128);
+  const pupilGeo  = new THREE.CircleGeometry(0.42, 64);
+
+  /* ── Eye group — everything tilts & rocks together ──────────── */
+  const eyeGroup = new THREE.Group();
+  eyeGroup.rotation.x =  0.62;
+  eyeGroup.rotation.z = -0.22;
+  eyeGroup.position.set(0.10, -0.15, 0);
+  scene.add(eyeGroup);
+
+  /* Sclera: behind iris */
+  const sclera = new THREE.Mesh(scleraGeo, scleraMat);
+  sclera.position.z = -0.10;
+  sclera.renderOrder = 0;
+  eyeGroup.add(sclera);
+
+  /* Iris (torus): the main attraction */
+  const torus = new THREE.Mesh(torusGeo, mat);
+  torus.renderOrder = 1;
+  eyeGroup.add(torus);
+
+  /* Pupil: dark disc inside the torus hole, sits slightly forward */
+  const pupil = new THREE.Mesh(pupilGeo, pupilMat);
+  pupil.position.z = 0.06;
+  pupil.renderOrder = 2;
+  eyeGroup.add(pupil);
 
   /* ── Mouse / touch parallax ── */
   const mouse = { tx: 0, ty: 0, x: 0, y: 0 };
@@ -1873,11 +2000,10 @@ function initHeroThree() {
     mouse.x += (mouse.tx - mouse.x) * 0.045;
     mouse.y += (mouse.ty - mouse.y) * 0.045;
 
-    /* Single torus: gentle rocking — "the middle part rocks slightly"
-       Very slow, mostly static like the Simon Sparks reference.     */
-    torus.rotation.x = 0.62 + 0.05 * Math.sin(elapsed * 0.9)  + mouse.y * 0.25;
-    torus.rotation.y =        0.06 * Math.sin(elapsed * 0.55)  + mouse.x * 0.25;
-    torus.rotation.z = -0.22 + 0.02 * Math.sin(elapsed * 0.65);
+    /* Eye group: iris + sclera + pupil all rock together */
+    eyeGroup.rotation.x = 0.62 + 0.05 * Math.sin(elapsed * 0.9)  + mouse.y * 0.25;
+    eyeGroup.rotation.y =        0.06 * Math.sin(elapsed * 0.55)  + mouse.x * 0.25;
+    eyeGroup.rotation.z = -0.22 + 0.02 * Math.sin(elapsed * 0.65);
 
     /* Slowly orbit all 5 lights */
     lp1.set(
@@ -1906,7 +2032,9 @@ function initHeroThree() {
       baseL5.z
     );
 
-    mat.uniforms.uTime.value = elapsed;
+    mat.uniforms.uTime.value      = elapsed;
+    scleraMat.uniforms.uTime.value = elapsed;
+    pupilMat.uniforms.uTime.value  = elapsed;
     renderer.render(scene, camera);
   }
   requestAnimationFrame(frame);
