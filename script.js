@@ -1835,7 +1835,7 @@ function initHeroThree() {
     vertexShader: `
       varying vec2 vPos;
       void main() {
-        vPos = position.xy / 3.0;   /* normalise to unit radius */
+        vPos = position.xy / 5.5;   /* normalise to unit radius */
         gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
       }
     `,
@@ -1847,40 +1847,39 @@ function initHeroThree() {
       void main() {
         float r = length(vPos);
 
-        /* Very gradual outer fade — so slow you can't tell where it ends */
-        float outerFade = 1.0 - smoothstep(0.60, 1.05, r);
-        if (outerFade < 0.002) discard;
-
         /* ── Zones ─────────────────────────────────────────────
-           Iris outer edge at r ≈ 0.613 (world 1.84 / sclera R 3.0).
-           haze: dark cobalt bloom just beyond iris, rolls off gradually. */
-        float haze      = smoothstep(0.59, 0.66, r) * (1.0 - smoothstep(0.64, 1.03, r));
-        float innerGlow = (1.0 - smoothstep(0.0, 0.64, r)) * 0.28;
-        float limbusWarm = smoothstep(0.65, 0.57, r) * smoothstep(0.46, 0.57, r);
+           Sclera radius = 5.5. Iris outer edge = 1.84/5.5 = 0.334.
+           haze: starts just outside iris, rolls off to full screen edge. */
+        float haze      = smoothstep(0.32, 0.38, r) * pow(1.0 - smoothstep(0.36, 1.01, r), 1.4);
+        float innerGlow = (1.0 - smoothstep(0.0, 0.35, r)) * 0.45;
+        float limbusWarm = smoothstep(0.38, 0.30, r) * smoothstep(0.20, 0.30, r);
 
-        /* ── Colours — all dark, close to background ────────────
-           Deep cobalt aura — reads as shadow/depth, not white.          */
-        vec3 cHaze  = vec3(0.05, 0.09, 0.30);   /* dark cobalt     */
-        vec3 cInner = vec3(0.03, 0.05, 0.20);   /* deeper cobalt   */
+        if (haze < 0.001 && innerGlow < 0.001) discard;
+
+        /* ── Colours ────────────────────────────────────────────
+           Clearly visible dark cobalt — reads as depth/shadow.
+           User wants it clearly visible, extending to screen edges.     */
+        vec3 cHaze  = vec3(0.08, 0.14, 0.48);   /* visible cobalt  */
+        vec3 cInner = vec3(0.04, 0.07, 0.28);   /* deep cobalt     */
         vec3 cBg    = vec3(0.01, 0.02, 0.07);   /* near-black bg   */
 
         vec3 col = mix(cBg, cInner, innerGlow);
-        col      = mix(col, cHaze,  haze);
-        /* Blend back toward bg at outer edge — very gradual */
-        col      = mix(col, cBg, pow(r, 2.5) * 0.9);
+        col      = mix(col, cHaze, haze);
+        /* Very gradual colour falloff to bg — so edge is imperceptible */
+        col      = mix(col, cBg, pow(r, 3.5) * 0.92);
 
-        /* Warm orange breath at inner limbus (iris colours bleeding out) */
-        col += vec3(0.22, 0.06, 0.01) * limbusWarm * 0.55;
+        /* Warm orange bleed at limbus — iris glow spilling outward */
+        col += vec3(0.28, 0.07, 0.01) * limbusWarm * 0.65;
 
-        /* Very subtle blue shimmer catchlight */
-        float cl = smoothstep(0.09, 0.0, length(vPos - vec2(0.33, 0.41)));
-        col += vec3(0.06, 0.12, 0.45) * cl * haze * 2.5;
+        /* Subtle blue catchlight near top of sclera */
+        float cl = smoothstep(0.06, 0.0, length(vPos - vec2(0.20, 0.26)));
+        col += vec3(0.08, 0.16, 0.55) * cl * haze * 3.0;
 
         /* Breathing pulse */
         float pulse = 0.97 + 0.03 * sin(uTime * 0.5);
 
-        /* Alpha — peaks ~0.62 just outside iris, fades to nothing */
-        float alpha = max(haze * 0.62, innerGlow * 0.60) * outerFade * pulse;
+        /* Alpha — clearly visible near iris, dissolves imperceptibly */
+        float alpha = max(haze * 0.78, innerGlow * 0.55) * pulse;
 
         gl_FragColor = vec4(col, alpha);
       }
@@ -1928,7 +1927,7 @@ function initHeroThree() {
 
   /* ── Geometries ─────────────────────────────────────────────── */
   const torusGeo  = new THREE.TorusGeometry(1.20, 0.64, seg, rseg);
-  const scleraGeo = new THREE.CircleGeometry(3.0, 128);
+  const scleraGeo = new THREE.CircleGeometry(5.5, 128);
   const pupilGeo  = new THREE.CircleGeometry(0.42, 64);
 
   /* ── Eye group — everything tilts & rocks together ──────────── */
