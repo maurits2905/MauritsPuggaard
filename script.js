@@ -1625,12 +1625,12 @@ function initHeroThree() {
            the mixed blue-purple zone is tiny.  Cobalt starts vivid. */
         /* Push cobalt start to d=0.44 (was 0.56) so the outer face is
            dominated by vivid cobalt, not the wide purple transition zone. */
-        vec3 cGlass  = vec3(1.00, 0.82, 0.45);  // amber-gold glass  d=0.00
-        vec3 cOrange = vec3(1.00, 0.34, 0.06);  // vivid orange      d=0.10
-        vec3 cCoral  = vec3(1.00, 0.10, 0.28);  // hot coral         d=0.26
-        vec3 cMagent = vec3(0.82, 0.02, 0.62);  // hot magenta       d=0.36
-        vec3 cCobalt = vec3(0.06, 0.16, 1.00);  // MAX vivid cobalt  d=0.44 (earlier!)
-        vec3 cDeep   = vec3(0.02, 0.06, 0.60);  // deep cobalt       d=1.00
+        vec3 cGlass  = vec3(1.00, 0.78, 0.35);  // warm amber glass  d=0.00
+        vec3 cOrange = vec3(1.00, 0.38, 0.04);  // vivid orange      d=0.10
+        vec3 cCoral  = vec3(1.00, 0.08, 0.22);  // hot coral-red     d=0.26
+        vec3 cMagent = vec3(0.90, 0.02, 0.58);  // vivid magenta     d=0.36
+        vec3 cCobalt = vec3(0.02, 0.06, 0.55);  // dark cobalt           d=0.44
+        vec3 cDeep   = vec3(0.005,0.01, 0.18);  // near-black cobalt     d=1.00
 
         /* Very narrow warm→cobalt crossover (0.36→0.44 = only 0.08 wide)
            keeps the magenta-to-cobalt purple band tiny.
@@ -1715,9 +1715,9 @@ function initHeroThree() {
         /* ── D. Diffuse — keep warm lights MODERATE so ACES doesn't blow out
            the inner zone to cream. Vivid colors come from the gradient base. */
         vec3 diff = col * (
-          nd1 * vec3(0.10, 0.25, 1.00) * 0.80 * (1.0 - warmZone * 0.75) +  // L1: suppressed in warm zone
-          nd2 * vec3(1.00, 0.20, 0.05) * 0.45 * warmZone +  // L2 orange-tinted (no pink bleed)
-          nd3 * vec3(1.00, 0.48, 0.04) * 0.40 * warmZone +  // L3 orange: moderate strength
+          nd1 * vec3(0.06, 0.14, 1.00) * 0.35 * (1.0 - warmZone * 0.75) +  // L1: blue key, reduced on outer
+          nd2 * vec3(1.00, 0.22, 0.05) * 0.65 * warmZone +  // L2 orange warm light boosted
+          nd3 * vec3(1.00, 0.48, 0.04) * 0.55 * warmZone +  // L3 orange accent boosted
           nd4 * vec3(0.40, 0.60, 1.00) * 0.12 +             // L4 cooler blue: subtle
           nd5 * vec3(0.18, 0.05, 0.82) * 0.08               // L5 subtle
         );
@@ -1752,9 +1752,11 @@ function initHeroThree() {
 
         /* ── G. Fresnel rim ───────────────────────────────────── */
         float fr     = pow(1.0 - NdV, 3.2);
-        vec3  rimOut = vec3(0.04, 0.10, 1.00);     // pure cobalt — no green
+        vec3  rimOut = vec3(0.02, 0.06, 0.80);     // dark cobalt rim
         vec3  rimIn  = vec3(1.00, 0.25, 0.02);     // vivid orange — minimal green/blue
-        vec3  rim    = mix(rimOut, rimIn, warmZone) * fr * 1.20;  // reduced from 1.80
+        /* Outer rim nearly invisible; inner rim vivid */
+        float rimStr = mix(0.08, 1.60, warmZone);
+        vec3  rim    = mix(rimOut, rimIn, warmZone) * fr * rimStr;
 
         /* ── H. Inner SSS glow — carefully bounded so it doesn't wash to cream
            Orange SSS fades toward inner; magenta SSS ramps in toward outer */
@@ -1762,41 +1764,50 @@ function initHeroThree() {
         float sssOrange  = max(0.0, 1.0 - d / 0.28);    // fades out by d=0.28
         float sssMagenta = smoothstep(0.22, 0.40, d);   // ramps in at d=0.22
         vec3  sss = (
-          vec3(1.00, 0.18, 0.01) * sssOrange * 1.20 +   // vivid pure orange (very low G)
-          vec3(0.92, 0.02, 0.55) * sssMagenta * 0.70 +  // hot magenta (low G, some B)
-          vec3(1.00, 0.50, 0.18) * nd4 * 0.25           // warm amber from front light
+          vec3(1.00, 0.20, 0.01) * sssOrange * 2.20 +   // vivid orange glow — boosted
+          vec3(0.92, 0.02, 0.55) * sssMagenta * 1.10 +  // hot magenta
+          vec3(1.00, 0.50, 0.18) * nd4 * 0.30           // warm amber accent
         ) * innerSSS * breathe;
 
         /* ── I. Outer shimmer ─ cool cobalt blue (no warm bleed) */
         float sh  = sin(v * TAU * 10.0 + uTime * 1.4) * 0.5 + 0.5;
               sh *= sin(v * TAU *  6.5 - uTime * 0.8) * 0.5 + 0.5;
               sh  = pow(sh, 4.5);
-        vec3  shimmer = vec3(0.10, 0.22, 1.0) * sh * d * 0.18;
+        /* Kill shimmer on outer zone — outer face must be dark/matte */
+        vec3  shimmer = vec3(0.10, 0.22, 1.0) * sh * d * 0.18 * (1.0 - d * 0.85);
 
         /* ── J. outerDark — crushes soft light on outer cobalt.
            coat + rim bypass (now zone-selective).
            specSquash^3 kills sheen/mid extra hard on outer zone.  */
-        float outerDark  = 1.0 - pow(d, 0.75) * 0.85;
+        float outerDark  = 1.0 - pow(d, 0.45) * 0.96;
         float specSquash = outerDark * outerDark * outerDark;
         /* rim partially darkened on outer zone */
         float rimDark    = mix(outerDark, 1.0, 0.40);
         /* cobaltBoost: small additive push to make outer cobalt vivid/saturated */
         float cobaltZone = smoothstep(0.40, 0.55, d);
-        vec3  cobaltBoost = vec3(0.00, 0.02, 0.12) * cobaltZone * (1.0 - warmZone);
-        col = amb + diff * outerDark + (sheen + mid) * specSquash + coat + rim * rimDark + sss + shimmer + cobaltBoost;
+        vec3  cobaltBoost = vec3(0.00, 0.01, 0.04) * cobaltZone * (1.0 - warmZone);
+        /* coat also crushed on outer zone — prevents bright purple highlights on dark cobalt face */
+        col = amb + diff * outerDark + (sheen + mid + coat) * specSquash + rim * rimDark + sss + shimmer + cobaltBoost;
 
         /* ── K. Back-face dimming + alpha glass ──────────────────
            Back faces are visible through the transparent inner glass.
            Dim their colour to 30% so they don't wash the front face. */
         if (!gl_FrontFacing) col *= 0.30;
 
-        float faceBoost = gl_FrontFacing ? 1.0 : 0.65;
-        float alpha     = (1.0 - pow(innerGlass, 0.85) * 0.68) * faceBoost;
-        float specLum   = dot(coat, vec3(0.2126, 0.7152, 0.0722));
-        alpha = min(1.0, alpha + specLum * 0.10);
+        float faceBoost = gl_FrontFacing ? 1.0 : 0.50;
+        /* Glass alpha: only the very inner rim (d < 0.14) is glassy transparent.
+           Warm zone (d=0.14–0.44) = vivid opaque orange/coral.
+           Cobalt zone (d=0.44+)   = fully opaque.
+           This matches the reference: solid ring body, glassy amber inner circle. */
+        float glassRim = smoothstep(0.0, 0.14, d);
+        float alpha    = mix(0.07, 1.0, pow(glassRim, 0.55)) * faceBoost;
+        float specLum  = dot(coat, vec3(0.2126, 0.7152, 0.0722));
+        alpha = min(1.0, alpha + specLum * 0.08);
 
         /* ── L. ACES tone map + gamma ─────────────────────────── */
-        col = aces(col * 1.10);
+        /* Inner zone gets boosted exposure; outer cobalt stays dark/matte */
+        float outerExp = mix(1.18, 0.54, smoothstep(0.38, 0.65, d));
+        col = aces(col * outerExp);
         col = pow(col, vec3(1.0 / 2.2));
 
         gl_FragColor = vec4(col, alpha);
@@ -1805,73 +1816,26 @@ function initHeroThree() {
   });
 
   /* ══════════════════════════════════════════════════════════════
-     TWO-PIECE SHAPE  (matches Simon Sparks reference exactly)
+     ONE FAT TORUS — matches Simon Sparks reference exactly.
 
-     1. OUTER RING — large, barely tilted, completely STATIC.
-        D-shaped cross-section: outer face fans outward for the
-        angular "shell" shoulder; inner face slightly flattened.
-        Seen nearly face-on → cobalt blue dominates.
-
-     2. INNER RING — smaller, more tilted, gently ROCKS.
-        Standard round tube. Inner cavity faces camera more →
-        warm orange → coral → magenta dominates.
-
-     Both share the same ShaderMaterial.  The outer ring's inner
-     equator is semi-transparent (alpha≈0.32 at d=0), letting the
-     warm inner ring glow through — exactly the layered glass look.
+     The reference is a SINGLE ring, not two pieces.  The key is:
+     • Fat tube: r/R ≈ 0.53 so hole = 30% of outer diameter
+     • Tilted ~28° so outer convex face shows upper-left (cobalt),
+       inner concave face shows center-right (warm orange/coral)
+     • Inner equator (d=0) = nearly transparent amber glass
+     • The "middle rocking" = gentle x oscillation of the whole ring
   ══════════════════════════════════════════════════════════════ */
-  function buildOuterShell(R, r, tubeSeg, ringSeg) {
-    const geo = new THREE.BufferGeometry();
-    const pos = [], uvArr = [], idx = [];
-    const S = tubeSeg + 1;
-    for (let i = 0; i <= ringSeg; i++) {
-      const phi = (i / ringSeg) * Math.PI * 2;
-      const cp = Math.cos(phi), sp = Math.sin(phi);
-      for (let j = 0; j <= tubeSeg; j++) {
-        const u  = j / tubeSeg;
-        const th = u * Math.PI * 2;
-        const ct = Math.cos(th), st = Math.sin(th);
-        /* Outer face (ct>0): sharp angular shelf — the "shoulder" */
-        const shelf = ct > 0 ? 1 + 0.42 * ct * ct : 1.0;
-        /* Inner face (ct<0): very slightly pulled in for a D-shape */
-        const flat  = ct < 0 ? 1 - 0.12 * ct * ct  : 1.0;
-        const rr    = r * shelf * flat;
-        pos.push((R + rr * ct) * cp, (R + rr * ct) * sp, rr * st);
-        uvArr.push(u, i / ringSeg);
-      }
-    }
-    for (let i = 0; i < ringSeg; i++)
-      for (let j = 0; j < tubeSeg; j++) {
-        const a = S*i+j, b = S*(i+1)+j;
-        idx.push(a,b,a+1, b,b+1,a+1);
-      }
-    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-    geo.setAttribute('uv',       new THREE.Float32BufferAttribute(uvArr, 2));
-    geo.setIndex(idx);
-    geo.computeVertexNormals();
-    return geo;
-  }
-
   const isMobile = window.innerWidth < 760;
   const seg = isMobile ? 256 : 512, rseg = isMobile ? 128 : 256;
 
-  /* ── Outer ring: large, D-shaped, static ── */
-  const outerGeo  = buildOuterShell(1.62, 0.42, seg, rseg);
-  const outerMesh = new THREE.Mesh(outerGeo, mat);
-  outerMesh.rotation.x = 0.18;   // nearly face-on → cobalt outer face dominates
-  outerMesh.rotation.z = 0.05;
-  outerMesh.position.set(0.15, -0.30, 0);
-  outerMesh.renderOrder = 2;
-  scene.add(outerMesh);
-
-  /* ── Inner ring: smaller, round, rocks back and forth ── */
-  const innerGeo  = new THREE.TorusGeometry(1.02, 0.52, seg, rseg);
-  const innerMesh = new THREE.Mesh(innerGeo, mat);
-  innerMesh.rotation.x = 0.55;   // more tilt → warm inner cavity visible
-  innerMesh.rotation.z = 0.05;
-  innerMesh.position.set(0.15, -0.34, -0.20); // slightly behind outer ring
-  innerMesh.renderOrder = 1;
-  scene.add(innerMesh);
+  /* R=1.20, r=0.64 → outer radius 1.84, hole radius 0.56
+     hole/outer ratio = 0.56/1.84 = 0.30 — matches reference */
+  const torusGeo = new THREE.TorusGeometry(1.20, 0.64, seg, rseg);
+  const torus    = new THREE.Mesh(torusGeo, mat);
+  torus.rotation.x =  0.62;   // more tilt — shows inner warm face prominently
+  torus.rotation.z = -0.22;   // lean left — outer cobalt face upper-left
+  torus.position.set(0.10, -0.15, 0);
+  scene.add(torus);
 
   /* ── Mouse / touch parallax ── */
   const mouse = { tx: 0, ty: 0, x: 0, y: 0 };
@@ -1909,13 +1873,11 @@ function initHeroThree() {
     mouse.x += (mouse.tx - mouse.x) * 0.045;
     mouse.y += (mouse.ty - mouse.y) * 0.045;
 
-    /* Outer ring: STATIC — no rotation update (matches reference) */
-
-    /* Inner ring: gentle rocking back and forth (Simon Sparks style)
-       + very subtle mouse parallax for interactivity               */
-    innerMesh.rotation.x = 0.55 + 0.20 * Math.sin(elapsed * 1.1) + mouse.y * 0.5;
-    innerMesh.rotation.y =        0.12 * Math.sin(elapsed * 0.7)  + mouse.x * 0.6;
-    innerMesh.rotation.z = 0.05 + 0.06 * Math.sin(elapsed * 0.9);
+    /* Single torus: gentle rocking — "the middle part rocks slightly"
+       Very slow, mostly static like the Simon Sparks reference.     */
+    torus.rotation.x = 0.62 + 0.05 * Math.sin(elapsed * 0.9)  + mouse.y * 0.25;
+    torus.rotation.y =        0.06 * Math.sin(elapsed * 0.55)  + mouse.x * 0.25;
+    torus.rotation.z = -0.22 + 0.02 * Math.sin(elapsed * 0.65);
 
     /* Slowly orbit all 5 lights */
     lp1.set(
