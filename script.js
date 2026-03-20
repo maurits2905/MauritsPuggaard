@@ -1864,33 +1864,31 @@ function initHeroThree() {
         if (scleraFill < 0.001 && borderRing < 0.001 && outerFade < 0.001 && innerGlow < 0.001) discard;
 
         /* ── Colours ─────────────────────────────────────────────
-           cSclera: medium blue-slate, clearly brighter than the iris's
-                    dark cobalt and brighter than the dark background —
-                    gives the eye shape its visible filled interior.
-           cBorder: near-black — the circular outline of the eye.       */
-        vec3 cSclera = vec3(0.28, 0.36, 0.72);   /* medium blue-slate */
+           cSclera: very subtle dark blue-navy — barely above bg, like
+                    a deep shadow rather than a bright fill. The dark
+                    borderRing is what defines the eye shape visually.  */
+        vec3 cSclera = vec3(0.07, 0.11, 0.32);   /* subtle dark navy  */
         vec3 cBorder = vec3(0.01, 0.02, 0.06);   /* near-black border */
-        vec3 cOuter  = vec3(0.05, 0.09, 0.28);   /* dark outer glow   */
-        vec3 cInner  = vec3(0.04, 0.07, 0.24);   /* cobalt behind iris*/
+        vec3 cOuter  = vec3(0.03, 0.06, 0.18);   /* dark outer glow   */
+        vec3 cInner  = vec3(0.03, 0.05, 0.20);   /* cobalt behind iris*/
         vec3 cBg     = vec3(0.01, 0.02, 0.07);   /* near-black bg     */
 
         vec3 col = mix(cBg,     cInner,  innerGlow);
-        col      = mix(col,     cSclera, scleraFill);  /* fill the eye white  */
-        col      = mix(col,     cBorder, borderRing);  /* stamp the dark ring */
-        col      = mix(col,     cOuter,  outerFade);   /* fade beyond border  */
+        col      = mix(col,     cSclera, scleraFill);
+        col      = mix(col,     cBorder, borderRing);
+        col      = mix(col,     cOuter,  outerFade);
         col      = mix(col,     cBg,     pow(r, 4.0) * 0.85);
 
         /* Warm orange limbus bleed from iris inner face */
-        col += vec3(0.28, 0.07, 0.01) * limbusWarm * 0.55;
+        col += vec3(0.22, 0.05, 0.01) * limbusWarm * 0.50;
 
         /* Breathing pulse */
         float pulse = 0.97 + 0.03 * sin(uTime * 0.5);
 
-        /* Solid sclera fill + opaque border + fading outer glow */
-        float alpha = max(scleraFill * 0.80,
-                      max(borderRing * 0.92,
-                      max(outerFade  * 0.48,
-                          innerGlow  * 0.45))) * pulse;
+        float alpha = max(scleraFill * 0.72,
+                      max(borderRing * 0.90,
+                      max(outerFade  * 0.42,
+                          innerGlow  * 0.40))) * pulse;
 
         gl_FragColor = vec4(col, alpha);
       }
@@ -1945,7 +1943,9 @@ function initHeroThree() {
   const eyeGroup = new THREE.Group();
   eyeGroup.rotation.x =  0.62;
   eyeGroup.rotation.z = -0.22;
-  eyeGroup.position.set(0.10, -0.15, 0);
+  /* rotation.z = -0.22 shifts visual centre left; compensate with +x.
+     Smaller offset on mobile since the portrait canvas is narrow.      */
+  eyeGroup.position.set(isMobile ? 0.05 : 0.18, 0, 0);
   scene.add(eyeGroup);
 
   /* Sclera: behind iris */
@@ -1982,6 +1982,9 @@ function initHeroThree() {
     const w = canvas.offsetWidth, h = canvas.offsetHeight;
     renderer.setSize(w, h);
     camera.aspect = w / h;
+    /* Pull camera back on narrow screens so full eye stays visible */
+    const narrow = Math.min(w, h);
+    camera.position.z = 5.6 * Math.max(1.0, 560 / narrow);
     camera.updateProjectionMatrix();
   }
   new ResizeObserver(resize).observe(canvas);
