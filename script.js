@@ -1847,49 +1847,40 @@ function initHeroThree() {
       void main() {
         float r = length(vPos);
 
-        /* Hard discard beyond soft outer edge */
-        float outerFade = 1.0 - smoothstep(0.68, 0.95, r);
+        /* Very gradual outer fade — so slow you can't tell where it ends */
+        float outerFade = 1.0 - smoothstep(0.60, 1.05, r);
         if (outerFade < 0.002) discard;
 
-        /* Zone masks ─────────────────────────────────────────── */
-        /* Iris outer edge at r ≈ 0.613 (1.84 / 3.0).
-           scleraZone: white ring just outside the iris, fades quickly */
-        float scleraZone = smoothstep(0.61, 0.70, r) * (1.0 - smoothstep(0.68, 0.93, r));
-        /* innerGlow: very subtle cobalt ambient behind the iris */
-        float innerGlow  = (1.0 - smoothstep(0.0, 0.63, r)) * 0.32;
-        /* limbusWarm: warm bleed at inner sclera edge */
-        float limbusWarm = smoothstep(0.64, 0.57, r) * smoothstep(0.46, 0.57, r);
+        /* ── Zones ─────────────────────────────────────────────
+           Iris outer edge at r ≈ 0.613 (world 1.84 / sclera R 3.0).
+           haze: dark cobalt bloom just beyond iris, rolls off gradually. */
+        float haze      = smoothstep(0.59, 0.66, r) * (1.0 - smoothstep(0.64, 1.03, r));
+        float innerGlow = (1.0 - smoothstep(0.0, 0.64, r)) * 0.28;
+        float limbusWarm = smoothstep(0.65, 0.57, r) * smoothstep(0.46, 0.57, r);
 
-        /* Colours ─────────────────────────────────────────────── */
-        vec3 cSclera = vec3(0.70, 0.72, 0.80);  /* cool off-white  */
-        vec3 cCobalt = vec3(0.03, 0.06, 0.26);  /* deep cobalt glow */
-        vec3 cDark   = vec3(0.01, 0.02, 0.08);  /* near-black bg   */
+        /* ── Colours — all dark, close to background ────────────
+           Deep cobalt aura — reads as shadow/depth, not white.          */
+        vec3 cHaze  = vec3(0.05, 0.09, 0.30);   /* dark cobalt     */
+        vec3 cInner = vec3(0.03, 0.05, 0.20);   /* deeper cobalt   */
+        vec3 cBg    = vec3(0.01, 0.02, 0.07);   /* near-black bg   */
 
-        vec3 col = mix(cDark, cCobalt, innerGlow);
-        col = mix(col, cSclera, scleraZone);
-        col = mix(col, cDark, smoothstep(0.66, 0.94, r));
+        vec3 col = mix(cBg, cInner, innerGlow);
+        col      = mix(col, cHaze,  haze);
+        /* Blend back toward bg at outer edge — very gradual */
+        col      = mix(col, cBg, pow(r, 2.5) * 0.9);
 
-        /* Limbal ring darkening */
-        float limbal = 1.0 - smoothstep(0.57, 0.63, r)
-                           * (1.0 - smoothstep(0.63, 0.72, r)) * 0.60;
-        col *= limbal;
+        /* Warm orange breath at inner limbus (iris colours bleeding out) */
+        col += vec3(0.22, 0.06, 0.01) * limbusWarm * 0.55;
 
-        /* Warm orange bleed from inner iris face */
-        col += vec3(0.35, 0.09, 0.02) * limbusWarm * 0.50;
-
-        /* Upper-right catchlight */
-        float cl1 = smoothstep(0.11, 0.0, length(vPos - vec2(0.34, 0.42)));
-        col = min(vec3(1.0), col + vec3(0.60, 0.65, 0.90) * cl1 * scleraZone * 2.2);
-
-        /* Lower-left blue env reflection */
-        float cl2 = smoothstep(0.14, 0.0, length(vPos - vec2(-0.26, -0.34)));
-        col += vec3(0.04, 0.08, 0.44) * cl2 * scleraZone * 1.0;
+        /* Very subtle blue shimmer catchlight */
+        float cl = smoothstep(0.09, 0.0, length(vPos - vec2(0.33, 0.41)));
+        col += vec3(0.06, 0.12, 0.45) * cl * haze * 2.5;
 
         /* Breathing pulse */
         float pulse = 0.97 + 0.03 * sin(uTime * 0.5);
 
-        /* Alpha — much more subtle, soft fade */
-        float alpha = max(scleraZone * 0.52, innerGlow * 0.70) * outerFade * pulse;
+        /* Alpha — peaks ~0.62 just outside iris, fades to nothing */
+        float alpha = max(haze * 0.62, innerGlow * 0.60) * outerFade * pulse;
 
         gl_FragColor = vec4(col, alpha);
       }
