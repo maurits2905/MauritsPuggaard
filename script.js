@@ -564,11 +564,14 @@ function initStory() {
 /* ------------------------------
    Projects rendering
 ------------------------------ */
+const WORK_PREVIEW = 3; // cards shown before "Show more"
+
 const state = {
   projects: [],
   tags: [],
   query: "",
   workEntered: false,
+  workExpanded: false,
   activeTag: "All",
 };
 
@@ -614,6 +617,430 @@ function initReveals() {
       scrollTrigger: { trigger: el, start: "top 85%" },
     });
   });
+}
+
+/* ── About section: scroll-driven card reveal ────────────────────────────
+   Scroll range tuning:
+     start  "top bottom+=120"  — fires ~120 px before the about section
+                                  enters the viewport, i.e. while the user
+                                  is still scrolling through the hero.
+                                  On a full-height hero this clamps to
+                                  scrollY ≈ 0, so the card is already in
+                                  its initial state on page load and begins
+                                  rising the instant the user scrolls.
+     end    "top 60%"          — card fully settled when about's top is
+                                  60 % down from the viewport top — roughly
+                                  half the previous range → ~40 % faster.
+     scrub  0.65               — lighter lag for a more immediate,
+                                  responsive feel without losing smoothness.
+
+   Transform range:
+     from  translateY(140px) scale(0.87) opacity(0.45)  ← more dramatic
+     to    translateY(0)     scale(1.00) opacity(1.00)
+─────────────────────────────────────────────────────────────────────── */
+function initAboutReveal() {
+  const wrap = document.querySelector('.aboutRevealWrap');
+  if (!wrap || prefersReducedMotion() || !window.gsap || !window.ScrollTrigger) return;
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  gsap.fromTo(
+    wrap,
+    { opacity: 0.45, y: 140, scale: 0.87 },
+    {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      ease: 'none',
+      scrollTrigger: {
+        id: 'about-reveal',
+        trigger: '#about',
+        start: 'top bottom+=120',  // starts before about enters viewport
+        end: 'top 60%',            // completes at 60 % — ~40 % faster
+        scrub: 0.65,               // responsive yet smooth
+      },
+    }
+  );
+}
+
+/* ── Expertise showcase — canvas particle morphing ───────────────────────
+   Three states (Professional / SAP / Fullstack) with smooth spring-based
+   morphing between distinct particle formations.
+
+   Shapes
+   ──────
+   Professional  4 concentric orbital rings + centre cluster
+   SAP           "S" letterform rasterised from offscreen canvas
+   Fullstack     5 stacked trapezoid layers (narrow→wide, like a tech stack)
+
+   Physics
+   ───────
+   Each particle springs toward its target position with slight ambient drift.
+   Spring k = 0.048 / damp = 0.884 → ~1.4 s settling, no overshoot.
+
+   Auto-advance every 4 s; pauses 10 s after user click.
+─────────────────────────────────────────────────────────────────────── */
+function initShowcase() {
+  const canvas = document.getElementById('showcaseCanvas');
+  if (!canvas) return;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  const ctx = canvas.getContext('2d', { alpha: true });
+  if (!ctx) return;
+
+  const DPR    = Math.min(window.devicePixelRatio || 1, 2);
+  const TWO_PI = Math.PI * 2;
+
+  /* ── Sizing ── */
+  let CW, CH;
+  function resize() {
+    const r = canvas.getBoundingClientRect();
+    CW = r.width; CH = r.height;
+    canvas.width  = Math.round(CW * DPR);
+    canvas.height = Math.round(CH * DPR);
+  }
+  resize();
+
+  const isMob  = CW < 680;
+  const N_TOT  = isMob ? 1000 : 2000;
+  const N_FORM = isMob ?  360 :  720;   // formation particles (0 … N_FORM-1)
+  /* ambient particles: N_FORM … N_TOT-1 — spread across full canvas */
+
+  /* ── State metadata ── */
+  const STATES = [
+    { title: 'Trusted to deliver',
+      desc:  'A consultant you can rely on. Sharp, structured, and practical.' },
+    { title: 'Enterprise ready',
+      desc:  'Deep expertise across S/4HANA, BTP, ABAP, and the full SAP stack.' },
+    { title: 'Built end-to-end',
+      desc:  'From database to UI — one developer, complete ownership.' },
+  ];
+
+  /* ══════════════════════════════════════════════════════════════════
+     Shape generators — return Float32Array[N_FORM * 2]
+     Each generator fills exactly n target positions [x0,y0, x1,y1 …]
+  ══════════════════════════════════════════════════════════════════ */
+
+  /* Professional: 5 equal-width horizontal bars (stacked-layers icon) */
+  function genProfessional(W, H, n) {
+    const barW  = W * 0.60;
+    const barH  = H * 0.055;
+    const gap   = H * 0.050;
+    const totalH = 5 * barH + 4 * gap;
+    const startY = (H - totalH) * 0.5;
+    const cx = W * 0.5;
+    const out = [];
+    const perBar = Math.floor(n / 5);
+    for (let b = 0; b < 5; b++) {
+      const cy  = startY + b * (barH + gap) + barH * 0.5;
+      const cnt = b < 4 ? perBar : n - 4 * perBar;
+      for (let i = 0; i < cnt; i++) {
+        out.push(cx + (Math.random() - 0.5) * barW,
+                 cy + (Math.random() - 0.5) * barH);
+      }
+    }
+    while (out.length < n * 2)
+      out.push(cx + (Math.random() - 0.5) * barW * 0.5,
+               H * 0.5 + (Math.random() - 0.5) * barH);
+    const arr = new Float32Array(n * 2);
+    arr.set(out.slice(0, n * 2));
+    return arr;
+  }
+
+  /* SAP: equilateral triangle — vertex nodes + edges + center hub + spokes */
+  function genSAP(W, H, n) {
+    const cx = W * 0.5, cy = H * 0.5;
+    const R  = Math.min(W * 0.36, H * 0.40);
+    const out = [];
+    const verts = Array.from({ length: 3 }, (_, v) => {
+      const a = -Math.PI / 2 + v * TWO_PI / 3;
+      return [cx + Math.cos(a) * R, cy + Math.sin(a) * R];
+    });
+
+    /* Edges */
+    const edgeN   = Math.round(n * 0.44);
+    const perEdge = Math.floor(edgeN / 3);
+    for (let e = 0; e < 3; e++) {
+      const [x0, y0] = verts[e];
+      const [x1, y1] = verts[(e + 1) % 3];
+      const cnt = e < 2 ? perEdge : edgeN - 2 * perEdge;
+      for (let i = 0; i < cnt; i++) {
+        const t = Math.random();
+        out.push(x0 + (x1 - x0) * t + (Math.random() - 0.5) * 3,
+                 y0 + (y1 - y0) * t + (Math.random() - 0.5) * 3);
+      }
+    }
+
+    /* Vertex node blobs */
+    const nodeN   = Math.round(n * 0.34);
+    const perNode = Math.floor(nodeN / 3);
+    for (let v = 0; v < 3; v++) {
+      const [vx, vy] = verts[v];
+      const nr = R * 0.09;
+      const cnt = v < 2 ? perNode : nodeN - 2 * perNode;
+      for (let i = 0; i < cnt; i++) {
+        const r = nr * Math.sqrt(Math.random());
+        const a = Math.random() * TWO_PI;
+        out.push(vx + Math.cos(a) * r, vy + Math.sin(a) * r);
+      }
+    }
+
+    /* Center hub */
+    const hubN = Math.round(n * 0.10);
+    for (let i = 0; i < hubN; i++) {
+      const r = R * 0.05 * Math.sqrt(Math.random());
+      const a = Math.random() * TWO_PI;
+      out.push(cx + Math.cos(a) * r, cy + Math.sin(a) * r);
+    }
+
+    /* Spokes to reach n */
+    while (out.length < n * 2) {
+      const [vx, vy] = verts[Math.floor(Math.random() * 3)];
+      const t = Math.random();
+      out.push(cx + (vx - cx) * t, cy + (vy - cy) * t);
+    }
+
+    const arr = new Float32Array(n * 2);
+    arr.set(out.slice(0, n * 2));
+    return arr;
+  }
+
+  /* Fullstack: hexagonal wheel — center hub + 6 outer nodes + arcs + spokes */
+  function genFullstack(W, H, n) {
+    const cx = W * 0.5, cy = H * 0.5;
+    const R  = Math.min(W * 0.38, H * 0.42);
+    const out = [];
+    const outerV = Array.from({ length: 6 }, (_, v) => {
+      const a = -Math.PI / 2 + v * TWO_PI / 6;
+      return [cx + Math.cos(a) * R, cy + Math.sin(a) * R];
+    });
+
+    /* Outer ring arcs */
+    const arcN   = Math.round(n * 0.38);
+    const perArc = Math.floor(arcN / 6);
+    for (let e = 0; e < 6; e++) {
+      const [x0, y0] = outerV[e];
+      const [x1, y1] = outerV[(e + 1) % 6];
+      const cnt = e < 5 ? perArc : arcN - 5 * perArc;
+      for (let i = 0; i < cnt; i++) {
+        const t = Math.random();
+        out.push(x0 + (x1 - x0) * t + (Math.random() - 0.5) * 3,
+                 y0 + (y1 - y0) * t + (Math.random() - 0.5) * 3);
+      }
+    }
+
+    /* Outer node blobs */
+    const outerN  = Math.round(n * 0.27);
+    const perNode = Math.floor(outerN / 6);
+    for (let v = 0; v < 6; v++) {
+      const [ox, oy] = outerV[v];
+      const nr = R * 0.07;
+      const cnt = v < 5 ? perNode : outerN - 5 * perNode;
+      for (let i = 0; i < cnt; i++) {
+        const r = nr * Math.sqrt(Math.random());
+        const a = Math.random() * TWO_PI;
+        out.push(ox + Math.cos(a) * r, oy + Math.sin(a) * r);
+      }
+    }
+
+    /* Center hub */
+    const hubN = Math.round(n * 0.10);
+    for (let i = 0; i < hubN; i++) {
+      const r = R * 0.08 * Math.sqrt(Math.random());
+      const a = Math.random() * TWO_PI;
+      out.push(cx + Math.cos(a) * r, cy + Math.sin(a) * r);
+    }
+
+    /* Spokes to reach n */
+    while (out.length < n * 2) {
+      const [ox, oy] = outerV[Math.floor(Math.random() * 6)];
+      const t = Math.random();
+      out.push(cx + (ox - cx) * t, cy + (oy - cy) * t);
+    }
+
+    const arr = new Float32Array(n * 2);
+    arr.set(out.slice(0, n * 2));
+    return arr;
+  }
+
+  /* ── Build formation targets ── */
+  function buildTargets() {
+    return [
+      genProfessional(CW, CH, N_FORM),
+      genSAP(CW, CH, N_FORM),
+      genFullstack(CW, CH, N_FORM),
+    ];
+  }
+  let allTargets = buildTargets();
+  let currentIdx = 0;
+
+  /* ── Particle pools ── */
+  const N_AMB  = N_TOT - N_FORM;
+  const px   = new Float32Array(N_TOT);
+  const py   = new Float32Array(N_TOT);
+  const ftx  = new Float32Array(N_FORM);   // formation targets
+  const fty  = new Float32Array(N_FORM);
+  const hx   = new Float32Array(N_AMB);    // ambient home positions
+  const hy   = new Float32Array(N_AMB);
+
+  const pSz  = new Float32Array(N_TOT);
+  const pOp  = new Float32Array(N_TOT);
+  const pDRx = new Float32Array(N_TOT);    // drift amplitude x
+  const pDRy = new Float32Array(N_TOT);    // drift amplitude y
+  const pDFx = new Float32Array(N_TOT);    // drift frequency x
+  const pDFy = new Float32Array(N_TOT);    // drift frequency y
+  const pDPx = new Float32Array(N_TOT);    // drift phase x
+  const pDPy = new Float32Array(N_TOT);    // drift phase y
+  const pLr  = new Float32Array(N_TOT);    // per-particle lerp rate
+  const pCS  = [];                          // color strings
+
+  const initT = allTargets[0];
+  for (let i = 0; i < N_TOT; i++) {
+    const isForm = i < N_FORM;
+
+    px[i] = Math.random() * CW;
+    py[i] = Math.random() * CH;
+
+    if (isForm) {
+      ftx[i] = initT[i * 2];
+      fty[i] = initT[i * 2 + 1];
+      pSz[i]  = 0.90 + Math.random() * 1.60;
+      pOp[i]  = 0.50 + Math.random() * 0.50;
+      pDRx[i] = 0.40 + Math.random() * 1.20;
+      pDRy[i] = 0.40 + Math.random() * 1.20;
+      pDFx[i] = 0.15 + Math.random() * 0.40;
+      pDFy[i] = 0.15 + Math.random() * 0.40;
+      pLr[i]  = 0.030 + Math.random() * 0.014;
+    } else {
+      const ai = i - N_FORM;
+      hx[ai]  = Math.random() * CW;
+      hy[ai]  = Math.random() * CH;
+      pSz[i]  = 0.50 + Math.random() * 0.90;
+      pOp[i]  = 0.12 + Math.random() * 0.28;
+      pDRx[i] = 2.00 + Math.random() * 5.00;
+      pDRy[i] = 2.00 + Math.random() * 5.00;
+      pDFx[i] = 0.08 + Math.random() * 0.20;
+      pDFy[i] = 0.08 + Math.random() * 0.20;
+      pLr[i]  = 0.016 + Math.random() * 0.010;
+    }
+
+    pDPx[i] = Math.random() * TWO_PI;
+    pDPy[i] = Math.random() * TWO_PI;
+
+    /* Color: blue-white / cobalt / soft-purple */
+    const c = Math.random();
+    let r, g, b;
+    if (c < 0.45) {
+      r = 210 + Math.round((c / 0.45) * 45);
+      g = 220 + Math.round((c / 0.45) * 35);
+      b = 255;
+    } else if (c < 0.78) {
+      const f = (c - 0.45) / 0.33;
+      r = 75  + Math.round(f * 52);
+      g = 105 + Math.round(f * 40);
+      b = 255;
+    } else {
+      r = 155 + Math.round((c - 0.78) / 0.22 * 55);
+      g = 118;
+      b = 255;
+    }
+    pCS.push(`rgb(${r},${g},${b})`);
+  }
+
+  /* ── State switching ── */
+  const titleEl = document.getElementById('showcaseTitle');
+  const descEl  = document.getElementById('showcaseDesc');
+
+  function setState(idx) {
+    if (idx === currentIdx) return;
+    currentIdx = idx;
+
+    titleEl && titleEl.classList.add('scTrans');
+    descEl  && descEl .classList.add('scTrans');
+    setTimeout(() => {
+      if (titleEl) { titleEl.textContent = STATES[idx].title; titleEl.classList.remove('scTrans'); }
+      if (descEl)  { descEl .textContent = STATES[idx].desc;  descEl .classList.remove('scTrans'); }
+    }, 230);
+
+    document.querySelectorAll('.showcasePill').forEach((btn, i) => {
+      const on = i === idx;
+      btn.classList.toggle('is-active', on);
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+
+    const t = allTargets[idx];
+    for (let i = 0; i < N_FORM; i++) { ftx[i] = t[i * 2]; fty[i] = t[i * 2 + 1]; }
+  }
+
+  /* ── Render loop (lerp, no spring/velocity) ── */
+  let t_a = 0, prev = performance.now(), raf;
+
+  function frame(now) {
+    const dt = Math.min((now - prev) * 0.001, 0.05);
+    prev  = now;
+    t_a  += dt;
+
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+    ctx.save();
+    ctx.scale(DPR, DPR);
+
+    for (let i = 0; i < N_TOT; i++) {
+      /* Framerate-independent lerp factor */
+      const lf = 1 - Math.pow(1 - pLr[i], dt * 60);
+      let gx, gy;   /* goal position this frame */
+
+      if (i < N_FORM) {
+        /* Formation: lerp toward shape target with gentle wobble */
+        gx = ftx[i] + Math.sin(t_a * pDFx[i] + pDPx[i]) * pDRx[i];
+        gy = fty[i] + Math.cos(t_a * pDFy[i] + pDPy[i]) * pDRy[i];
+      } else {
+        /* Ambient: drift around home position */
+        const ai = i - N_FORM;
+        gx = hx[ai] + Math.sin(t_a * pDFx[i] + pDPx[i]) * pDRx[i];
+        gy = hy[ai] + Math.cos(t_a * pDFy[i] + pDPy[i]) * pDRy[i];
+      }
+
+      px[i] += (gx - px[i]) * lf;
+      py[i] += (gy - py[i]) * lf;
+
+      ctx.globalAlpha = pOp[i];
+      ctx.fillStyle   = pCS[i];
+      ctx.beginPath();
+      ctx.arc(px[i], py[i], pSz[i], 0, TWO_PI);
+      ctx.fill();
+    }
+
+    ctx.globalAlpha = 1;
+    ctx.restore();
+    raf = requestAnimationFrame(frame);
+  }
+
+  raf = requestAnimationFrame(frame);
+
+  /* ── Pills interaction ── */
+  let autoTimer;
+  function startAuto() {
+    autoTimer = setInterval(() => setState((currentIdx + 1) % 3), 4000);
+  }
+  startAuto();
+
+  document.querySelectorAll('.showcasePill').forEach((btn, i) => {
+    btn.addEventListener('click', () => {
+      clearInterval(autoTimer);
+      setState(i);
+      setTimeout(startAuto, 10000);
+    });
+  });
+
+  /* ── Resize ── */
+  new ResizeObserver(() => {
+    resize();
+    allTargets = buildTargets();
+    const t = allTargets[currentIdx];
+    for (let i = 0; i < N_FORM; i++) { ftx[i] = t[i * 2]; fty[i] = t[i * 2 + 1]; }
+    for (let i = 0; i < N_AMB; i++) { hx[i] = Math.random() * CW; hy[i] = Math.random() * CH; }
+  }).observe(canvas);
 }
 
 function animateWorkCards() {
@@ -713,72 +1140,96 @@ function makeProjectCard(p, index) {
   el.className = "projectCard r" + (p.featured ? " featured" : "");
   el.tabIndex = 0;
 
-  const img = p.imageUrl
-    ? `
-    <img src="${p.imageUrl}" alt="" onerror="this.style.display='none'">
-    <div class="mediaGlow" aria-hidden="true"></div>
-  `
-    : `
-    <div class="mediaGlow" aria-hidden="true"></div>
-  `;
+  // Per-card accent palette — cycles through a set of dark-toned backgrounds
+  const palettes = [
+    { bg: "linear-gradient(135deg,#1a0406 0%,#2d0810 100%)", accent: "#ff3352" },
+    { bg: "linear-gradient(135deg,#03081e 0%,#081028 100%)", accent: "#3a80ff" },
+    { bg: "linear-gradient(135deg,#0a0318 0%,#130528 100%)", accent: "#9b5cf6" },
+    { bg: "linear-gradient(135deg,#021808 0%,#032010 100%)", accent: "#22c55e" },
+    { bg: "linear-gradient(135deg,#1a0c02 0%,#241404 100%)", accent: "#f97316" },
+    { bg: "linear-gradient(135deg,#001a18 0%,#022420 100%)", accent: "#2dd4bf" },
+    { bg: "linear-gradient(135deg,#1a1002 0%,#241802 100%)", accent: "#facc15" },
+    { bg: "linear-gradient(135deg,#02101a 0%,#041824 100%)", accent: "#38bdf8" },
+    { bg: "linear-gradient(135deg,#180204 0%,#200408 100%)", accent: "#e11d48" },
+  ];
+  const pal = palettes[index % palettes.length];
+
+  const imgHtml = p.imageUrl
+    ? `<img class="cardImg" src="${p.imageUrl}" alt="${escapeHtml(p.name)}" onerror="this.style.display='none'">`
+    : "";
+
+  // Circular spinning badge
+  const circleId = `cp${index}`;
+  const visitBadge =
+    p.demoUrl && p.demoUrl !== "x"
+      ? `<a class="visitBadge" href="${p.demoUrl}" target="_blank" rel="noopener" aria-label="Visit project">
+           <svg class="visitRing" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+             <path id="${circleId}" fill="none" d="M50,50 m-32,0 a32,32 0 1,1 64,0 a32,32 0 1,1 -64,0"/>
+             <text class="visitText"><textPath href="#${circleId}">VISIT PROJECT · VISIT PROJECT · </textPath></text>
+           </svg>
+           <span class="visitArrow" style="color:${pal.accent}">↗</span>
+         </a>`
+      : "";
+
+  // Highlights bullet list (max 3)
+  const highlights = (p.highlights || [])
+    .filter((h) => h && h !== "x")
+    .slice(0, 3)
+    .map(
+      (h) =>
+        `<li class="cardHighlightItem"><span class="highlightPlus" style="color:${pal.accent}">+</span>${escapeHtml(h)}</li>`,
+    )
+    .join("");
+
+  const tags = (p.tags || [])
+    .slice(0, 5)
+    .map((t) => `<span class="tag">${escapeHtml(t)}</span>`)
+    .join("");
 
   el.innerHTML = `
-    <div class="projectTop">
-      <div class="pNum">${String(index + 1).padStart(2, "0")}</div>
-      ${p.featured ? `<div class="pBadge">Featured</div>` : ``}
+    <div class="cardLeft" style="background:${pal.bg}">
+      <div class="cardImgWrap">${imgHtml}</div>
+      <div class="cardOverlay"><span class="overlayLabel">View Project</span></div>
+      ${visitBadge}
     </div>
 
-    <div class="projectMedia">
-      ${img}
-    </div>
-
-    <div class="projectBody">
-      <div class="pTitle">${escapeHtml(p.name)}</div>
-      <div class="pDesc">${escapeHtml(p.description || "")}</div>
-
-      <div class="tagRow">
-        ${(p.tags || [])
-          .slice(0, 4)
-          .map((t) => `<span class="tag">${escapeHtml(t)}</span>`)
-          .join("")}
+    <div class="cardRight">
+      <div class="cardRightTop">
+        <div class="cardNumRow">
+          <span class="cardNum" style="color:${pal.accent}">${String(index + 1).padStart(2, "0")}</span>
+          ${p.featured ? `<span class="pBadge">Featured</span>` : ""}
+        </div>
+        <div class="cardAccentLine" style="background:${pal.accent}"></div>
       </div>
 
-      <div class="pMeta">
-        <div>${formatDate(p.date)}</div>
-        <div class="pLinks">
-          ${
-            p.demoUrl
-              ? `<a class="btn tiny primary" href="${p.demoUrl}" target="_blank" rel="noopener">Live</a>`
-              : ``
-          }
-          ${
-            p.repoUrl
-              ? `<a class="btn tiny" href="${p.repoUrl}" target="_blank" rel="noopener">Code</a>`
-              : ``
-          }
+      <h3 class="cardTitle">${escapeHtml(p.name)}</h3>
+      <p class="cardDesc">${escapeHtml(p.description || "")}</p>
+
+      ${highlights ? `<ul class="cardHighlights">${highlights}</ul>` : ""}
+
+      <div class="cardBottom">
+        <div class="tagRow">${tags}</div>
+        <div class="cardLinks">
+          ${p.demoUrl && p.demoUrl !== "x" ? `<a class="cardLink live" href="${p.demoUrl}" target="_blank" rel="noopener">↗ Live</a>` : ""}
+          ${p.repoUrl && p.repoUrl !== "x" ? `<a class="cardLink" href="${p.repoUrl}" target="_blank" rel="noopener">{ } Code</a>` : ""}
         </div>
       </div>
     </div>
   `;
 
-  // hover tilt
-  const reset = () => {
-    el.style.transform = "";
-  };
-  el.addEventListener("mousemove", (e) => {
-    const r = el.getBoundingClientRect();
-    const x = (e.clientX - r.left) / r.width - 0.5;
-    const y = (e.clientY - r.top) / r.height - 0.5;
-    el.style.transform = `perspective(800px) rotateX(${(-y * 5).toFixed(
-      2,
-    )}deg) rotateY(${(x * 6).toFixed(2)}deg) translateY(-2px)`;
-  });
-  el.addEventListener("mouseleave", reset);
+  // Subtle lift on hover (no tilt — horizontal card doesn't benefit from tilt)
+  if (window.matchMedia("(hover: hover)").matches) {
+    el.addEventListener("mouseleave", () => {
+      el.style.transform = "";
+    });
+  }
 
   el.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
-      if (p.demoUrl) window.open(p.demoUrl, "_blank", "noopener");
-      else if (p.repoUrl) window.open(p.repoUrl, "_blank", "noopener");
+      if (p.demoUrl && p.demoUrl !== "x")
+        window.open(p.demoUrl, "_blank", "noopener");
+      else if (p.repoUrl && p.repoUrl !== "x")
+        window.open(p.repoUrl, "_blank", "noopener");
     }
   });
 
@@ -824,11 +1275,43 @@ function renderWork() {
   const list = filteredProjects();
   const grid = document.getElementById("workGrid");
   const empty = document.getElementById("emptyState");
+  const showMoreWrap = document.getElementById("workShowMoreWrap");
+  const showMoreLabel = document.getElementById("workShowMoreLabel");
+  const totalBadge = document.getElementById("workTotalCount");
   if (!grid || !empty) return;
 
+  // When search/tag filter is active show everything; otherwise respect preview
+  const isFiltered =
+    state.activeTag !== "All" || state.query.trim() !== "";
+  const visibleList =
+    isFiltered || state.workExpanded ? list : list.slice(0, WORK_PREVIEW);
+
   grid.innerHTML = "";
-  list.forEach((p, i) => grid.appendChild(makeProjectCard(p, i)));
+  visibleList.forEach((p, i) => grid.appendChild(makeProjectCard(p, i)));
   empty.hidden = list.length !== 0;
+
+  // Total count badge in subtitle
+  if (totalBadge) {
+    totalBadge.textContent =
+      state.projects.length > 0 ? `${state.projects.length} projects` : "";
+  }
+
+  // Show More / Show Less button
+  const hasHidden = !isFiltered && list.length > WORK_PREVIEW;
+  if (showMoreWrap) {
+    showMoreWrap.hidden = !hasHidden;
+  }
+  if (showMoreLabel && hasHidden) {
+    if (state.workExpanded) {
+      showMoreLabel.textContent = "Show less";
+      const svg = showMoreLabel.nextElementSibling;
+      if (svg) svg.style.transform = "rotate(180deg)";
+    } else {
+      showMoreLabel.textContent = `Show all ${list.length} projects`;
+      const svg = showMoreLabel.nextElementSibling;
+      if (svg) svg.style.transform = "";
+    }
+  }
 
   // Always update pinned story stats
   const proj = document.getElementById("statProjects");
@@ -836,23 +1319,13 @@ function renderWork() {
   if (proj) proj.textContent = String(state.projects.length);
   if (tags) tags.textContent = String(Math.max(0, state.tags.length - 1));
 
+  // Hide rail arrows (not needed)
   const prev = document.getElementById("railPrev");
   const next = document.getElementById("railNext");
+  if (prev) prev.hidden = true;
+  if (next) next.hidden = true;
 
-  // If no cards, hide arrows completely
-  if (list.length === 0) {
-    if (prev) prev.hidden = true;
-    if (next) next.hidden = true;
-    return;
-  }
-
-  const viewport = document.querySelector(".railViewport");
-  if (viewport) viewport.scrollLeft = 0;
-
-  // Force arrow refresh after render + scroll reset
-  requestAnimationFrame(() => {
-    grid.dispatchEvent(new Event("scroll"));
-  });
+  if (list.length === 0) return;
 
   // Animate cards only when section has been entered
   if (state.workEntered) {
@@ -1185,6 +1658,14 @@ function initAskMe() {
     meta.hidden = !show;
   };
 
+  // Topic chip quick-sends
+  document.querySelectorAll(".askChip").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      input.value = chip.dataset.q || "";
+      form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+    });
+  });
+
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
@@ -1480,10 +1961,260 @@ function initBgStars() {
   else draw();
 }
 
-/* ------------------------------
-   Hero earth FX (aurora + subtle parallax)
-   - drives CSS vars --hx/--hy used by .heroEarth
------------------------------- */
+/* ── Hero — Mouse-reactive particle field ──────────────────────────────
+   A soft interactive particle field where the mouse creates a living
+   circular energy field around it.  Particles are spread across the
+   canvas and smoothly gather into a diffuse orbital formation around
+   the cursor — organic, atmospheric, alive.
+
+   Physics (all in device px):
+     • Spring toward orbital target around cursor when in influence zone
+     • Spring back to home position when cursor absent
+     • Heavy damping  (0.938) → calm, non-oscillatory motion
+     • Gentle Brownian jitter keeps ambient field alive
+
+   Visual:
+     • Gaussian-distributed orbit radii (μ=82px·DPR, σ=22px·DPR)
+       → soft diffuse cloud, NOT a hard ring
+     • Opacity boost (+0.38) when near cursor, with slow pulse
+     • Blue-purple-white colour palette
+     • Soft shadowBlur glow on all particles
+─────────────────────────────────────────────────────────────────────── */
+function initHeroThree() {
+  const canvas = document.getElementById('heroCanvas');
+  if (!canvas) return;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  const ctx = canvas.getContext('2d', { alpha: true });
+  if (!ctx) return;
+
+  const DPR    = Math.min(window.devicePixelRatio || 1, 2);
+  const TWO_PI = Math.PI * 2;
+
+  /* ── Physics constants (device px) ── */
+  const SPRING   = 0.038;          // spring force toward orbital target
+  const DAMP     = 0.938;          // velocity damping — heavy, keeps motion calm
+  const HOME_K   = 0.007;          // gentle pull back to home when cursor absent
+  const NOISE    = 0.024 * DPR;    // Brownian jitter amplitude
+  const INF_R    = 240 * DPR;      // mouse influence radius
+  const OP_BOOST = 0.38;           // opacity lift at full influence
+  const PULSE_F  = 2.2;            // pulse frequency  (rad/s)
+  const ORBIT_MU = 82  * DPR;      // mean orbit radius
+  const ORBIT_SG = 22  * DPR;      // orbit radius σ
+  const ORBIT_FL = 28  * DPR;      // orbit radius floor
+
+  /* ── Layout (device px) ── */
+  let W, H;
+
+  function resize() {
+    const rect = canvas.getBoundingClientRect();
+    W = canvas.width  = Math.round(rect.width  * DPR);
+    H = canvas.height = Math.round(rect.height * DPR);
+  }
+  resize();
+
+  /* ── Particle count ── */
+  const isMob = (W / DPR) < 680;
+  const N     = Math.round(isMob ? 550 : 920);
+
+  /* ── Gaussian sampler (Box-Muller) ── */
+  function gauss(mu, sg) {
+    let u, v;
+    do { u = Math.random(); } while (u === 0);
+    do { v = Math.random(); } while (v === 0);
+    return mu + sg * Math.sqrt(-2 * Math.log(u)) * Math.cos(TWO_PI * v);
+  }
+
+  /* ── Smoothstep: maps [0,1] to smooth [0,1] ── */
+  function smoothstep(x) {
+    if (x <= 0) return 0;
+    if (x >= 1) return 1;
+    return x * x * (3 - 2 * x);
+  }
+
+  /* ── Build particle pool ── */
+  const MARGIN = 40 * DPR;
+  const particles = [];
+
+  for (let i = 0; i < N; i++) {
+    const hx = MARGIN + Math.random() * (W - MARGIN * 2);
+    const hy = MARGIN + Math.random() * (H - MARGIN * 2);
+
+    /* Per-particle orbit radius — Gaussian, floored for safety */
+    const orbitR = Math.max(ORBIT_FL, gauss(ORBIT_MU, ORBIT_SG));
+
+    /* Angular speed: 0.60–1.40 rad/s, CW/CCW mixed */
+    const angSpeed = (0.60 + Math.random() * 0.80) * (Math.random() < 0.5 ? 1 : -1);
+
+    /* Size: 0.7–2.0 CSS px (scaled by DPR) */
+    const sz = (0.7 + Math.random() * 1.3) * DPR;
+
+    /* Base opacity: 0.10–0.52 */
+    const baseOp = 0.10 + Math.random() * 0.42;
+
+    /* Colour — blue-purple-white palette */
+    const tc = Math.random();
+    let cr, cg, cb;
+    if (tc < 0.38) {
+      /* Blue-white */
+      cr = 180 + Math.round(Math.random() * 75);
+      cg = 200 + Math.round(Math.random() * 55);
+      cb = 255;
+    } else if (tc < 0.68) {
+      /* Blue-purple */
+      cr = 115 + Math.round(Math.random() * 85);
+      cg = 135 + Math.round(Math.random() * 65);
+      cb = 238 + Math.round(Math.random() * 17);
+    } else {
+      /* Soft near-white */
+      const v = 205 + Math.round(Math.random() * 50);
+      cr = v; cg = v; cb = 255;
+    }
+
+    particles.push({
+      px: hx, py: hy,   // current position
+      vx: 0,  vy: 0,    // velocity
+      hx, hy,            // home position
+      orbitR,
+      angle:    Math.random() * TWO_PI,
+      angSpeed,
+      sz,
+      baseOp,
+      cs:      `rgb(${cr},${cg},${cb})`,
+      opAmp:   0.04 + Math.random() * 0.08,
+      opFreq:  0.04 + Math.random() * 0.14,
+      opPhase: Math.random() * TWO_PI,
+      inf:     0,        // cached influence (physics → draw)
+    });
+  }
+
+  /* ── Mouse tracking (device px) ── */
+  let mx = -99999, my = -99999;
+  const hero = document.getElementById('hero');
+  if (hero) {
+    const onMove = (ex, ey) => {
+      const rect = canvas.getBoundingClientRect();
+      mx = (ex - rect.left) * DPR;
+      my = (ey - rect.top)  * DPR;
+    };
+    hero.addEventListener('mousemove',  e => onMove(e.clientX, e.clientY));
+    hero.addEventListener('mouseleave', () => { mx = -99999; my = -99999; });
+    hero.addEventListener('touchmove',
+      e => onMove(e.touches[0].clientX, e.touches[0].clientY),
+      { passive: true }
+    );
+    hero.addEventListener('touchend', () => { mx = -99999; my = -99999; });
+  }
+
+  /* ── Animation state ── */
+  let t    = 0;
+  let prev = performance.now();
+  let raf;
+  const WRAP = 55 * DPR;
+
+  /* ── Render loop ── */
+  function frame(now) {
+    const dt = Math.min((now - prev) * 0.001, 0.05);
+    prev = now;
+    t   += dt;
+
+    const pulse       = 1.0 + 0.09 * Math.sin(t * PULSE_F);
+    const mouseActive = mx > -9000;
+
+    ctx.clearRect(0, 0, W, H);
+
+    /* ── Physics update ── */
+    for (const p of particles) {
+      /* Influence: how strongly cursor affects this particle */
+      const ddx = p.px - mx;
+      const ddy = p.py - my;
+      const d   = Math.sqrt(ddx * ddx + ddy * ddy);
+      const raw = mouseActive ? Math.max(0, 1 - d / INF_R) : 0;
+      p.inf     = smoothstep(raw);
+      const inf = p.inf;
+
+      /* Advance this particle's orbital angle */
+      p.angle += p.angSpeed * dt;
+
+      /* Orbital target position around cursor */
+      const r    = p.orbitR * pulse;
+      const tx_o = mx + Math.cos(p.angle) * r;
+      const ty_o = my + Math.sin(p.angle) * r;
+
+      /* Blend: orbit when influenced, home when not */
+      const ftx = tx_o * inf + p.hx * (1 - inf);
+      const fty = ty_o * inf + p.hy * (1 - inf);
+
+      /* Spring force — combines orbital pull and home pull */
+      const keff = SPRING * inf + HOME_K * (1 - inf);
+      p.vx += (ftx - p.px) * keff;
+      p.vy += (fty - p.py) * keff;
+
+      /* Brownian ambient motion */
+      p.vx += (Math.random() - 0.5) * NOISE;
+      p.vy += (Math.random() - 0.5) * NOISE;
+
+      /* Damp velocity */
+      p.vx *= DAMP;
+      p.vy *= DAMP;
+
+      /* Integrate */
+      p.px += p.vx;
+      p.py += p.vy;
+
+      /* Soft boundary wrap */
+      if (p.px < -WRAP)    p.px += W + WRAP * 2;
+      if (p.px > W + WRAP) p.px -= W + WRAP * 2;
+      if (p.py < -WRAP)    p.py += H + WRAP * 2;
+      if (p.py > H + WRAP) p.py -= H + WRAP * 2;
+    }
+
+    /* ── Draw ── */
+    if (!isMob) {
+      ctx.shadowBlur  = 9 * DPR;
+      ctx.shadowColor = 'rgba(105, 145, 255, 0.55)';
+    }
+
+    for (const p of particles) {
+      const op = Math.max(0, Math.min(1,
+        p.baseOp
+        + p.opAmp * Math.sin(t * p.opFreq + p.opPhase)
+        + p.inf * OP_BOOST
+      ));
+
+      ctx.globalAlpha = op;
+      ctx.fillStyle   = p.cs;
+      ctx.beginPath();
+      ctx.arc(p.px, p.py, p.sz, 0, TWO_PI);
+      ctx.fill();
+    }
+
+    ctx.shadowBlur  = 0;
+    ctx.globalAlpha = 1;
+
+    raf = requestAnimationFrame(frame);
+  }
+
+  raf = requestAnimationFrame(frame);
+
+  new ResizeObserver(() => {
+    resize();
+    /* Re-home particles that are now outside new canvas bounds */
+    const M = 40 * DPR;
+    for (const p of particles) {
+      if (p.hx > W - M || p.hx < M) {
+        p.hx = M + Math.random() * (W - M * 2);
+        p.px = p.hx;
+      }
+      if (p.hy > H - M || p.hy < M) {
+        p.hy = M + Math.random() * (H - M * 2);
+        p.py = p.hy;
+      }
+    }
+  }).observe(canvas);
+}
+
+
 function initHeroEarthFX() {
   const hero = document.getElementById("hero");
   const earth = document.querySelector(".heroEarth");
@@ -1691,8 +2422,9 @@ async function init() {
   loadTo(28);
 
   initBgStars();
-  initHeroEarthFX();
+  initHeroThree();
   initHeroSkillTicker();
+  initShowcase();
 
   loadTo(40);
 
@@ -1882,6 +2614,7 @@ async function init() {
   }
 
   initReveals();
+  initAboutReveal();
   initStory();
 
   // Career
@@ -1971,6 +2704,21 @@ async function init() {
       } else {
         tagsDrawer.removeAttribute("hidden");
         tagsToggle.setAttribute("aria-expanded", "true");
+      }
+    });
+  }
+
+  // Show More / Show Less
+  const showMoreBtn = document.getElementById("workShowMore");
+  if (showMoreBtn) {
+    showMoreBtn.addEventListener("click", () => {
+      state.workExpanded = !state.workExpanded;
+      renderWork();
+      // Scroll back to section top when collapsing
+      if (!state.workExpanded) {
+        document
+          .getElementById("work")
+          ?.scrollIntoView({ behavior: "smooth", block: "start" });
       }
     });
   }
