@@ -1537,522 +1537,309 @@ function initBgStars() {
   else draw();
 }
 
-/* ── Hero — Three.js iridescent torus ── */
-/* ── Hero — Three.js iridescent torus (custom shader) ── */
+/* ── Hero — Diffuse radial particle field ──────────────────────────────
+   FIELD-FIRST, not ring-drawing.
+
+   Particles are placed using a smooth RADIAL DENSITY FUNCTION:
+
+     d(r) = r² · exp( -(r - R_peak)² / (2 · σ²) )
+
+   with σ deliberately WIDE (≈ 0.52 · R_peak).
+
+   This means:
+     • d(0) = 0           — centre naturally empty behind headline
+     • rises gradually    — no hard inner boundary
+     • broad soft peak    — density maximum spread over a wide band
+     • falls off smoothly — no visible outer edge
+     • σ so large the "ring" is imperceptible; only the density
+       gradient is felt — viewer senses composition, not geometry
+
+   Motion: ultra-slow shared angular drift (~58-min full lap).
+   Individual particles also have tiny independent drift (< 5 % of global).
+   The field reads as one calm atmospheric entity, not orbiting dots.
+─────────────────────────────────────────────────────────────────────── */
 function initHeroThree() {
   const canvas = document.getElementById('heroCanvas');
-  if (!canvas || typeof THREE === 'undefined') return;
+  if (!canvas) return;
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-  /* ── Renderer ── */
-  const renderer = new THREE.WebGLRenderer({
-    canvas, antialias: true, alpha: false, powerPreference: 'high-performance'
-  });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-  renderer.toneMapping = THREE.NoToneMapping;   // we do our own ACES in shader
-  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  const ctx = canvas.getContext('2d', { alpha: true });
+  if (!ctx) return;
 
-  /* ── Scene + Camera ── */
-  const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x05081a);
+  const DPR = Math.min(window.devicePixelRatio || 1, 2);
 
-  const camera = new THREE.PerspectiveCamera(44, 1, 0.1, 100);
-  camera.position.set(0, 0.10, 5.6);
+  /* ── Layout — rebuilt on resize ── */
+  let W, H, cx, cy, Rs, centerGrad, ambGrad, vigGrad, raf;
 
-  /* ── 5 orbiting light positions ── */
-  const lp1 = new THREE.Vector3(-3.8,  3.2, 4.2);   // top-left  — cool blue
-  const lp2 = new THREE.Vector3( 3.8,  0.2, 3.8);   // right     — warm pink
-  const lp3 = new THREE.Vector3( 0.5, -4.5, 2.5);   // bottom    — orange
-  const lp4 = new THREE.Vector3( 0.6,  2.0, 6.0);   // front-top — clearcoat white
-  const lp5 = new THREE.Vector3(-2.5, -2.0, 3.5);   // bottom-left — purple rim
+  /* Ellipse stretch ratios (fixed — no need to rebuild on resize) */
+  const RX = 1.32;   // horizontal stretch
+  const RY = 0.80;   // vertical squish  →  tilted-disk feel
 
-  /* ── Custom ShaderMaterial — v4: reference-matched vivid cobalt + orange/magenta ── */
-  const mat = new THREE.ShaderMaterial({
-    transparent: true,
-    depthWrite: false,
-    side: THREE.DoubleSide,
-    uniforms: {
-      uCamPos: { value: camera.position },
-      uL1: { value: lp1 }, uL2: { value: lp2 }, uL3: { value: lp3 },
-      uL4: { value: lp4 }, uL5: { value: lp5 },
-      uTime: { value: 0 },
-    },
+  function resize() {
+    const rect = canvas.getBoundingClientRect();
+    W = canvas.width  = Math.round(rect.width  * DPR);
+    H = canvas.height = Math.round(rect.height * DPR);
 
-    vertexShader: `
-      varying vec2  vUv;
-      varying vec3  vNormal;
-      varying vec3  vWorldPos;
-      void main() {
-        vUv       = uv;
-        vNormal   = normalize((modelMatrix * vec4(normal, 0.0)).xyz);
-        vWorldPos = (modelMatrix * vec4(position, 1.0)).xyz;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    /* Composition centre — near the hero headline */
+    cx = W * 0.500;
+    cy = H * 0.425;
+
+    /* Rs — radial scale unit.  All normalised radii multiply by Rs → pixels. */
+    Rs = Math.min(W * 0.46, H * 0.50);
+
+    /* Soft atmospheric glow centred on headline (inner warm glow) */
+    centerGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, Rs * 0.42);
+    centerGrad.addColorStop(0,    'rgba(58, 88, 210, 0.060)');
+    centerGrad.addColorStop(0.55, 'rgba(42, 70, 190, 0.020)');
+    centerGrad.addColorStop(1,    'rgba(28, 54, 175, 0)');
+
+    /* ── Ambient field gradient — prevents starfield look ────────────────
+       Fills the particle density zone with a continuous soft blue luminosity.
+       The background between particles reads as "lit atmosphere" not "space".
+       Opacity deliberately strong enough to be clearly perceptible.          */
+    ambGrad = ctx.createRadialGradient(cx, cy, Rs * 0.18, cx, cy, Rs * 1.10);
+    ambGrad.addColorStop(0,    'rgba(3, 4, 16, 0)');           // centre dark
+    ambGrad.addColorStop(0.32, 'rgba(50, 82, 198, 0.10)');     // buildup
+    ambGrad.addColorStop(0.58, 'rgba(58, 92, 210, 0.17)');     // peak luminosity
+    ambGrad.addColorStop(0.78, 'rgba(48, 80, 198, 0.08)');     // soft falloff
+    ambGrad.addColorStop(1.0,  'rgba(3, 4, 16, 0)');           // edge fades
+
+    /* Edge vignette — clips atmosphere at canvas edges */
+    vigGrad = ctx.createRadialGradient(cx, cy, Rs * 0.88, cx, cy, Rs * 1.65);
+    vigGrad.addColorStop(0, 'rgba(3, 4, 16, 0)');
+    vigGrad.addColorStop(1, 'rgba(3, 4, 16, 0.97)');
+  }
+  resize();
+
+  /* ── Constants ── */
+  const TWO_PI = Math.PI * 2;
+  const rand   = (a, b) => a + Math.random() * (b - a);
+
+  /* ── Site colour palette: near-white → deep cobalt ── */
+  const COL = [
+    [248, 250, 255],  // 0  near-white
+    [210, 222, 255],  // 1  soft ice-blue
+    [165, 188, 255],  // 2  light periwinkle
+    [112, 142, 255],  // 3  periwinkle-cobalt
+    [ 72, 102, 255],  // 4  cobalt accent
+    [ 44,  68, 204],  // 5  deep cobalt
+  ];
+
+  /* ── Density function ────────────────────────────────────────────────
+     d(rn) = rn² · exp(-(rn - rp)² / (2·sg²))
+       rn  — normalised radius (actual px / Rs)
+       rp  — peak radius (normalised)
+       sg  — spread — deliberately large for diffuse, field-like look
+
+     The true maximum is NOT at rn = rp (r² factor shifts it outward).
+     Analytical maximum for correct rejection-sampling upper bound:
+       rn_true_max = (rp + √(rp² + 8·sg²)) / 2
+  ── */
+  function layerD(rn, rp, sg) {
+    return rn * rn * Math.exp(-((rn - rp) * (rn - rp)) / (2 * sg * sg));
+  }
+  function layerDMax(rp, sg) {
+    const rm = (rp + Math.sqrt(rp * rp + 8 * sg * sg)) * 0.5;
+    return layerD(rm, rp, sg);
+  }
+
+  /* ── Three depth layers ─────────────────────────────────────────────
+     IMPORTANT: rp ≠ true density peak.
+     Because d(r) = r² · exp(...), the r² factor shifts the TRUE peak:
+       rm_true = (rp + √(rp² + 8·sg²)) / 2
+     The rp values below are back-calculated so the TRUE peak lands at the
+     desired position.  Formula:  rp = r_desired − 2·sg² / r_desired
+
+     Desired true peaks:
+       Near field  → 0.48 · Rs   sg = 0.23   ∴ rp = 0.260
+       Mid  field  → 0.70 · Rs   sg = 0.31   ∴ rp = 0.415
+       Far  field  → 1.00 · Rs   sg = 0.42   ∴ rp = 0.647
+
+     Each sg is ≈ 48–52 % of the desired peak → genuinely diffuse (no visible
+     ring edge; only a soft density gradient is perceptible).
+
+     Columns: [ count, rp, sg, szMin, szMax, opMin, opMax, cMin, cMax, driftMult ]
+  ── */
+  const isMobile = (W / DPR) < 680;
+  const PS = isMobile ? 0.60 : 1.0;
+
+  const LAYERS = [
+    // Near field  — true peak 0.48·Rs — closer to content, capped max to avoid star-like bright dots
+    [ Math.round(400 * PS),  0.260, 0.230,   0.8, 1.8,   0.18, 0.52,   0, 2,  1.18, true  ],
+    // Mid  field  — true peak 0.70·Rs — primary cloud bulk
+    [ Math.round(580 * PS),  0.415, 0.310,   0.6, 1.4,   0.10, 0.38,   1, 4,  1.00, true  ],
+    // Far  field  — true peak 1.00·Rs — outer haze
+    [ Math.round(200 * PS),  0.647, 0.420,   0.4, 0.9,   0.04, 0.16,   3, 5,  0.78, false ],
+  ];
+
+  /* ── Build particle pool via rejection sampling ── */
+  const particles = [];
+
+  LAYERS.forEach(([n, rp, sg, szMin, szMax, opMin, opMax, cMin, cMax, driftMult, useGlow]) => {
+    const dMax  = layerDMax(rp, sg);
+    const maxRn = rp + 3.0 * sg;   // sample up to 3σ beyond peak
+
+    for (let i = 0; i < n; i++) {
+      /* Rejection sample: accept with probability d(trial) / dMax */
+      let rNorm = rp;  // fallback (very rare — only if 80 consecutive rejections)
+      for (let attempt = 0; attempt < 80; attempt++) {
+        const trial = Math.random() * maxRn;
+        if (Math.random() * dMax < layerD(trial, rp, sg)) { rNorm = trial; break; }
       }
-    `,
 
-    fragmentShader: `
-      precision highp float;
-      #define PI  3.14159265359
-      #define TAU 6.28318530718
+      const angle = rand(0, TWO_PI);
+      const cidx  = Math.min(COL.length - 1,
+        cMin + Math.floor(rand(0, cMax - cMin + 0.99))
+      );
+      const [cr, cg, cb] = COL[cidx];
 
-      uniform vec3  uCamPos;
-      uniform vec3  uL1, uL2, uL3, uL4, uL5;
-      uniform float uTime;
-      varying vec2  vUv;
-      varying vec3  vNormal;
-      varying vec3  vWorldPos;
+      /* Parallax: inner particles feel closer → shift more */
+      const par = Math.max(0, 0.38 - rNorm * 0.22);
 
-      /* ═══════════════════════════════════════════════════════
-         TUBE COLOUR GRADIENT  (reference-matched)
-         Three.js TorusGeometry:
-           uv.y = poloidal (tube cross-section): 0 = outer eq, 0.5 = inner eq
-           uv.x = toroidal (ring direction)
-         d = |uv.y - 0.5| * 2  →  0 = inner equator, 1 = outer equator
+      particles.push({
+        angle,
+        rNorm,
+        driftMult,
+        useGlow,
 
-         Reference zones (inner → outer):
-           0.00–0.10  amber-gold glass   (inner hole rim, glassy)
-           0.10–0.30  vivid orange        (backlit warm cavity)
-           0.30–0.46  orange → coral-red  (warm-hot transition)
-           0.46–0.60  coral → hot magenta (YES — reference has magenta!)
-           0.60–0.78  magenta → cobalt    (warm-cool crossover)
-           0.78–1.00  vivid cobalt blue   (outer shell — NOT near-black)
-         ═══════════════════════════════════════════════════════ */
-      vec3 tubeColor(float u) {
-        float d = abs(u - 0.5) * 2.0;
+        /* Tiny per-particle drift — < 5 % of global.  Keeps field from being static
+           without making individual motion perceptible.                           */
+        indOmega: rand(-0.00020, 0.00020),
 
-        /* Reference-exact: warm inner cavity → crisp cobalt outer shell.
-           Key: the magenta→cobalt crossover is NARROW (d=0.50→0.56) so
-           the mixed blue-purple zone is tiny.  Cobalt starts vivid. */
-        /* Push cobalt start to d=0.44 (was 0.56) so the outer face is
-           dominated by vivid cobalt, not the wide purple transition zone. */
-        vec3 cGlass  = vec3(1.00, 0.78, 0.35);  // warm amber glass  d=0.00
-        vec3 cOrange = vec3(1.00, 0.38, 0.04);  // vivid orange      d=0.10
-        vec3 cCoral  = vec3(1.00, 0.08, 0.22);  // hot coral-red     d=0.26
-        vec3 cMagent = vec3(0.90, 0.02, 0.58);  // vivid magenta     d=0.36
-        vec3 cCobalt = vec3(0.02, 0.06, 0.55);  // dark cobalt           d=0.44
-        vec3 cDeep   = vec3(0.005,0.01, 0.18);  // near-black cobalt     d=1.00
+        /* Gentle radial breathing — each particle subtly oscillates in/out */
+        rBreath:  rand(0.010, 0.042),
+        rBreathF: rand(0.030, 0.110),
+        rBreathP: rand(0, TWO_PI),
 
-        /* Very narrow warm→cobalt crossover (0.36→0.44 = only 0.08 wide)
-           keeps the magenta-to-cobalt purple band tiny.
-           Cobalt now occupies d=0.44→1.00 — majority of the outer face. */
-        if (d < 0.10) return mix(cGlass,  cOrange, d / 0.10);
-        if (d < 0.26) return mix(cOrange, cCoral,  (d - 0.10) / 0.16);
-        if (d < 0.36) return mix(cCoral,  cMagent, (d - 0.26) / 0.10);
-        if (d < 0.44) return mix(cMagent, cCobalt, (d - 0.36) / 0.08);
-        if (d < 0.86) return mix(cCobalt, cDeep,   (d - 0.44) / 0.42);
-        return cDeep;
-      }
+        /* Per-particle vertical variation — prevents cloud from reading flat (±8 %) */
+        tiltY: rand(0.92, 1.08),
 
-      /* ═══════════════════════════════════════════════════════
-         BLINN-PHONG SPECULAR  — includes NdL so the highlight
-         only fires when the surface actually faces the light.
-         This prevents broad sheen from washing out the cobalt.
-         ═══════════════════════════════════════════════════════ */
-      vec3 bSpec(vec3 N, vec3 V, vec3 lPos, vec3 lCol, float expo) {
-        vec3  L   = normalize(lPos - vWorldPos);
-        float NdL = max(dot(N, L), 0.0);
-        if (NdL < 0.001) return vec3(0.0);
-        vec3  H   = normalize(L + V);
-        float s   = pow(max(dot(N, H), 0.0), expo) * NdL;
-        return lCol * s;
-      }
+        sz:     rand(szMin, szMax) * DPR,
+        baseOp: rand(opMin, opMax),
+        opAmp:  rand(0.005, 0.030),
+        opFreq: rand(0.035, 0.160),
+        opPhase: rand(0, TWO_PI),
 
-      /* ═══════════════════════════════════════════════════════
-         ACES FILMIC TONE MAP  (Narkowicz 2015)
-         ═══════════════════════════════════════════════════════ */
-      vec3 aces(vec3 x) {
-        return clamp((x*(2.51*x+0.03))/(x*(2.43*x+0.59)+0.14), 0.0, 1.0);
-      }
-
-      /* ══════════════════════════════════════════════════════════
-         MAIN
-         ══════════════════════════════════════════════════════════ */
-      void main() {
-        vec3  N   = normalize(vNormal);
-        if (!gl_FrontFacing) N = -N;
-
-        vec3  V   = normalize(uCamPos - vWorldPos);
-        float NdV = max(dot(N, V), 0.0);
-
-        /* UV: uv.y = tube cross-section, uv.x = ring revolution */
-        float u = vUv.y;
-        float v = vUv.x;
-        float d     = abs(u - 0.5) * 2.0;   // 0=inner … 1=outer
-        float inner = 1.0 - d;
-
-        /* innerGlass — smooth alpha mask across full tube
-           innerSSS   — tight to inner cavity (d < 0.60) for SSS glow */
-        float innerGlass = pow(inner, 0.70);
-        float innerSSS   = pow(clamp((inner - 0.30) / 0.70, 0.0, 1.0), 1.6);
-
-        /* ── A. Base colour ───────────────────────────────────── */
-        vec3 col = tubeColor(u);
-
-        /* ── B. Iridescent shimmer (inner zone only, very subtle) */
-        float iriPhase = v * TAU * 2.2 + NdV * PI * 1.5 + uTime * 0.06;
-        float iriT     = sin(iriPhase) * 0.5 + 0.5;
-        /* Warm shimmer oscillates orange ↔ pink (matches inner gradient) */
-        vec3  iriWarm  = mix(vec3(1.00,0.35,0.06), vec3(0.90,0.10,0.65), iriT);
-        float iriMask  = pow(inner, 1.2) * (1.0 - smoothstep(0.26, 0.44, d));
-        col += iriWarm * iriMask * 0.18;
-
-        /* ── C. Light normals ──────────────────────────────────── */
-        vec3  L1 = normalize(uL1 - vWorldPos);
-        vec3  L2 = normalize(uL2 - vWorldPos);
-        vec3  L3 = normalize(uL3 - vWorldPos);
-        vec3  L4 = normalize(uL4 - vWorldPos);
-        vec3  L5 = normalize(uL5 - vWorldPos);
-        float nd1 = max(dot(N,L1),0.0), nd2 = max(dot(N,L2),0.0);
-        float nd3 = max(dot(N,L3),0.0), nd4 = max(dot(N,L4),0.0);
-        float nd5 = max(dot(N,L5),0.0);
-
-        /* ── D. Diffuse with zone-selective warm light suppression ─
-           Warm lights (L2/L3) are attenuated on the outer cobalt zone.
-           L1 (cool blue) runs at full strength on the outer cobalt →
-           gives vivid cobalt under natural shadow.                    */
-        float warmZone = 1.0 - smoothstep(0.26, 0.44, d);  // 1=inner, 0=outer (matches gradient)
-
-        /* ── D. Diffuse — keep warm lights MODERATE so ACES doesn't blow out
-           the inner zone to cream. Vivid colors come from the gradient base. */
-        vec3 diff = col * (
-          nd1 * vec3(0.06, 0.14, 1.00) * 0.35 * (1.0 - warmZone * 0.75) +  // L1: blue key, reduced on outer
-          nd2 * vec3(1.00, 0.22, 0.05) * 0.65 * warmZone +  // L2 orange warm light boosted
-          nd3 * vec3(1.00, 0.48, 0.04) * 0.55 * warmZone +  // L3 orange accent boosted
-          nd4 * vec3(0.40, 0.60, 1.00) * 0.12 +             // L4 cooler blue: subtle
-          nd5 * vec3(0.18, 0.05, 0.82) * 0.08               // L5 subtle
-        );
-
-        /* ── E. Ambient ────────────────────────────────────────── */
-        vec3 amb = col * 0.040;
-
-        /* ── F. Specular — 3 layers ───────────────────────────── */
-
-        /* F1: Very subtle sheen */
-        vec3 sheen =
-          bSpec(N,V,uL1, vec3(0.35,0.60,1.00), 80.0) * 0.22 +
-          bSpec(N,V,uL2, vec3(1.00,0.35,0.04), 70.0) * 0.25 * warmZone +  // orange sheen (no blue)
-          bSpec(N,V,uL4, vec3(0.60,0.76,1.00), 90.0) * 0.14;
-
-        /* F2: Mid-gloss */
-        vec3 mid =
-          bSpec(N,V,uL1, vec3(0.50,0.72,1.00), 480.0) * 1.20 +
-          bSpec(N,V,uL2, vec3(1.00,0.45,0.06), 420.0) * 1.20 * warmZone +  // orange mid-gloss
-          bSpec(N,V,uL3, vec3(1.00,0.60,0.04), 380.0) * 0.90 * warmZone +  // orange mid-gloss
-          bSpec(N,V,uL4, vec3(0.55,0.72,1.00), 560.0) * 0.45;
-
-        /* F3: Ultra-sharp coat pools — zone-selective colors.
-           Outer cobalt gets BLUE-tinted coat; inner gets warm coat. */
-        vec3 cCoat1 = mix(vec3(0.20,0.48,1.00), vec3(0.78,0.90,1.00), warmZone);
-        vec3 cCoat4 = mix(vec3(0.20,0.48,1.00), vec3(1.00,1.00,1.00), warmZone);
-        vec3 coat =
-          bSpec(N,V,uL1, cCoat1,               8000.0) * 14.0 +
-          bSpec(N,V,uL4, cCoat4,               12000.0) * 18.0 +
-          bSpec(N,V,uL2, vec3(1.00,0.60,0.10),  7000.0) *  9.0 * warmZone +
-          bSpec(N,V,uL3, vec3(1.00,0.75,0.15),  9000.0) *  7.0 * warmZone;
-
-        /* ── G. Fresnel rim ───────────────────────────────────── */
-        float fr     = pow(1.0 - NdV, 3.2);
-        vec3  rimOut = vec3(0.02, 0.06, 0.80);     // dark cobalt rim
-        vec3  rimIn  = vec3(1.00, 0.25, 0.02);     // vivid orange — minimal green/blue
-        /* Outer rim nearly invisible; inner rim vivid */
-        float rimStr = mix(0.08, 1.60, warmZone);
-        vec3  rim    = mix(rimOut, rimIn, warmZone) * fr * rimStr;
-
-        /* ── H. Inner SSS glow — carefully bounded so it doesn't wash to cream
-           Orange SSS fades toward inner; magenta SSS ramps in toward outer */
-        float breathe    = 0.86 + 0.14 * sin(uTime * 0.50 + v * 4.8);
-        float sssOrange  = max(0.0, 1.0 - d / 0.28);    // fades out by d=0.28
-        float sssMagenta = smoothstep(0.22, 0.40, d);   // ramps in at d=0.22
-        vec3  sss = (
-          vec3(1.00, 0.20, 0.01) * sssOrange * 2.20 +   // vivid orange glow — boosted
-          vec3(0.92, 0.02, 0.55) * sssMagenta * 1.10 +  // hot magenta
-          vec3(1.00, 0.50, 0.18) * nd4 * 0.30           // warm amber accent
-        ) * innerSSS * breathe;
-
-        /* ── I. Outer shimmer ─ cool cobalt blue (no warm bleed) */
-        float sh  = sin(v * TAU * 10.0 + uTime * 1.4) * 0.5 + 0.5;
-              sh *= sin(v * TAU *  6.5 - uTime * 0.8) * 0.5 + 0.5;
-              sh  = pow(sh, 4.5);
-        /* Kill shimmer on outer zone — outer face must be dark/matte */
-        vec3  shimmer = vec3(0.10, 0.22, 1.0) * sh * d * 0.18 * (1.0 - d * 0.85);
-
-        /* ── J. outerDark — crushes soft light on outer cobalt.
-           coat + rim bypass (now zone-selective).
-           specSquash^3 kills sheen/mid extra hard on outer zone.  */
-        float outerDark  = 1.0 - pow(d, 0.45) * 0.96;
-        float specSquash = outerDark * outerDark * outerDark;
-        /* rim partially darkened on outer zone */
-        float rimDark    = mix(outerDark, 1.0, 0.40);
-        /* cobaltBoost: small additive push to make outer cobalt vivid/saturated */
-        float cobaltZone = smoothstep(0.40, 0.55, d);
-        vec3  cobaltBoost = vec3(0.00, 0.01, 0.04) * cobaltZone * (1.0 - warmZone);
-        /* coat also crushed on outer zone — prevents bright purple highlights on dark cobalt face */
-        col = amb + diff * outerDark + (sheen + mid + coat) * specSquash + rim * rimDark + sss + shimmer + cobaltBoost;
-
-        /* ── K. Back-face dimming + alpha glass ──────────────────
-           Back faces are visible through the transparent inner glass.
-           Dim their colour to 30% so they don't wash the front face. */
-        if (!gl_FrontFacing) col *= 0.30;
-
-        float faceBoost = gl_FrontFacing ? 1.0 : 0.50;
-        /* Glass alpha: only the very inner rim (d < 0.14) is glassy transparent.
-           Warm zone (d=0.14–0.44) = vivid opaque orange/coral.
-           Cobalt zone (d=0.44+)   = fully opaque.
-           This matches the reference: solid ring body, glassy amber inner circle. */
-        float glassRim = smoothstep(0.0, 0.14, d);
-        float alpha    = mix(0.07, 1.0, pow(glassRim, 0.55)) * faceBoost;
-        float specLum  = dot(coat, vec3(0.2126, 0.7152, 0.0722));
-        alpha = min(1.0, alpha + specLum * 0.08);
-
-        /* ── L. ACES tone map + gamma ─────────────────────────── */
-        /* Inner zone gets boosted exposure; outer cobalt stays dark/matte */
-        float outerExp = mix(1.18, 0.54, smoothstep(0.38, 0.65, d));
-        col = aces(col * outerExp);
-        col = pow(col, vec3(1.0 / 2.2));
-
-        gl_FragColor = vec4(col, alpha);
-      }
-    `,
+        cs: `rgb(${cr},${cg},${cb})`,
+        par,
+      });
+    }
   });
 
-  /* ══════════════════════════════════════════════════════════════
-     EYE COMPOSITION
-     The torus IS the iris.  Around it: a glowing sclera (eye white)
-     fading into the dark background.  A deep pupil disc sits in the
-     transparent inner hole.  The whole group tilts + rocks together.
-
-     Torus proportions: R=1.20, r=0.64 → outer radius 1.84, hole 0.56
-     Sclera radius 3.0 → iris/sclera ratio ≈ 0.61 (realistic eye)
-  ══════════════════════════════════════════════════════════════ */
-  const isMobile = window.innerWidth < 760;
-  const seg = isMobile ? 256 : 512, rseg = isMobile ? 128 : 256;
-
-  /* ── Sclera material (eye white, fades into background) ─────── */
-  const scleraMat = new THREE.ShaderMaterial({
-    transparent: true,
-    depthWrite: false,
-    uniforms: { uTime: { value: 0 } },
-    vertexShader: `
-      varying vec2 vPos;
-      void main() {
-        vPos = position.xy / 5.5;   /* normalise to unit radius */
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }
-    `,
-    fragmentShader: `
-      precision highp float;
-      uniform float uTime;
-      varying vec2 vPos;
-
-      void main() {
-        float r = length(vPos);
-
-        /* ── Zones ─────────────────────────────────────────────
-           Sclera R = 5.5.  Iris outer edge ≈ 0.334 (1.84/5.5).
-
-           scleraFill: bright-ish filled disc from iris to outer border.
-           borderRing: DARK ring at a fixed radius — this is the eye's
-                       circular outline that makes the shape readable.
-           outerFade:  subtle dark glow beyond the border, dissolves.
-           innerGlow:  ambient behind the iris.                        */
-        float scleraFill = smoothstep(0.32, 0.38, r) * (1.0 - smoothstep(0.54, 0.63, r));
-        float borderRing = smoothstep(0.60, 0.64, r) * (1.0 - smoothstep(0.66, 0.74, r));
-        float outerFade  = smoothstep(0.68, 0.74, r) * pow(1.0 - smoothstep(0.72, 1.01, r), 2.2);
-        float innerGlow  = (1.0 - smoothstep(0.0, 0.34, r)) * 0.38;
-        float limbusWarm = smoothstep(0.38, 0.30, r) * smoothstep(0.20, 0.30, r);
-
-        if (scleraFill < 0.001 && borderRing < 0.001 && outerFade < 0.001 && innerGlow < 0.001) discard;
-
-        /* ── Colours ─────────────────────────────────────────────
-           cSclera: very subtle dark blue-navy — barely above bg, like
-                    a deep shadow rather than a bright fill. The dark
-                    borderRing is what defines the eye shape visually.  */
-        /* Sclera fill: nearly indistinguishable from bg — just a
-           whisper darker/bluer so it doesn't pop.  The borderRing
-           does all the shape-defining work.                          */
-        vec3 cSclera = vec3(0.03, 0.05, 0.16);   /* near-bg dark blue */
-        vec3 cBorder = vec3(0.01, 0.015, 0.055); /* near-black border */
-        vec3 cOuter  = vec3(0.02, 0.04, 0.12);   /* dark outer glow   */
-        vec3 cInner  = vec3(0.02, 0.04, 0.16);   /* cobalt behind iris*/
-        vec3 cBg     = vec3(0.02, 0.032, 0.104); /* match scene bg    */
-
-        vec3 col = mix(cBg,  cInner,  innerGlow);
-        col      = mix(col,  cSclera, scleraFill);
-        col      = mix(col,  cBorder, borderRing);
-        col      = mix(col,  cOuter,  outerFade);
-        col      = mix(col,  cBg,     pow(r, 3.5) * 0.90);
-
-        /* Warm orange limbus bleed */
-        col += vec3(0.18, 0.04, 0.01) * limbusWarm * 0.40;
-
-        /* Breathing pulse */
-        float pulse = 0.97 + 0.03 * sin(uTime * 0.5);
-
-        float alpha = max(scleraFill * 0.55,
-                      max(borderRing * 0.88,
-                      max(outerFade  * 0.35,
-                          innerGlow  * 0.32))) * pulse;
-
-        gl_FragColor = vec4(col, alpha);
-      }
-    `,
-  });
-
-  /* ── Pupil material (deep dark disc in the center hole) ──────── */
-  const pupilMat = new THREE.ShaderMaterial({
-    transparent: true,
-    depthWrite: false,
-    uniforms: { uTime: { value: 0 } },
-    vertexShader: `
-      varying vec2 vPos;
-      void main() {
-        vPos = position.xy / 0.42;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }
-    `,
-    fragmentShader: `
-      precision highp float;
-      uniform float uTime;
-      varying vec2 vPos;
-
-      void main() {
-        float r = length(vPos);
-        float alpha = (1.0 - smoothstep(0.78, 1.0, r)) * 0.96;
-        if (alpha < 0.01) discard;
-
-        /* Near-black depth with a subtle inner glow */
-        vec3 col = vec3(0.004, 0.007, 0.022);
-        float depth = 1.0 - smoothstep(0.0, 0.70, r);
-        col += vec3(0.018, 0.032, 0.11) * depth;
-
-        /* Primary catchlight */
-        float c1 = smoothstep(0.10, 0.0, length(vPos - vec2(0.33, 0.38)));
-        col = min(vec3(1.0), col + vec3(0.50, 0.55, 0.72) * c1 * 0.80);
-        /* Tiny secondary catchlight */
-        float c2 = smoothstep(0.05, 0.0, length(vPos - vec2(-0.22, -0.28)));
-        col = min(vec3(1.0), col + vec3(0.20, 0.25, 0.50) * c2 * 0.40);
-
-        gl_FragColor = vec4(col, alpha);
-      }
-    `,
-  });
-
-  /* ── Geometries ─────────────────────────────────────────────── */
-  const torusGeo  = new THREE.TorusGeometry(1.20, 0.64, seg, rseg);
-  const scleraGeo = new THREE.CircleGeometry(5.5, 128);
-  const pupilGeo  = new THREE.CircleGeometry(0.42, 64);
-
-  /* ── Eye group — everything tilts & rocks together ──────────── */
-  const eyeGroup = new THREE.Group();
-  eyeGroup.rotation.x =  0.62;
-  eyeGroup.rotation.z = -0.22;
-  /* rotation.z = -0.22 shifts visual centre left; compensate with +x.
-     Smaller offset on mobile since the portrait canvas is narrow.      */
-  eyeGroup.position.set(isMobile ? 0.05 : 0.18, 0, 0);
-  scene.add(eyeGroup);
-
-  /* Sclera: behind iris */
-  const sclera = new THREE.Mesh(scleraGeo, scleraMat);
-  sclera.position.z = -0.10;
-  sclera.renderOrder = 0;
-  eyeGroup.add(sclera);
-
-  /* Iris (torus): the main attraction */
-  const torus = new THREE.Mesh(torusGeo, mat);
-  torus.renderOrder = 1;
-  eyeGroup.add(torus);
-
-  /* Pupil: dark disc inside the torus hole, sits slightly forward */
-  const pupil = new THREE.Mesh(pupilGeo, pupilMat);
-  pupil.position.z = 0.06;
-  pupil.renderOrder = 2;
-  eyeGroup.add(pupil);
+  /* Far particles rendered first (behind) */
+  particles.sort((a, b) => b.rNorm - a.rNorm);
 
   /* ── Mouse / touch parallax ── */
   const mouse = { tx: 0, ty: 0, x: 0, y: 0 };
-  const hero = document.getElementById('hero');
-  const onMove = (cx, cy) => {
-    const r = canvas.getBoundingClientRect();
-    mouse.tx = ((cx - r.left) / r.width  - 0.5) *  0.52;
-    mouse.ty = ((cy - r.top)  / r.height - 0.5) * -0.38;
-  };
-  hero.addEventListener('mousemove',  e => onMove(e.clientX, e.clientY));
-  hero.addEventListener('touchmove',  e => onMove(e.touches[0].clientX, e.touches[0].clientY), { passive: true });
-  hero.addEventListener('mouseleave', () => { mouse.tx = 0; mouse.ty = 0; });
-
-  /* ── Resize ── */
-  function resize() {
-    const w = canvas.offsetWidth, h = canvas.offsetHeight;
-    /* false = don't override CSS width/height with inline px values —
-       prevents the canvas fighting its own CSS on repeated resizes.   */
-    renderer.setSize(w, h, false);
-    camera.aspect = w / h;
-    /* Pull camera back on narrow screens so full eye stays in frame */
-    const narrow = Math.min(w, h);
-    camera.position.z = 5.6 * Math.max(1.0, 560 / narrow);
-    /* Recentre eye: rotation.z=-0.22 shifts visual centre left,
-       compensate more on wide screens, less on narrow.               */
-    eyeGroup.position.x = w < 760 ? 0.05 : 0.18;
-    camera.updateProjectionMatrix();
+  const hero  = document.getElementById('hero');
+  if (hero) {
+    const onMove = (ex, ey) => {
+      const rect = canvas.getBoundingClientRect();
+      mouse.tx = (ex - rect.left) / rect.width  - 0.5;
+      mouse.ty = (ey - rect.top)  / rect.height - 0.5;
+    };
+    hero.addEventListener('mousemove',  e => onMove(e.clientX, e.clientY));
+    hero.addEventListener('mouseleave', () => { mouse.tx = 0; mouse.ty = 0; });
+    hero.addEventListener('touchmove',
+      e => onMove(e.touches[0].clientX, e.touches[0].clientY),
+      { passive: true }
+    );
   }
-  new ResizeObserver(resize).observe(canvas);
-  resize();
 
-  /* ── Animate ── */
-  const baseL1 = lp1.clone(), baseL2 = lp2.clone(),
-        baseL3 = lp3.clone(), baseL4 = lp4.clone(), baseL5 = lp5.clone();
-  let elapsed = 0, lastTs = 0;
+  /* ── Animation state ── */
+  let gAngle = 0;
+  let t      = 0;
+  let prev   = performance.now();
 
-  function frame(ts) {
-    requestAnimationFrame(frame);
-    const dt = Math.min(ts - lastTs, 50); lastTs = ts;
-    elapsed += dt * 0.001;
+  /* ── Render loop ── */
+  function frame(now) {
+    const dt = Math.min((now - prev) * 0.001, 0.05);
+    prev = now;
+    t    += dt;
 
-    /* Smooth mouse lerp */
-    mouse.x += (mouse.tx - mouse.x) * 0.048;
-    mouse.y += (mouse.ty - mouse.y) * 0.048;
+    /* Ultra-slow collective drift: 0.0018 rad/s → ~58-min full lap.
+       Slight sinusoidal variation (±6 %) prevents mechanical feel.   */
+    gAngle += dt * 0.0018 * (1.0 + 0.06 * Math.sin(t * 0.048));
 
-    /* Eye group: iris + sclera + pupil all rock together */
-    eyeGroup.rotation.x = 0.62 + 0.05 * Math.sin(elapsed * 0.9)  + mouse.y * 0.25;
-    eyeGroup.rotation.y =        0.06 * Math.sin(elapsed * 0.55)  + mouse.x * 0.25;
-    eyeGroup.rotation.z = -0.22 + 0.02 * Math.sin(elapsed * 0.65);
+    mouse.x += (mouse.tx - mouse.x) * 0.034;
+    mouse.y += (mouse.ty - mouse.y) * 0.034;
 
-    /* Gentle camera breathe — adds life without distracting */
-    camera.position.y = 0.10 + 0.013 * Math.sin(elapsed * 0.38);
+    ctx.clearRect(0, 0, W, H);
 
-    /* Slowly orbit all 5 lights */
-    lp1.set(
-      baseL1.x + Math.sin(elapsed * 0.27) * 1.2,
-      baseL1.y + Math.cos(elapsed * 0.21) * 0.9,
-      baseL1.z
-    );
-    lp2.set(
-      baseL2.x + Math.cos(elapsed * 0.23) * 1.1,
-      baseL2.y + Math.sin(elapsed * 0.17) * 1.0,
-      baseL2.z
-    );
-    lp3.set(
-      baseL3.x + Math.sin(elapsed * 0.31) * 0.7,
-      baseL3.y + Math.cos(elapsed * 0.19) * 0.6,
-      baseL3.z
-    );
-    lp4.set(
-      baseL4.x + Math.cos(elapsed * 0.18) * 0.5,
-      baseL4.y + Math.sin(elapsed * 0.24) * 0.4,
-      baseL4.z
-    );
-    lp5.set(
-      baseL5.x + Math.sin(elapsed * 0.35) * 0.8,
-      baseL5.y + Math.cos(elapsed * 0.28) * 0.7,
-      baseL5.z
-    );
+    /* Atmospheric centre glow */
+    ctx.globalAlpha = 1;
+    ctx.fillStyle   = centerGrad;
+    ctx.fillRect(0, 0, W, H);
 
-    mat.uniforms.uTime.value      = elapsed;
-    scleraMat.uniforms.uTime.value = elapsed;
-    pupilMat.uniforms.uTime.value  = elapsed;
-    renderer.render(scene, camera);
+    /* Ambient field luminosity — fills particle density zone with soft haze.
+       This prevents individual particles from reading as isolated stars by
+       providing a continuous luminous ground for the field.               */
+    ctx.fillStyle = ambGrad;
+    ctx.fillRect(0, 0, W, H);
+
+    /* ── Particle pass — two-batch shadow optimisation ────────────────
+       Far-field (no glow): drawn first, no shadow state.
+       Near+mid (glow):     drawn second with a single shadowBlur state
+                            set ONCE before the batch — no per-particle cost.
+       This eliminates the "crisp star in space" look without expensive
+       per-particle gradient draw calls.                                    */
+
+    /* Helper: compute position + opacity for a particle */
+    const particlePos = (p) => {
+      const a  = p.angle + gAngle * p.driftMult;
+      const rn = p.rNorm + p.rBreath * Math.sin(t * p.rBreathF + p.rBreathP);
+      const rPx = rn * Rs;
+      const mx = mouse.x * p.par * W * 0.09;
+      const my = mouse.y * p.par * H * 0.06;
+      return [
+        cx + Math.cos(a) * rPx * RX + mx,
+        cy + Math.sin(a) * rPx * RY * p.tiltY + my,
+        Math.max(0, Math.min(1, p.baseOp + Math.sin(t * p.opFreq + p.opPhase) * p.opAmp)),
+      ];
+    };
+
+    /* Advance all particle angles first */
+    for (const p of particles) p.angle += p.indOmega * dt;
+
+    /* Pass 1 — far field, no glow */
+    ctx.shadowBlur = 0;
+    for (const p of particles) {
+      if (p.useGlow) continue;
+      const [x, y, op] = particlePos(p);
+      ctx.globalAlpha = op;
+      ctx.fillStyle   = p.cs;
+      ctx.beginPath();
+      ctx.arc(x, y, p.sz, 0, TWO_PI);
+      ctx.fill();
+    }
+
+    /* Pass 2 — near + mid field, soft atmospheric glow */
+    if (!isMobile) {
+      ctx.shadowBlur  = 10.0 * DPR;
+      ctx.shadowColor = 'rgba(105, 145, 255, 0.60)';
+    }
+    for (const p of particles) {
+      if (!p.useGlow) continue;
+      const [x, y, op] = particlePos(p);
+      ctx.globalAlpha = op;
+      ctx.fillStyle   = p.cs;
+      ctx.beginPath();
+      ctx.arc(x, y, p.sz, 0, TWO_PI);
+      ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+
+    /* Edge vignette */
+    ctx.globalAlpha = 1;
+    ctx.fillStyle   = vigGrad;
+    ctx.fillRect(0, 0, W, H);
+
+    raf = requestAnimationFrame(frame);
   }
-  requestAnimationFrame(frame);
+
+  raf = requestAnimationFrame(frame);
+
+  new ResizeObserver(() => resize()).observe(canvas);
 }
 
 
