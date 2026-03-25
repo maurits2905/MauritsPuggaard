@@ -745,59 +745,50 @@ function initShowcase() {
     return arr;
   }
 
-  /* SAP logo silhouette — QUADRILATERAL (4 vertices), not a pentagon.
-     The real SAP logo shape:
-       • Full vertical left side
-       • Horizontal top going from left edge to roughly the centre
-       • One long diagonal from that centre-top point all the way to the
-         bottom-right corner — this IS the entire right boundary, no separate
-         vertical right edge exists
-       • Full horizontal bottom
-     This creates a large white triangle in the upper-right (≈ 25 % of area).
-     40 % of particles on the diagonal slash so it reads as a crisp edge. */
+  /* SAP logo — renders the actual "SAP" wordmark onto an offscreen canvas
+     and samples the filled pixels as particle targets.  This is literally
+     the SAP logo text, so it cannot be wrong.                              */
   function genSAP(W, H, n) {
     const cx = W * 0.5, cy = H * 0.5;
-    const sw = Math.min(W * 0.270, H * 0.310);  // half-width
-    const sh = sw * 0.68;                         // half-height — landscape ~1.47:1
 
-    /* 4 vertices (clockwise): TL → Tcut → BR → BL */
-    const TL   = [cx - sw, cy - sh];   // top-left corner
-    const Tcut = [cx,      cy - sh];   // centre of top edge — diagonal START
-    const BR   = [cx + sw, cy + sh];   // bottom-right corner — diagonal END
-    const BL   = [cx - sw, cy + sh];   // bottom-left corner
+    /* offscreen canvas sized to ~60 % of the showcase area */
+    const offW = Math.round(Math.min(W * 0.62, H * 1.6));
+    const offH = Math.round(offW * 0.38);   // ~2.6:1 aspect — matches SAP wordmark
 
-    const diagN = Math.round(n * 0.40);  // 40 % on the long slash
-    const fillN = n - diagN;
-    const out   = [];
+    const off  = document.createElement('canvas');
+    off.width  = offW;
+    off.height = offH;
+    const oc   = off.getContext('2d');
 
-    /* Dense diagonal edge: Tcut → BR */
-    for (let i = 0; i < diagN; i++) {
-      const t = Math.random();
-      out.push(
-        Tcut[0] + (BR[0] - Tcut[0]) * t + (Math.random() - 0.5) * 1.8,
-        Tcut[1] + (BR[1] - Tcut[1]) * t + (Math.random() - 0.5) * 1.8
-      );
+    const fs = Math.round(offH * 0.82);
+    oc.font         = `900 ${fs}px Arial Black, Arial, sans-serif`;
+    oc.textBaseline = 'middle';
+    oc.textAlign    = 'center';
+    oc.fillStyle    = '#ffffff';
+    oc.fillText('SAP', offW * 0.5, offH * 0.5);
+
+    /* collect lit pixels — subsample for performance */
+    const imgd = oc.getImageData(0, 0, offW, offH).data;
+    const pool = [];
+    const step = 2;   // check every 2nd pixel — still plenty of density
+    for (let y = 0; y < offH; y += step) {
+      for (let x = 0; x < offW; x += step) {
+        if (imgd[(y * offW + x) * 4 + 3] > 64) pool.push([x, y]);
+      }
     }
 
-    /* Fill body: split quadrilateral into 2 triangles
-       Tri-1: TL, Tcut, BR  (upper-right body triangle)
-       Tri-2: TL, BR,   BL  (lower rectangle triangle) */
-    const tris = [[TL, Tcut, BR], [TL, BR, BL]];
-    const triArea = ([a,b,c]) =>
-      Math.abs((b[0]-a[0])*(c[1]-a[1]) - (c[0]-a[0])*(b[1]-a[1])) * 0.5;
-    const areas = tris.map(triArea);
-    const total = areas.reduce((s,a) => s + a, 0);
-    let rem = fillN;
-    tris.forEach(([A,B,C], idx) => {
-      const cnt = idx < 1 ? Math.round(fillN * areas[idx] / total) : rem;
-      rem -= cnt;
-      for (let k = 0; k < cnt; k++) {
-        let r1 = Math.random(), r2 = Math.random();
-        if (r1 + r2 > 1) { r1 = 1 - r1; r2 = 1 - r2; }
-        const r3 = 1 - r1 - r2;
-        out.push(A[0]*r1 + B[0]*r2 + C[0]*r3, A[1]*r1 + B[1]*r2 + C[1]*r3);
-      }
-    });
+    /* offset so the text is centred on the canvas */
+    const ox = cx - offW * 0.5;
+    const oy = cy - offH * 0.5;
+
+    const out = [];
+    for (let i = 0; i < n; i++) {
+      const p = pool[Math.floor(Math.random() * pool.length)];
+      out.push(
+        ox + p[0] + (Math.random() - 0.5) * 1.6,
+        oy + p[1] + (Math.random() - 0.5) * 1.6
+      );
+    }
 
     const arr = new Float32Array(n * 2);
     arr.set(out.slice(0, n * 2));
