@@ -720,22 +720,24 @@ function initShowcase() {
      Shapes match the reference icons (layers / SAP logo / circles)
   ══════════════════════════════════════════════════════════════════ */
 
-  /* Professional: 3 stacked horizontal bars (layers icon) */
+  /* Professional: 3 compact elliptical bars (stacked layers icon — rounded, dense) */
   function genProfessional(W, H, n) {
-    const barW   = W * 0.50;
-    const barH   = H * 0.090;
-    const gap    = H * 0.060;
-    const totalH = 3 * barH + 2 * gap;
-    const cy0    = (H - totalH) * 0.5 + barH * 0.5;
-    const cx     = W * 0.5;
+    const cx  = W * 0.5, cy = H * 0.5;
+    const bw  = W * 0.23;   // semi-major axis (half-width of each ellipse)
+    const bh  = H * 0.058;  // semi-minor axis (half-height)
+    const gap = H * 0.058;  // gap between bars
+    const totalH = 3 * bh * 2 + 2 * gap;
+    const cy0    = cy - totalH * 0.5 + bh;
     const perBar = Math.floor(n / 3);
     const out    = [];
     for (let b = 0; b < 3; b++) {
-      const cy  = cy0 + b * (barH + gap);
+      const cyb = cy0 + b * (bh * 2 + gap);
       const cnt = b < 2 ? perBar : n - 2 * perBar;
       for (let i = 0; i < cnt; i++) {
-        out.push(cx + (Math.random() - 0.5) * barW,
-                 cy + (Math.random() - 0.5) * barH);
+        /* Uniform fill of ellipse via polar with sqrt for area distribution */
+        const r = Math.sqrt(Math.random());
+        const a = Math.random() * TWO_PI;
+        out.push(cx + bw * r * Math.cos(a), cyb + bh * r * Math.sin(a));
       }
     }
     const arr = new Float32Array(n * 2);
@@ -743,94 +745,87 @@ function initShowcase() {
     return arr;
   }
 
-  /* SAP: right-triangle shape (approximation of SAP logo flag) */
+  /* SAP: matches the SAP logo silhouette — large square body with a prominent
+     diagonal notch cut from the upper-right corner.
+     Diagonal edge gets the heaviest particle density so it reads clearly. */
   function genSAP(W, H, n) {
-    const cx   = W * 0.5, cy = H * 0.5;
-    const size = Math.min(W * 0.44, H * 0.52) * 0.5;
-    /* Triangle vertices: top-left, top-right, bottom-right (SAP flag orientation) */
-    const A = [cx - size,       cy - size * 0.85];
-    const B = [cx + size,       cy - size * 0.85];
-    const C = [cx + size,       cy + size * 0.85];
-    const out = [];
+    const cx = W * 0.5, cy = H * 0.5;
+    const s  = Math.min(W * 0.40, H * 0.46) * 0.5;
+    /* Pentagon vertices — notch covers ~40% of each side for a clear diagonal:
+       TL → Tcut → Rcut → BR → BL                                             */
+    const P = [
+      [cx - s,        cy - s       ],   // TL
+      [cx + s * 0.18, cy - s       ],   // Tcut  (top edge, 60% across)
+      [cx + s,        cy - s * 0.18],   // Rcut  (right edge, 60% down)
+      [cx + s,        cy + s       ],   // BR
+      [cx - s,        cy + s       ],   // BL
+    ];
 
-    /* Dense edges: hypotenuse A→C is the signature diagonal */
-    const edgeN = Math.round(n * 0.50);
-    const nAC   = Math.round(edgeN * 0.48); // diagonal — most prominent
-    const nAB   = Math.round(edgeN * 0.26); // top horizontal
-    const nBC   = edgeN - nAC - nAB;        // right vertical
-    const addEdge = (x0, y0, x1, y1, cnt) => {
-      for (let i = 0; i < cnt; i++) {
-        const t = Math.random();
-        out.push(x0 + (x1 - x0) * t + (Math.random() - 0.5) * 2.5,
-                 y0 + (y1 - y0) * t + (Math.random() - 0.5) * 2.5);
-      }
-    };
-    addEdge(A[0], A[1], C[0], C[1], nAC);
-    addEdge(A[0], A[1], B[0], B[1], nAB);
-    addEdge(B[0], B[1], C[0], C[1], nBC);
+    /* Allocate: 35% diagonal edge  +  65% interior fill */
+    const diagN  = Math.round(n * 0.35);
+    const fillN  = n - diagN;
+    const out    = [];
 
-    /* Sparse interior fill */
-    while (out.length < n * 2) {
-      let r1 = Math.random(), r2 = Math.random();
-      if (r1 + r2 > 1) { r1 = 1 - r1; r2 = 1 - r2; }
-      const r3 = 1 - r1 - r2;
-      out.push(A[0] * r1 + B[0] * r2 + C[0] * r3,
-               A[1] * r1 + B[1] * r2 + C[1] * r3);
+    /* ── Diagonal edge (Tcut → Rcut) — very dense, tight scatter ── */
+    for (let i = 0; i < diagN; i++) {
+      const t = Math.random();
+      out.push(
+        P[1][0] + (P[2][0]-P[1][0]) * t + (Math.random()-0.5) * 2,
+        P[1][1] + (P[2][1]-P[1][1]) * t + (Math.random()-0.5) * 2
+      );
     }
 
-    const arr = new Float32Array(n * 2);
-    arr.set(out.slice(0, n * 2));
-    return arr;
-  }
-
-  /* Fullstack: 3 circular node clusters + connecting edges (connected-circles icon) */
-  function genFullstack(W, H, n) {
-    const cx  = W * 0.5, cy = H * 0.5;
-    const R   = Math.min(W * 0.30, H * 0.34);
-    const nr  = R * 0.24; // node blob radius
-    const out = [];
-
-    /* 3 nodes in equilateral triangle */
-    const nodes = Array.from({ length: 3 }, (_, v) => {
-      const a = -Math.PI / 2 + v * TWO_PI / 3;
-      return [cx + Math.cos(a) * R, cy + Math.sin(a) * R];
+    /* ── Pentagon interior fill (fan-triangulate from P[0]) ── */
+    const tris = [
+      [P[0], P[1], P[4]],
+      [P[1], P[2], P[4]],
+      [P[2], P[3], P[4]],
+    ];
+    const triArea = ([a, b, c]) =>
+      Math.abs((b[0]-a[0])*(c[1]-a[1]) - (c[0]-a[0])*(b[1]-a[1])) * 0.5;
+    const areas = tris.map(triArea);
+    const total = areas.reduce((s, a) => s + a, 0);
+    let rem = fillN;
+    tris.forEach(([A, B, C], i) => {
+      const cnt = i < 2 ? Math.round(fillN * areas[i] / total) : rem;
+      rem -= cnt;
+      for (let k = 0; k < cnt; k++) {
+        let r1 = Math.random(), r2 = Math.random();
+        if (r1 + r2 > 1) { r1 = 1-r1; r2 = 1-r2; }
+        const r3 = 1-r1-r2;
+        out.push(A[0]*r1+B[0]*r2+C[0]*r3, A[1]*r1+B[1]*r2+C[1]*r3);
+      }
     });
 
-    /* Node blobs */
-    const nodeN   = Math.round(n * 0.56);
-    const perNode = Math.floor(nodeN / 3);
+    const arr = new Float32Array(n * 2);
+    arr.set(out.slice(0, n * 2));
+    return arr;
+  }
+
+  /* Fullstack: 3 solid filled circles in tight equilateral triangle (connected-circles icon).
+     Each circle is a dense uniform disc — no edge lines, just 3 pure circle fills. */
+  function genFullstack(W, H, n) {
+    const cx = W * 0.5, cy = H * 0.5;
+    const cr   = Math.min(W * 0.115, H * 0.135);  // circle radius
+    const dist = cr * 2.14;                         // center-to-center (nearly touching)
+    /* Equilateral triangle of circle centers, centroid at (cx, cy) */
+    const h3 = dist * Math.sqrt(3) * 0.5;
+    const nodes = [
+      [cx,            cy - h3 * (2 / 3)],   // top
+      [cx - dist*0.5, cy + h3 * (1 / 3)],   // bottom-left
+      [cx + dist*0.5, cy + h3 * (1 / 3)],   // bottom-right
+    ];
+    const out = [];
+    const perNode = Math.floor(n / 3);
     for (let v = 0; v < 3; v++) {
       const [nx, ny] = nodes[v];
-      const cnt = v < 2 ? perNode : nodeN - 2 * perNode;
+      const cnt = v < 2 ? perNode : n - 2 * perNode;
       for (let i = 0; i < cnt; i++) {
-        const r = nr * Math.sqrt(Math.random());
+        const r = cr * Math.sqrt(Math.random());
         const a = Math.random() * TWO_PI;
         out.push(nx + Math.cos(a) * r, ny + Math.sin(a) * r);
       }
     }
-
-    /* Connecting edges between all 3 nodes */
-    const edgeN   = Math.round(n * 0.38);
-    const perEdge = Math.floor(edgeN / 3);
-    for (let e = 0; e < 3; e++) {
-      const [x0, y0] = nodes[e];
-      const [x1, y1] = nodes[(e + 1) % 3];
-      const cnt = e < 2 ? perEdge : edgeN - 2 * perEdge;
-      for (let i = 0; i < cnt; i++) {
-        const t = Math.random();
-        out.push(x0 + (x1 - x0) * t + (Math.random() - 0.5) * 2.5,
-                 y0 + (y1 - y0) * t + (Math.random() - 0.5) * 2.5);
-      }
-    }
-
-    /* Fill to n */
-    while (out.length < n * 2) {
-      const [nx, ny] = nodes[Math.floor(Math.random() * 3)];
-      const r = nr * Math.sqrt(Math.random());
-      const a = Math.random() * TWO_PI;
-      out.push(nx + Math.cos(a) * r, ny + Math.sin(a) * r);
-    }
-
     const arr = new Float32Array(n * 2);
     arr.set(out.slice(0, n * 2));
     return arr;
@@ -887,7 +882,7 @@ function initShowcase() {
 
     /* ── Uniform base appearance — identical for formation and ambient ── */
     pSz[i]  = 0.55 + Math.random() * 0.85;   // 0.55–1.40 px
-    pOp[i]  = 0.13 + Math.random() * 0.22;   // 0.13–0.35 (dim ambient base)
+    pOp[i]  = 0.17 + Math.random() * 0.23;   // 0.17–0.40 (brighter ambient base)
     pDRx[i] = 3.5  + Math.random() * 6.5;    // wide drift fills canvas
     pDRy[i] = 3.5  + Math.random() * 6.5;
     pDFx[i] = 0.08 + Math.random() * 0.18;
@@ -948,7 +943,7 @@ function initShowcase() {
   /* ── Render loop ── */
   /* Condensation radius: within this distance a formation particle brightens/grows,
      making the icon emerge from the field rather than appearing pre-formed. */
-  const CONDENSE_R = Math.min(CW, CH) * 0.13;
+  const CONDENSE_R = Math.min(CW, CH) * 0.09;
 
   let t_a = 0, prev = performance.now(), raf;
 
@@ -990,8 +985,8 @@ function initShowcase() {
         const dist = Math.sqrt(dx * dx + dy * dy);
         const t    = 1 - Math.min(dist / CONDENSE_R, 1);
         const s    = t * t * (3 - 2 * t);   // smoothstep
-        drawSz += s * 1.35;
-        drawOp  = Math.min(pOp[i] + s * 0.58, 1);
+        drawSz += s * 1.10;
+        drawOp  = Math.min(pOp[i] + s * 0.50, 1);
       }
 
       ctx.globalAlpha = drawOp;
