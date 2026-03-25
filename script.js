@@ -702,9 +702,8 @@ function initShowcase() {
   resize();
 
   const isMob  = CW < 680;
-  const N_TOT  = isMob ? 1000 : 2000;
-  const N_FORM = isMob ?  360 :  720;   // formation particles (0 … N_FORM-1)
-  /* ambient particles: N_FORM … N_TOT-1 — spread across full canvas */
+  const N_TOT  = isMob ? 1200 : 2400;
+  const N_FORM = isMob ?  960 : 1920;  // 80 % form the icon
 
   /* ── State metadata ── */
   const STATES = [
@@ -717,87 +716,78 @@ function initShowcase() {
   ];
 
   /* ══════════════════════════════════════════════════════════════════
-     Shape generators — return Float32Array[N_FORM * 2]
-     Each generator fills exactly n target positions [x0,y0, x1,y1 …]
+     Shape generators — return Float32Array[n * 2]
+     Shapes match the reference icons (layers / SAP logo / circles)
   ══════════════════════════════════════════════════════════════════ */
 
-  /* Professional: 5 equal-width horizontal bars (stacked-layers icon) */
+  /* Professional: 3 compact elliptical bars matching the stacked-layers icon.
+     Dense uniform disc fill — readable from density alone, no brightness boost needed. */
   function genProfessional(W, H, n) {
-    const barW  = W * 0.60;
-    const barH  = H * 0.055;
-    const gap   = H * 0.050;
-    const totalH = 5 * barH + 4 * gap;
-    const startY = (H - totalH) * 0.5;
-    const cx = W * 0.5;
-    const out = [];
-    const perBar = Math.floor(n / 5);
-    for (let b = 0; b < 5; b++) {
-      const cy  = startY + b * (barH + gap) + barH * 0.5;
-      const cnt = b < 4 ? perBar : n - 4 * perBar;
+    const cx  = W * 0.5, cy = H * 0.5;
+    const bw  = W * 0.240;  // semi-major (half-width)   ← ~23 % wider
+    const bh  = H * 0.064;  // semi-minor (half-height)  ← ~23 % taller
+    const gap = H * 0.058;  // gap between bar centres   ← scaled up
+    const totalH = 3 * bh * 2 + 2 * gap;
+    const cy0    = cy - totalH * 0.5 + bh;
+    const perBar = Math.floor(n / 3);
+    const out    = [];
+    for (let b = 0; b < 3; b++) {
+      const cyb = cy0 + b * (bh * 2 + gap);
+      const cnt = b < 2 ? perBar : n - 2 * perBar;
       for (let i = 0; i < cnt; i++) {
-        out.push(cx + (Math.random() - 0.5) * barW,
-                 cy + (Math.random() - 0.5) * barH);
+        const r = Math.sqrt(Math.random());
+        const a = Math.random() * TWO_PI;
+        out.push(cx + bw * r * Math.cos(a), cyb + bh * r * Math.sin(a));
       }
     }
-    while (out.length < n * 2)
-      out.push(cx + (Math.random() - 0.5) * barW * 0.5,
-               H * 0.5 + (Math.random() - 0.5) * barH);
     const arr = new Float32Array(n * 2);
     arr.set(out.slice(0, n * 2));
     return arr;
   }
 
-  /* SAP: equilateral triangle — vertex nodes + edges + center hub + spokes */
+  /* SAP logo — renders the actual "SAP" wordmark onto an offscreen canvas
+     and samples the filled pixels as particle targets.  This is literally
+     the SAP logo text, so it cannot be wrong.                              */
   function genSAP(W, H, n) {
     const cx = W * 0.5, cy = H * 0.5;
-    const R  = Math.min(W * 0.36, H * 0.40);
+
+    /* offscreen canvas sized to ~60 % of the showcase area */
+    const offW = Math.round(Math.min(W * 0.62, H * 1.6));
+    const offH = Math.round(offW * 0.38);   // ~2.6:1 aspect — matches SAP wordmark
+
+    const off  = document.createElement('canvas');
+    off.width  = offW;
+    off.height = offH;
+    const oc   = off.getContext('2d');
+
+    const fs = Math.round(offH * 0.82);
+    oc.font         = `900 ${fs}px Arial Black, Arial, sans-serif`;
+    oc.textBaseline = 'middle';
+    oc.textAlign    = 'center';
+    oc.fillStyle    = '#ffffff';
+    oc.fillText('SAP', offW * 0.5, offH * 0.5);
+
+    /* collect lit pixels — subsample for performance */
+    const imgd = oc.getImageData(0, 0, offW, offH).data;
+    const pool = [];
+    const step = 2;   // check every 2nd pixel — still plenty of density
+    for (let y = 0; y < offH; y += step) {
+      for (let x = 0; x < offW; x += step) {
+        if (imgd[(y * offW + x) * 4 + 3] > 64) pool.push([x, y]);
+      }
+    }
+
+    /* offset so the text is centred on the canvas */
+    const ox = cx - offW * 0.5;
+    const oy = cy - offH * 0.5;
+
     const out = [];
-    const verts = Array.from({ length: 3 }, (_, v) => {
-      const a = -Math.PI / 2 + v * TWO_PI / 3;
-      return [cx + Math.cos(a) * R, cy + Math.sin(a) * R];
-    });
-
-    /* Edges */
-    const edgeN   = Math.round(n * 0.44);
-    const perEdge = Math.floor(edgeN / 3);
-    for (let e = 0; e < 3; e++) {
-      const [x0, y0] = verts[e];
-      const [x1, y1] = verts[(e + 1) % 3];
-      const cnt = e < 2 ? perEdge : edgeN - 2 * perEdge;
-      for (let i = 0; i < cnt; i++) {
-        const t = Math.random();
-        out.push(x0 + (x1 - x0) * t + (Math.random() - 0.5) * 3,
-                 y0 + (y1 - y0) * t + (Math.random() - 0.5) * 3);
-      }
-    }
-
-    /* Vertex node blobs */
-    const nodeN   = Math.round(n * 0.34);
-    const perNode = Math.floor(nodeN / 3);
-    for (let v = 0; v < 3; v++) {
-      const [vx, vy] = verts[v];
-      const nr = R * 0.09;
-      const cnt = v < 2 ? perNode : nodeN - 2 * perNode;
-      for (let i = 0; i < cnt; i++) {
-        const r = nr * Math.sqrt(Math.random());
-        const a = Math.random() * TWO_PI;
-        out.push(vx + Math.cos(a) * r, vy + Math.sin(a) * r);
-      }
-    }
-
-    /* Center hub */
-    const hubN = Math.round(n * 0.10);
-    for (let i = 0; i < hubN; i++) {
-      const r = R * 0.05 * Math.sqrt(Math.random());
-      const a = Math.random() * TWO_PI;
-      out.push(cx + Math.cos(a) * r, cy + Math.sin(a) * r);
-    }
-
-    /* Spokes to reach n */
-    while (out.length < n * 2) {
-      const [vx, vy] = verts[Math.floor(Math.random() * 3)];
-      const t = Math.random();
-      out.push(cx + (vx - cx) * t, cy + (vy - cy) * t);
+    for (let i = 0; i < n; i++) {
+      const p = pool[Math.floor(Math.random() * pool.length)];
+      out.push(
+        ox + p[0] + (Math.random() - 0.5) * 1.6,
+        oy + p[1] + (Math.random() - 0.5) * 1.6
+      );
     }
 
     const arr = new Float32Array(n * 2);
@@ -805,144 +795,150 @@ function initShowcase() {
     return arr;
   }
 
-  /* Fullstack: hexagonal wheel — center hub + 6 outer nodes + arcs + spokes */
+  /* Fullstack: 3 overlapping solid circles matching the connected-nodes reference icon.
+     Circles are slightly overlapping (dist = 1.75 × radius) for a tight cluster feel. */
   function genFullstack(W, H, n) {
     const cx = W * 0.5, cy = H * 0.5;
-    const R  = Math.min(W * 0.38, H * 0.42);
-    const out = [];
-    const outerV = Array.from({ length: 6 }, (_, v) => {
-      const a = -Math.PI / 2 + v * TWO_PI / 6;
-      return [cx + Math.cos(a) * R, cy + Math.sin(a) * R];
-    });
-
-    /* Outer ring arcs */
-    const arcN   = Math.round(n * 0.38);
-    const perArc = Math.floor(arcN / 6);
-    for (let e = 0; e < 6; e++) {
-      const [x0, y0] = outerV[e];
-      const [x1, y1] = outerV[(e + 1) % 6];
-      const cnt = e < 5 ? perArc : arcN - 5 * perArc;
+    const cr   = Math.min(W * 0.135, H * 0.155);  // circle radius — ~23 % larger
+    const dist = cr * 2.50;                         // centres — clear gap between circles
+    const h3   = dist * Math.sqrt(3) * 0.5;
+    const nodes = [
+      [cx,            cy - h3 * (2 / 3)],   // top
+      [cx - dist*0.5, cy + h3 * (1 / 3)],   // bottom-left
+      [cx + dist*0.5, cy + h3 * (1 / 3)],   // bottom-right
+    ];
+    const out    = [];
+    const perNode = Math.floor(n / 3);
+    for (let v = 0; v < 3; v++) {
+      const [nx, ny] = nodes[v];
+      const cnt = v < 2 ? perNode : n - 2 * perNode;
       for (let i = 0; i < cnt; i++) {
-        const t = Math.random();
-        out.push(x0 + (x1 - x0) * t + (Math.random() - 0.5) * 3,
-                 y0 + (y1 - y0) * t + (Math.random() - 0.5) * 3);
-      }
-    }
-
-    /* Outer node blobs */
-    const outerN  = Math.round(n * 0.27);
-    const perNode = Math.floor(outerN / 6);
-    for (let v = 0; v < 6; v++) {
-      const [ox, oy] = outerV[v];
-      const nr = R * 0.07;
-      const cnt = v < 5 ? perNode : outerN - 5 * perNode;
-      for (let i = 0; i < cnt; i++) {
-        const r = nr * Math.sqrt(Math.random());
+        const r = cr * Math.sqrt(Math.random());
         const a = Math.random() * TWO_PI;
-        out.push(ox + Math.cos(a) * r, oy + Math.sin(a) * r);
+        out.push(nx + Math.cos(a) * r, ny + Math.sin(a) * r);
       }
     }
-
-    /* Center hub */
-    const hubN = Math.round(n * 0.10);
-    for (let i = 0; i < hubN; i++) {
-      const r = R * 0.08 * Math.sqrt(Math.random());
-      const a = Math.random() * TWO_PI;
-      out.push(cx + Math.cos(a) * r, cy + Math.sin(a) * r);
-    }
-
-    /* Spokes to reach n */
-    while (out.length < n * 2) {
-      const [ox, oy] = outerV[Math.floor(Math.random() * 6)];
-      const t = Math.random();
-      out.push(cx + (ox - cx) * t, cy + (oy - cy) * t);
-    }
-
     const arr = new Float32Array(n * 2);
     arr.set(out.slice(0, n * 2));
     return arr;
   }
 
-  /* ── Build formation targets ── */
   function buildTargets() {
     return [
-      genProfessional(CW, CH, N_FORM),
-      genSAP(CW, CH, N_FORM),
       genFullstack(CW, CH, N_FORM),
+      genSAP(CW, CH, N_FORM),
+      genProfessional(CW, CH, N_FORM),
     ];
   }
   let allTargets = buildTargets();
-  let currentIdx = 0;
+  let currentIdx  = 0;
+  /* Magnetic pull radius — only particles within this distance of their
+     assigned target point feel the pull. Particles outside drift freely. */
+  const PULL_R = 420;
 
-  /* ── Particle pools ── */
-  const N_AMB  = N_TOT - N_FORM;
+  /* ══════════════════════════════════════════════════════════════════
+     ONE unified particle pool — no separate formation / ambient arrays.
+     All particles share the same base visual properties. Formation
+     particles (0…N_FORM-1) are pulled toward shape targets; the rest
+     drift freely. Brightness/size increases only as a particle nears
+     its target (condensation), so the icon literally emerges from the
+     ambient field rather than appearing as a separate blob.
+  ══════════════════════════════════════════════════════════════════ */
   const px   = new Float32Array(N_TOT);
   const py   = new Float32Array(N_TOT);
-  const ftx  = new Float32Array(N_FORM);   // formation targets
+  const ftx  = new Float32Array(N_FORM);  // shape targets (formation only)
   const fty  = new Float32Array(N_FORM);
-  const hx   = new Float32Array(N_AMB);    // ambient home positions
-  const hy   = new Float32Array(N_AMB);
+  const hx   = new Float32Array(N_TOT);   // home / ambient anchor (all)
+  const hy   = new Float32Array(N_TOT);
 
+  /* Per-particle constants */
   const pSz  = new Float32Array(N_TOT);
   const pOp  = new Float32Array(N_TOT);
-  const pDRx = new Float32Array(N_TOT);    // drift amplitude x
-  const pDRy = new Float32Array(N_TOT);    // drift amplitude y
-  const pDFx = new Float32Array(N_TOT);    // drift frequency x
-  const pDFy = new Float32Array(N_TOT);    // drift frequency y
-  const pDPx = new Float32Array(N_TOT);    // drift phase x
-  const pDPy = new Float32Array(N_TOT);    // drift phase y
-  const pLr  = new Float32Array(N_TOT);    // per-particle lerp rate
-  const pCS  = [];                          // color strings
+  const pDRx = new Float32Array(N_TOT);
+  const pDRy = new Float32Array(N_TOT);
+  const pDFx = new Float32Array(N_TOT);
+  const pDFy = new Float32Array(N_TOT);
+  const pDPx = new Float32Array(N_TOT);
+  const pDPy = new Float32Array(N_TOT);
+  const pLr    = new Float32Array(N_TOT);
+  const pBoost = new Float32Array(N_FORM);  // smoothed condensation boost 0–1
+  const pCS  = [];
 
   const initT = allTargets[0];
   for (let i = 0; i < N_TOT; i++) {
     const isForm = i < N_FORM;
 
-    px[i] = Math.random() * CW;
-    py[i] = Math.random() * CH;
+    /* Formation particles home near the icon centre so they continuously
+       wander in and out of the magnetic pull zone.
+       Ambient particles are spread across the full section. */
+    if (isForm) {
+      /* Homes concentrated in the central 65% so particles regularly sweep
+         through the magnetic pull zone around the icon. */
+      hx[i] = CW * 0.5 + (Math.random() - 0.5) * CW * 0.80;
+      hy[i] = CH * 0.5 + (Math.random() - 0.5) * CH * 0.65;
+    } else {
+      hx[i] = Math.random() * CW;
+      hy[i] = Math.random() * CH;
+    }
+    px[i] = hx[i];
+    py[i] = hy[i];
 
     if (isForm) {
       ftx[i] = initT[i * 2];
       fty[i] = initT[i * 2 + 1];
-      pSz[i]  = 0.90 + Math.random() * 1.60;
-      pOp[i]  = 0.50 + Math.random() * 0.50;
-      pDRx[i] = 0.40 + Math.random() * 1.20;
-      pDRy[i] = 0.40 + Math.random() * 1.20;
-      pDFx[i] = 0.15 + Math.random() * 0.40;
-      pDFy[i] = 0.15 + Math.random() * 0.40;
-      pLr[i]  = 0.030 + Math.random() * 0.014;
-    } else {
-      const ai = i - N_FORM;
-      hx[ai]  = Math.random() * CW;
-      hy[ai]  = Math.random() * CH;
-      pSz[i]  = 0.50 + Math.random() * 0.90;
-      pOp[i]  = 0.12 + Math.random() * 0.28;
-      pDRx[i] = 2.00 + Math.random() * 5.00;
-      pDRy[i] = 2.00 + Math.random() * 5.00;
-      pDFx[i] = 0.08 + Math.random() * 0.20;
-      pDFy[i] = 0.08 + Math.random() * 0.20;
-      pLr[i]  = 0.016 + Math.random() * 0.010;
     }
 
+    /* ── Base appearance ── */
+    pSz[i]  = 0.80 + Math.random() * 0.90;   // 0.80–1.70 px
+    pOp[i]  = 0.28 + Math.random() * 0.22;   // 0.28–0.50
+
+    /* Formation particles drift with medium amplitude — large enough to sweep
+       through the pull zone, small enough to settle once captured.
+       Ambient particles move calmly across the full section. */
+    /* Formation particles drift wider so they sweep through the pull zone more
+       frequently → more continuous inward flow.
+       Ambient particles stay calm across the full section. */
+    pDRx[i] = isForm ? 40 + Math.random() * 65 : 20 + Math.random() * 40;
+    pDRy[i] = isForm ? 40 + Math.random() * 65 : 20 + Math.random() * 40;
+    pDFx[i] = isForm
+      ? 0.030 + Math.random() * 0.050  // 0.030–0.080 Hz (13–33 s) — faster orbiting
+      : 0.018 + Math.random() * 0.030; // 0.018–0.048 Hz — calm ambient
+    pDFy[i] = isForm
+      ? 0.030 + Math.random() * 0.050
+      : 0.018 + Math.random() * 0.030;
     pDPx[i] = Math.random() * TWO_PI;
     pDPy[i] = Math.random() * TWO_PI;
 
-    /* Color: blue-white / cobalt / soft-purple */
-    const c = Math.random();
+    /* Formation snaps to magnetic goal; ambient drifts with gentle inertia */
+    pLr[i] = isForm
+      ? 0.055 + Math.random() * 0.025   // 0.055–0.080: snappier pull
+      : 0.015 + Math.random() * 0.012;  // 0.015–0.027: smooth ambient glide
+
+    /* Color palette aligned with site accent colours:
+       --accent: #8899ff (136,153,255)  --accent2: #6b85ff (107,133,255)
+       Four tiers centred on that blue-indigo hue family. */
+    const tier = Math.random();
     let r, g, b;
-    if (c < 0.45) {
-      r = 210 + Math.round((c / 0.45) * 45);
-      g = 220 + Math.round((c / 0.45) * 35);
-      b = 255;
-    } else if (c < 0.78) {
-      const f = (c - 0.45) / 0.33;
-      r = 75  + Math.round(f * 52);
-      g = 105 + Math.round(f * 40);
+    if (tier < 0.34) {
+      /* Core accent — close to #8899ff */
+      r = 122 + Math.round(Math.random() * 48);  // 122–170
+      g = 140 + Math.round(Math.random() * 42);  // 140–182
+      b = 248 + Math.round(Math.random() * 7);   // 248–255
+    } else if (tier < 0.62) {
+      /* Deep accent — close to #6b85ff */
+      r =  85 + Math.round(Math.random() * 42);  // 85–127
+      g = 105 + Math.round(Math.random() * 40);  // 105–145
+      b = 238 + Math.round(Math.random() * 17);  // 238–255
+    } else if (tier < 0.82) {
+      /* Near-white lavender sparkle */
+      r = 190 + Math.round(Math.random() * 55);  // 190–245
+      g = 198 + Math.round(Math.random() * 50);  // 198–248
       b = 255;
     } else {
-      r = 155 + Math.round((c - 0.78) / 0.22 * 55);
-      g = 118;
-      b = 255;
+      /* Deep indigo */
+      r =  48 + Math.round(Math.random() * 42);  // 48–90
+      g =  65 + Math.round(Math.random() * 42);  // 65–107
+      b = 208 + Math.round(Math.random() * 38);  // 208–246
     }
     pCS.push(`rgb(${r},${g},${b})`);
   }
@@ -968,11 +964,19 @@ function initShowcase() {
       btn.setAttribute('aria-pressed', on ? 'true' : 'false');
     });
 
+    /* Move the magnetic targets — particles currently inside PULL_R of the
+       new targets will be drawn in; particles outside just keep drifting. */
     const t = allTargets[idx];
     for (let i = 0; i < N_FORM; i++) { ftx[i] = t[i * 2]; fty[i] = t[i * 2 + 1]; }
   }
 
-  /* ── Render loop (lerp, no spring/velocity) ── */
+  /* ── Render loop ──
+     Magnetic pull model: the active icon shape acts as an invisible magnet.
+     Formation particles (0…N_FORM-1) drift freely across the section at all
+     times. When one drifts within PULL_R of its assigned target point the pull
+     kicks in — bending its path toward the icon. Particles outside PULL_R feel
+     nothing and just drift. This creates a continuous, organic "condensation"
+     as nearby particles are drawn in and settle, while far ones keep wandering. */
   let t_a = 0, prev = performance.now(), raf;
 
   function frame(now) {
@@ -986,28 +990,63 @@ function initShowcase() {
     ctx.scale(DPR, DPR);
 
     for (let i = 0; i < N_TOT; i++) {
-      /* Framerate-independent lerp factor */
       const lf = 1 - Math.pow(1 - pLr[i], dt * 60);
-      let gx, gy;   /* goal position this frame */
+
+      /* Ambient drift goal — the lazy looping path every particle follows */
+      const ambGx = hx[i] + Math.sin(t_a * pDFx[i] + pDPx[i]) * pDRx[i];
+      const ambGy = hy[i] + Math.cos(t_a * pDFy[i] + pDPy[i]) * pDRy[i];
+
+      let gx, gy;
 
       if (i < N_FORM) {
-        /* Formation: lerp toward shape target with gentle wobble */
-        gx = ftx[i] + Math.sin(t_a * pDFx[i] + pDPx[i]) * pDRx[i];
-        gy = fty[i] + Math.cos(t_a * pDFy[i] + pDPy[i]) * pDRy[i];
+        /* Magnetic pull: blend ambient drift with target pull based on distance */
+        const dx   = px[i] - ftx[i], dy = py[i] - fty[i];
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < PULL_R) {
+          const t    = 1 - dist / PULL_R;
+          const pull = t * t * (3 - 2 * t);  // smoothstep: strong at edge, full at centre
+          gx = ambGx + (ftx[i] - ambGx) * pull;
+          gy = ambGy + (fty[i] - ambGy) * pull;
+        } else {
+          gx = ambGx;  // outside pull zone — pure ambient drift
+          gy = ambGy;
+        }
       } else {
-        /* Ambient: drift around home position */
-        const ai = i - N_FORM;
-        gx = hx[ai] + Math.sin(t_a * pDFx[i] + pDPx[i]) * pDRx[i];
-        gy = hy[ai] + Math.cos(t_a * pDFy[i] + pDPy[i]) * pDRy[i];
+        /* Ambient particles: always pure drift, no pull */
+        gx = ambGx;
+        gy = ambGy;
       }
 
       px[i] += (gx - px[i]) * lf;
       py[i] += (gy - py[i]) * lf;
 
-      ctx.globalAlpha = pOp[i];
+      /* Formation particles brighten as they settle onto their target.
+         pBoost[i] smoothly lerps toward the raw condensation value so particles
+         stay bright while traveling between formations on state-switch — no
+         jarring pop back to dim.  They fade in ~0.6 s, fade out ~1.4 s.
+         Condensation radius extended to 80 px so particles start glowing earlier
+         as they approach, giving a clear "drawn in" pull-glow effect. */
+      let op = pOp[i], sz = pSz[i];
+      if (i < N_FORM) {
+        const dx = px[i] - ftx[i], dy = py[i] - fty[i];
+        const d2 = dx*dx + dy*dy;
+        const COND_R2 = 6400; // 80 px radius
+        let rawBoost = 0;
+        if (d2 < COND_R2) {
+          const t = 1 - d2 / COND_R2;
+          rawBoost = t * t * (3 - 2 * t);  // smoothstep
+        }
+        /* Asymmetric lerp: rise fast, decay slowly so glow persists during transit */
+        const bRise = 1 - Math.pow(1 - 0.10, dt * 60);  // ~0.6 s to full
+        const bFall = 1 - Math.pow(1 - 0.04, dt * 60);  // ~1.4 s to zero
+        pBoost[i] += (rawBoost - pBoost[i]) * (rawBoost > pBoost[i] ? bRise : bFall);
+        op += pBoost[i] * 0.52;
+        sz += pBoost[i] * 1.60;
+      }
+      ctx.globalAlpha = op;
       ctx.fillStyle   = pCS[i];
       ctx.beginPath();
-      ctx.arc(px[i], py[i], pSz[i], 0, TWO_PI);
+      ctx.arc(px[i], py[i], sz, 0, TWO_PI);
       ctx.fill();
     }
 
@@ -1018,19 +1057,9 @@ function initShowcase() {
 
   raf = requestAnimationFrame(frame);
 
-  /* ── Pills interaction ── */
-  let autoTimer;
-  function startAuto() {
-    autoTimer = setInterval(() => setState((currentIdx + 1) % 3), 4000);
-  }
-  startAuto();
-
+  /* ── Pills interaction (no auto-rotation) ── */
   document.querySelectorAll('.showcasePill').forEach((btn, i) => {
-    btn.addEventListener('click', () => {
-      clearInterval(autoTimer);
-      setState(i);
-      setTimeout(startAuto, 10000);
-    });
+    btn.addEventListener('click', () => setState(i));
   });
 
   /* ── Resize ── */
@@ -1039,7 +1068,15 @@ function initShowcase() {
     allTargets = buildTargets();
     const t = allTargets[currentIdx];
     for (let i = 0; i < N_FORM; i++) { ftx[i] = t[i * 2]; fty[i] = t[i * 2 + 1]; }
-    for (let i = 0; i < N_AMB; i++) { hx[i] = Math.random() * CW; hy[i] = Math.random() * CH; }
+    for (let i = 0; i < N_TOT; i++) {
+      if (i < N_FORM) {
+        hx[i] = CW * 0.5 + (Math.random() - 0.5) * CW * 0.80;
+        hy[i] = CH * 0.5 + (Math.random() - 0.5) * CH * 0.65;
+      } else {
+        hx[i] = Math.random() * CW;
+        hy[i] = Math.random() * CH;
+      }
+    }
   }).observe(canvas);
 }
 
