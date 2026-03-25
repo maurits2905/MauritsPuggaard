@@ -745,47 +745,51 @@ function initShowcase() {
     return arr;
   }
 
-  /* SAP logo silhouette — pentagon matching the reference image exactly:
-       Rectangle body with the upper-right corner removed by a diagonal.
-       Diagonal runs from the CENTRE of the top edge → CENTRE of the right edge,
-       giving the characteristic ~45° slash of the real SAP logo.
-       40 % of particles sit on the diagonal so it reads as a sharp slash. */
+  /* SAP logo silhouette — QUADRILATERAL (4 vertices), not a pentagon.
+     The real SAP logo shape:
+       • Full vertical left side
+       • Horizontal top going from left edge to roughly the centre
+       • One long diagonal from that centre-top point all the way to the
+         bottom-right corner — this IS the entire right boundary, no separate
+         vertical right edge exists
+       • Full horizontal bottom
+     This creates a large white triangle in the upper-right (≈ 25 % of area).
+     40 % of particles on the diagonal slash so it reads as a crisp edge. */
   function genSAP(W, H, n) {
     const cx = W * 0.5, cy = H * 0.5;
-    const sw = Math.min(W * 0.255, H * 0.300);   // half-width
-    const sh = sw * 0.80;                          // half-height — gentle landscape ratio
+    const sw = Math.min(W * 0.270, H * 0.310);  // half-width
+    const sh = sw * 0.68;                         // half-height — landscape ~1.47:1
 
-    /* Pentagon vertices (clockwise):
-       TL → Tcut (centre top) → Rcut (centre right) → BR → BL */
-    const TL   = [cx - sw, cy - sh];  // top-left
-    const Tcut = [cx,      cy - sh];  // centre of top edge  — diagonal START
-    const Rcut = [cx + sw, cy      ]; // centre of right edge — diagonal END
-    const BR   = [cx + sw, cy + sh];  // bottom-right
-    const BL   = [cx - sw, cy + sh];  // bottom-left
+    /* 4 vertices (clockwise): TL → Tcut → BR → BL */
+    const TL   = [cx - sw, cy - sh];   // top-left corner
+    const Tcut = [cx,      cy - sh];   // centre of top edge — diagonal START
+    const BR   = [cx + sw, cy + sh];   // bottom-right corner — diagonal END
+    const BL   = [cx - sw, cy + sh];   // bottom-left corner
 
-    const diagN = Math.round(n * 0.40);  // 40 % on the slash — sharp, readable
+    const diagN = Math.round(n * 0.40);  // 40 % on the long slash
     const fillN = n - diagN;
     const out   = [];
 
-    /* Dense diagonal edge: Tcut → Rcut */
+    /* Dense diagonal edge: Tcut → BR */
     for (let i = 0; i < diagN; i++) {
       const t = Math.random();
       out.push(
-        Tcut[0] + (Rcut[0] - Tcut[0]) * t + (Math.random() - 0.5) * 1.6,
-        Tcut[1] + (Rcut[1] - Tcut[1]) * t + (Math.random() - 0.5) * 1.6
+        Tcut[0] + (BR[0] - Tcut[0]) * t + (Math.random() - 0.5) * 1.8,
+        Tcut[1] + (BR[1] - Tcut[1]) * t + (Math.random() - 0.5) * 1.8
       );
     }
 
-    /* Fill pentagon body via fan-triangulation from BL (index 4) */
-    const pts  = [TL, Tcut, Rcut, BR, BL];
-    const tris = [[pts[0],pts[1],pts[4]], [pts[1],pts[2],pts[4]], [pts[2],pts[3],pts[4]]];
+    /* Fill body: split quadrilateral into 2 triangles
+       Tri-1: TL, Tcut, BR  (upper-right body triangle)
+       Tri-2: TL, BR,   BL  (lower rectangle triangle) */
+    const tris = [[TL, Tcut, BR], [TL, BR, BL]];
     const triArea = ([a,b,c]) =>
       Math.abs((b[0]-a[0])*(c[1]-a[1]) - (c[0]-a[0])*(b[1]-a[1])) * 0.5;
     const areas = tris.map(triArea);
     const total = areas.reduce((s,a) => s + a, 0);
     let rem = fillN;
     tris.forEach(([A,B,C], idx) => {
-      const cnt = idx < 2 ? Math.round(fillN * areas[idx] / total) : rem;
+      const cnt = idx < 1 ? Math.round(fillN * areas[idx] / total) : rem;
       rem -= cnt;
       for (let k = 0; k < cnt; k++) {
         let r1 = Math.random(), r2 = Math.random();
