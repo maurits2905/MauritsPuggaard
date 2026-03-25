@@ -835,10 +835,9 @@ function initShowcase() {
   }
   let allTargets = buildTargets();
   let currentIdx  = 0;
-  let pendingIdx  = 0;
-  let transPhase  = 'form';   // 'scatter' → dissolve to home | 'form' → stream to icon
-  let transTimer  = 0;
-  const SCATTER_DUR = 0.45;   // seconds: how long particles fly outward before reforming
+  /* Magnetic pull radius — only particles within this distance of their
+     assigned target point feel the pull. Particles outside drift freely. */
+  const PULL_R = 260;
 
   /* ══════════════════════════════════════════════════════════════════
      ONE unified particle pool — no separate formation / ambient arrays.
@@ -869,30 +868,46 @@ function initShowcase() {
 
   const initT = allTargets[0];
   for (let i = 0; i < N_TOT; i++) {
-    px[i] = Math.random() * CW;
-    py[i] = Math.random() * CH;
-    hx[i] = Math.random() * CW;   // every particle has an ambient home
-    hy[i] = Math.random() * CH;
+    const isForm = i < N_FORM;
 
-    if (i < N_FORM) {
+    /* Formation particles home near the icon centre so they continuously
+       wander in and out of the magnetic pull zone.
+       Ambient particles are spread across the full section. */
+    if (isForm) {
+      /* Homes concentrated in the central 65% so particles regularly sweep
+         through the magnetic pull zone around the icon. */
+      hx[i] = CW * 0.5 + (Math.random() - 0.5) * CW * 0.65;
+      hy[i] = CH * 0.5 + (Math.random() - 0.5) * CH * 0.65;
+    } else {
+      hx[i] = Math.random() * CW;
+      hy[i] = Math.random() * CH;
+    }
+    px[i] = hx[i];
+    py[i] = hy[i];
+
+    if (isForm) {
       ftx[i] = initT[i * 2];
       fty[i] = initT[i * 2 + 1];
     }
 
-    /* ── Base appearance — visible while flying; condensation adds extra boost ── */
-    pSz[i]  = 0.80 + Math.random() * 0.90;   // 0.80–1.70 px — visible in transit & ambient
-    pOp[i]  = 0.28 + Math.random() * 0.22;   // 0.28–0.50    — clearly visible at all times
-    pDRx[i] = 1.5  + Math.random() * 2.5;    // calm drift amplitude
-    pDRy[i] = 1.5  + Math.random() * 2.5;
-    pDFx[i] = 0.04 + Math.random() * 0.08;   // slow drift frequency
-    pDFy[i] = 0.04 + Math.random() * 0.08;
+    /* ── Base appearance ── */
+    pSz[i]  = 0.80 + Math.random() * 0.90;   // 0.80–1.70 px
+    pOp[i]  = 0.28 + Math.random() * 0.22;   // 0.28–0.50
+
+    /* Formation particles drift with medium amplitude — large enough to sweep
+       through the pull zone, small enough to settle once captured.
+       Ambient particles move calmly across the full section. */
+    pDRx[i] = isForm ? 25 + Math.random() * 45 : 20 + Math.random() * 40;
+    pDRy[i] = isForm ? 25 + Math.random() * 45 : 20 + Math.random() * 40;
+    pDFx[i] = 0.022 + Math.random() * 0.038;  // 0.022–0.060 Hz (17–45 s period)
+    pDFy[i] = 0.022 + Math.random() * 0.038;
     pDPx[i] = Math.random() * TWO_PI;
     pDPy[i] = Math.random() * TWO_PI;
 
-    /* Formation streams at visible speed; ambient glides very slowly */
-    pLr[i] = i < N_FORM
-      ? 0.038 + Math.random() * 0.020   // formation: visible streaming motion
-      : 0.008 + Math.random() * 0.006;  // ambient: very slow glide
+    /* Formation snaps to magnetic goal; ambient drifts with gentle inertia */
+    pLr[i] = isForm
+      ? 0.042 + Math.random() * 0.018   // 0.042–0.060: responsive pull
+      : 0.015 + Math.random() * 0.012;  // 0.015–0.027: smooth ambient glide
 
     /* Color: blue-white / cobalt / soft-purple */
     const c = Math.random();
@@ -919,13 +934,9 @@ function initShowcase() {
   const descEl  = document.getElementById('showcaseDesc');
 
   function setState(idx) {
-    /* Guard: ignore if already on this state and fully settled */
-    if (idx === currentIdx && transPhase === 'form') return;
-
+    if (idx === currentIdx) return;
     currentIdx = idx;
-    pendingIdx = idx;
 
-    /* Update UI immediately */
     titleEl && titleEl.classList.add('scTrans');
     descEl  && descEl .classList.add('scTrans');
     setTimeout(() => {
@@ -939,42 +950,25 @@ function initShowcase() {
       btn.setAttribute('aria-pressed', on ? 'true' : 'false');
     });
 
-    /* Start scatter phase — formation particles fly back to home positions.
-       New icon targets are assigned only after scatter completes, so particles
-       first spread out across the section, then stream inward to form the icon. */
-    transPhase = 'scatter';
-    transTimer = 0;
-    /* NOTE: ftx/fty intentionally NOT updated here — done after scatter ends */
+    /* Move the magnetic targets — particles currently inside PULL_R of the
+       new targets will be drawn in; particles outside just keep drifting. */
+    const t = allTargets[idx];
+    for (let i = 0; i < N_FORM; i++) { ftx[i] = t[i * 2]; fty[i] = t[i * 2 + 1]; }
   }
 
   /* ── Render loop ──
-     Two-phase transition creates the "whole field streaming in" effect:
-     SCATTER: formation particles fly back to their home positions (spread across canvas).
-              The active icon dissolves as particles leave.
-     FORM:    formation particles stream from home positions toward the icon targets.
-              Condensation boost materialises the icon as particles arrive.
-     On initial page load transPhase='form' so particles stream in from the start. */
+     Magnetic pull model: the active icon shape acts as an invisible magnet.
+     Formation particles (0…N_FORM-1) drift freely across the section at all
+     times. When one drifts within PULL_R of its assigned target point the pull
+     kicks in — bending its path toward the icon. Particles outside PULL_R feel
+     nothing and just drift. This creates a continuous, organic "condensation"
+     as nearby particles are drawn in and settle, while far ones keep wandering. */
   let t_a = 0, prev = performance.now(), raf;
 
   function frame(now) {
     const dt = Math.min((now - prev) * 0.001, 0.05);
     prev  = now;
     t_a  += dt;
-
-    /* ── Phase transition management ── */
-    if (transPhase === 'scatter') {
-      transTimer += dt;
-      if (transTimer >= SCATTER_DUR) {
-        /* Scatter done — assign new icon targets and begin streaming in */
-        const tgt = allTargets[pendingIdx];
-        for (let i = 0; i < N_FORM; i++) {
-          ftx[i] = tgt[i * 2];
-          fty[i] = tgt[i * 2 + 1];
-        }
-        transPhase = 'form';
-        transTimer = 0;
-      }
-    }
 
     const W = canvas.width, H = canvas.height;
     ctx.clearRect(0, 0, W, H);
@@ -983,22 +977,30 @@ function initShowcase() {
 
     for (let i = 0; i < N_TOT; i++) {
       const lf = 1 - Math.pow(1 - pLr[i], dt * 60);
+
+      /* Ambient drift goal — the lazy looping path every particle follows */
+      const ambGx = hx[i] + Math.sin(t_a * pDFx[i] + pDPx[i]) * pDRx[i];
+      const ambGy = hy[i] + Math.cos(t_a * pDFy[i] + pDPy[i]) * pDRy[i];
+
       let gx, gy;
 
       if (i < N_FORM) {
-        if (transPhase === 'scatter') {
-          /* Scatter: fly back to home — icon dissolves, particles spread across section */
-          gx = hx[i] + Math.sin(t_a * pDFx[i] + pDPx[i]) * pDRx[i];
-          gy = hy[i] + Math.cos(t_a * pDFy[i] + pDPy[i]) * pDRy[i];
+        /* Magnetic pull: blend ambient drift with target pull based on distance */
+        const dx   = px[i] - ftx[i], dy = py[i] - fty[i];
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < PULL_R) {
+          const t    = 1 - dist / PULL_R;
+          const pull = t * t * (3 - 2 * t);  // smoothstep: strong at edge, full at centre
+          gx = ambGx + (ftx[i] - ambGx) * pull;
+          gy = ambGy + (fty[i] - ambGy) * pull;
         } else {
-          /* Form: stream toward icon target — visibly flies in from across the section */
-          gx = ftx[i];
-          gy = fty[i];
+          gx = ambGx;  // outside pull zone — pure ambient drift
+          gy = ambGy;
         }
       } else {
-        /* Ambient: slow calm drift across the full section at all times */
-        gx = hx[i] + Math.sin(t_a * pDFx[i] + pDPx[i]) * pDRx[i];
-        gy = hy[i] + Math.cos(t_a * pDFy[i] + pDPy[i]) * pDRy[i];
+        /* Ambient particles: always pure drift, no pull */
+        gx = ambGx;
+        gy = ambGy;
       }
 
       px[i] += (gx - px[i]) * lf;
@@ -1034,19 +1036,9 @@ function initShowcase() {
 
   raf = requestAnimationFrame(frame);
 
-  /* ── Pills interaction ── */
-  let autoTimer;
-  function startAuto() {
-    autoTimer = setInterval(() => setState((currentIdx + 1) % 3), 4000);
-  }
-  startAuto();
-
+  /* ── Pills interaction (no auto-rotation) ── */
   document.querySelectorAll('.showcasePill').forEach((btn, i) => {
-    btn.addEventListener('click', () => {
-      clearInterval(autoTimer);
-      setState(i);
-      setTimeout(startAuto, 10000);
-    });
+    btn.addEventListener('click', () => setState(i));
   });
 
   /* ── Resize ── */
@@ -1055,7 +1047,15 @@ function initShowcase() {
     allTargets = buildTargets();
     const t = allTargets[currentIdx];
     for (let i = 0; i < N_FORM; i++) { ftx[i] = t[i * 2]; fty[i] = t[i * 2 + 1]; }
-    for (let i = 0; i < N_TOT;  i++) { hx[i]  = Math.random() * CW; hy[i] = Math.random() * CH; }
+    for (let i = 0; i < N_TOT; i++) {
+      if (i < N_FORM) {
+        hx[i] = CW * 0.5 + (Math.random() - 0.5) * CW * 0.65;
+        hy[i] = CH * 0.5 + (Math.random() - 0.5) * CH * 0.65;
+      } else {
+        hx[i] = Math.random() * CW;
+        hy[i] = Math.random() * CH;
+      }
+    }
   }).observe(canvas);
 }
 
