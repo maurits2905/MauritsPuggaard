@@ -702,8 +702,8 @@ function initShowcase() {
   resize();
 
   const isMob  = CW < 680;
-  const N_TOT  = isMob ? 1000 : 2000;
-  const N_FORM = isMob ?  700 : 1400;  // 70 % of particles form the icon — denser icon
+  const N_TOT  = isMob ? 1200 : 2400;
+  const N_FORM = isMob ?  960 : 1920;  // 80 % form the icon
 
   /* ── State metadata ── */
   const STATES = [
@@ -834,7 +834,7 @@ function initShowcase() {
   let currentIdx  = 0;
   /* Magnetic pull radius — only particles within this distance of their
      assigned target point feel the pull. Particles outside drift freely. */
-  const PULL_R = 260;
+  const PULL_R = 420;
 
   /* ══════════════════════════════════════════════════════════════════
      ONE unified particle pool — no separate formation / ambient arrays.
@@ -860,7 +860,8 @@ function initShowcase() {
   const pDFy = new Float32Array(N_TOT);
   const pDPx = new Float32Array(N_TOT);
   const pDPy = new Float32Array(N_TOT);
-  const pLr  = new Float32Array(N_TOT);
+  const pLr    = new Float32Array(N_TOT);
+  const pBoost = new Float32Array(N_FORM);  // smoothed condensation boost 0–1
   const pCS  = [];
 
   const initT = allTargets[0];
@@ -873,7 +874,7 @@ function initShowcase() {
     if (isForm) {
       /* Homes concentrated in the central 65% so particles regularly sweep
          through the magnetic pull zone around the icon. */
-      hx[i] = CW * 0.5 + (Math.random() - 0.5) * CW * 0.65;
+      hx[i] = CW * 0.5 + (Math.random() - 0.5) * CW * 0.80;
       hy[i] = CH * 0.5 + (Math.random() - 0.5) * CH * 0.65;
     } else {
       hx[i] = Math.random() * CW;
@@ -910,7 +911,7 @@ function initShowcase() {
 
     /* Formation snaps to magnetic goal; ambient drifts with gentle inertia */
     pLr[i] = isForm
-      ? 0.042 + Math.random() * 0.018   // 0.042–0.060: responsive pull
+      ? 0.055 + Math.random() * 0.025   // 0.055–0.080: snappier pull
       : 0.015 + Math.random() * 0.012;  // 0.015–0.027: smooth ambient glide
 
     /* Color palette aligned with site accent colours:
@@ -1020,20 +1021,27 @@ function initShowcase() {
       py[i] += (gy - py[i]) * lf;
 
       /* Formation particles brighten as they settle onto their target.
-         Condensation radius 28 px — strong boost makes icon sharp and dense.
-         Max +0.52 opacity (dim base 0.13–0.28 → settled peak 0.65–0.80).
-         Max +1.60 size (base 0.45–1.15 → settled 2.05–2.75 px). */
+         pBoost[i] smoothly lerps toward the raw condensation value so particles
+         stay bright while traveling between formations on state-switch — no
+         jarring pop back to dim.  They fade in ~0.6 s, fade out ~1.4 s.
+         Condensation radius extended to 80 px so particles start glowing earlier
+         as they approach, giving a clear "drawn in" pull-glow effect. */
       let op = pOp[i], sz = pSz[i];
       if (i < N_FORM) {
         const dx = px[i] - ftx[i], dy = py[i] - fty[i];
         const d2 = dx*dx + dy*dy;
-        const COND_R2 = 784; // 28 px²
+        const COND_R2 = 6400; // 80 px radius
+        let rawBoost = 0;
         if (d2 < COND_R2) {
           const t = 1 - d2 / COND_R2;
-          const boost = t * t * (3 - 2 * t);  // smoothstep
-          op += boost * 0.52;
-          sz += boost * 1.60;
+          rawBoost = t * t * (3 - 2 * t);  // smoothstep
         }
+        /* Asymmetric lerp: rise fast, decay slowly so glow persists during transit */
+        const bRise = 1 - Math.pow(1 - 0.10, dt * 60);  // ~0.6 s to full
+        const bFall = 1 - Math.pow(1 - 0.04, dt * 60);  // ~1.4 s to zero
+        pBoost[i] += (rawBoost - pBoost[i]) * (rawBoost > pBoost[i] ? bRise : bFall);
+        op += pBoost[i] * 0.52;
+        sz += pBoost[i] * 1.60;
       }
       ctx.globalAlpha = op;
       ctx.fillStyle   = pCS[i];
@@ -1062,7 +1070,7 @@ function initShowcase() {
     for (let i = 0; i < N_FORM; i++) { ftx[i] = t[i * 2]; fty[i] = t[i * 2 + 1]; }
     for (let i = 0; i < N_TOT; i++) {
       if (i < N_FORM) {
-        hx[i] = CW * 0.5 + (Math.random() - 0.5) * CW * 0.65;
+        hx[i] = CW * 0.5 + (Math.random() - 0.5) * CW * 0.80;
         hy[i] = CH * 0.5 + (Math.random() - 0.5) * CH * 0.65;
       } else {
         hx[i] = Math.random() * CW;
