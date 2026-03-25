@@ -724,9 +724,9 @@ function initShowcase() {
      Dense uniform disc fill — readable from density alone, no brightness boost needed. */
   function genProfessional(W, H, n) {
     const cx  = W * 0.5, cy = H * 0.5;
-    const bw  = W * 0.195;  // semi-major (half-width)
-    const bh  = H * 0.052;  // semi-minor (half-height)
-    const gap = H * 0.050;  // gap between bar centres
+    const bw  = W * 0.240;  // semi-major (half-width)   ← ~23 % wider
+    const bh  = H * 0.064;  // semi-minor (half-height)  ← ~23 % taller
+    const gap = H * 0.058;  // gap between bar centres   ← scaled up
     const totalH = 3 * bh * 2 + 2 * gap;
     const cy0    = cy - totalH * 0.5 + bh;
     const perBar = Math.floor(n / 3);
@@ -751,7 +751,7 @@ function initShowcase() {
      With 1000 formation particles the density alone makes it readable. */
   function genSAP(W, H, n) {
     const cx = W * 0.5, cy = H * 0.5;
-    const s  = Math.min(W * 0.36, H * 0.42) * 0.5;
+    const s  = Math.min(W * 0.44, H * 0.50) * 0.5;  // ~22 % larger
     /* Pentagon (clockwise): TL → Tcut → Rcut → BR → BL
        Notch spans ~40 % of each side — same proportions as the real logo. */
     const P = [
@@ -802,7 +802,7 @@ function initShowcase() {
      Circles are slightly overlapping (dist = 1.75 × radius) for a tight cluster feel. */
   function genFullstack(W, H, n) {
     const cx = W * 0.5, cy = H * 0.5;
-    const cr   = Math.min(W * 0.110, H * 0.125);  // circle radius
+    const cr   = Math.min(W * 0.135, H * 0.155);  // circle radius — ~23 % larger
     const dist = cr * 2.50;                         // centres — clear gap between circles
     const h3   = dist * Math.sqrt(3) * 0.5;
     const nodes = [
@@ -897,10 +897,17 @@ function initShowcase() {
     /* Formation particles drift with medium amplitude — large enough to sweep
        through the pull zone, small enough to settle once captured.
        Ambient particles move calmly across the full section. */
-    pDRx[i] = isForm ? 25 + Math.random() * 45 : 20 + Math.random() * 40;
-    pDRy[i] = isForm ? 25 + Math.random() * 45 : 20 + Math.random() * 40;
-    pDFx[i] = 0.022 + Math.random() * 0.038;  // 0.022–0.060 Hz (17–45 s period)
-    pDFy[i] = 0.022 + Math.random() * 0.038;
+    /* Formation particles drift wider so they sweep through the pull zone more
+       frequently → more continuous inward flow.
+       Ambient particles stay calm across the full section. */
+    pDRx[i] = isForm ? 40 + Math.random() * 65 : 20 + Math.random() * 40;
+    pDRy[i] = isForm ? 40 + Math.random() * 65 : 20 + Math.random() * 40;
+    pDFx[i] = isForm
+      ? 0.030 + Math.random() * 0.050  // 0.030–0.080 Hz (13–33 s) — faster orbiting
+      : 0.018 + Math.random() * 0.030; // 0.018–0.048 Hz — calm ambient
+    pDFy[i] = isForm
+      ? 0.030 + Math.random() * 0.050
+      : 0.018 + Math.random() * 0.030;
     pDPx[i] = Math.random() * TWO_PI;
     pDPy[i] = Math.random() * TWO_PI;
 
@@ -909,22 +916,31 @@ function initShowcase() {
       ? 0.042 + Math.random() * 0.018   // 0.042–0.060: responsive pull
       : 0.015 + Math.random() * 0.012;  // 0.015–0.027: smooth ambient glide
 
-    /* Color: blue-white / cobalt / soft-purple */
-    const c = Math.random();
+    /* Color palette aligned with site accent colours:
+       --accent: #8899ff (136,153,255)  --accent2: #6b85ff (107,133,255)
+       Four tiers centred on that blue-indigo hue family. */
+    const tier = Math.random();
     let r, g, b;
-    if (c < 0.45) {
-      r = 210 + Math.round((c / 0.45) * 45);
-      g = 220 + Math.round((c / 0.45) * 35);
-      b = 255;
-    } else if (c < 0.78) {
-      const f = (c - 0.45) / 0.33;
-      r = 75  + Math.round(f * 52);
-      g = 105 + Math.round(f * 40);
+    if (tier < 0.34) {
+      /* Core accent — close to #8899ff */
+      r = 122 + Math.round(Math.random() * 48);  // 122–170
+      g = 140 + Math.round(Math.random() * 42);  // 140–182
+      b = 248 + Math.round(Math.random() * 7);   // 248–255
+    } else if (tier < 0.62) {
+      /* Deep accent — close to #6b85ff */
+      r =  85 + Math.round(Math.random() * 42);  // 85–127
+      g = 105 + Math.round(Math.random() * 40);  // 105–145
+      b = 238 + Math.round(Math.random() * 17);  // 238–255
+    } else if (tier < 0.82) {
+      /* Near-white lavender sparkle */
+      r = 190 + Math.round(Math.random() * 55);  // 190–245
+      g = 198 + Math.round(Math.random() * 50);  // 198–248
       b = 255;
     } else {
-      r = 155 + Math.round((c - 0.78) / 0.22 * 55);
-      g = 118;
-      b = 255;
+      /* Deep indigo */
+      r =  48 + Math.round(Math.random() * 42);  // 48–90
+      g =  65 + Math.round(Math.random() * 42);  // 65–107
+      b = 208 + Math.round(Math.random() * 38);  // 208–246
     }
     pCS.push(`rgb(${r},${g},${b})`);
   }
