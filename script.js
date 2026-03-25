@@ -703,7 +703,7 @@ function initShowcase() {
 
   const isMob  = CW < 680;
   const N_TOT  = isMob ? 1000 : 2000;
-  const N_FORM = isMob ?  500 : 1000;  // 50 % of particles form the icon
+  const N_FORM = isMob ?  700 : 1400;  // 70 % of particles form the icon — denser icon
 
   /* ── State metadata ── */
   const STATES = [
@@ -875,20 +875,20 @@ function initShowcase() {
       fty[i] = initT[i * 2 + 1];
     }
 
-    /* ── Uniform base appearance — identical for formation and ambient ── */
-    pSz[i]  = 0.70 + Math.random() * 1.00;   // 0.70–1.70 px  — same for ALL particles
-    pOp[i]  = 0.28 + Math.random() * 0.24;   // 0.28–0.52     — same for ALL particles
-    pDRx[i] = 3.5  + Math.random() * 6.5;    // wide drift fills canvas
-    pDRy[i] = 3.5  + Math.random() * 6.5;
-    pDFx[i] = 0.08 + Math.random() * 0.18;
-    pDFy[i] = 0.08 + Math.random() * 0.18;
+    /* ── Base appearance — ambient is dim/small; formation boost on condensation ── */
+    pSz[i]  = 0.45 + Math.random() * 0.70;   // 0.45–1.15 px (dim ambient base)
+    pOp[i]  = 0.13 + Math.random() * 0.15;   // 0.13–0.28    (dim ambient base)
+    pDRx[i] = 1.5  + Math.random() * 2.5;    // calm drift amplitude
+    pDRy[i] = 1.5  + Math.random() * 2.5;
+    pDFx[i] = 0.04 + Math.random() * 0.08;   // slow drift frequency
+    pDFy[i] = 0.04 + Math.random() * 0.08;
     pDPx[i] = Math.random() * TWO_PI;
     pDPy[i] = Math.random() * TWO_PI;
 
-    /* Formation particles pull faster so shape snaps cleanly */
+    /* Formation snaps fast; ambient drifts very slowly */
     pLr[i] = i < N_FORM
-      ? 0.034 + Math.random() * 0.018
-      : 0.013 + Math.random() * 0.009;
+      ? 0.055 + Math.random() * 0.025   // formation: fast snap
+      : 0.008 + Math.random() * 0.006;  // ambient: very slow glide
 
     /* Color: blue-white / cobalt / soft-purple */
     const c = Math.random();
@@ -957,11 +957,11 @@ function initShowcase() {
       let gx, gy;
 
       if (i < N_FORM) {
-        /* Formation: converge on shape target with minimal organic wobble */
-        gx = ftx[i] + Math.sin(t_a * pDFx[i] + pDPx[i]) * 1.5;
-        gy = fty[i] + Math.cos(t_a * pDFy[i] + pDPy[i]) * 1.5;
+        /* Formation: settle onto shape target — no wobble, clean silhouette */
+        gx = ftx[i];
+        gy = fty[i];
       } else {
-        /* Ambient: drift around home position — fills the whole section */
+        /* Ambient: slow calm drift across the full section */
         gx = hx[i] + Math.sin(t_a * pDFx[i] + pDPx[i]) * pDRx[i];
         gy = hy[i] + Math.cos(t_a * pDFy[i] + pDPy[i]) * pDRy[i];
       }
@@ -969,19 +969,20 @@ function initShowcase() {
       px[i] += (gx - px[i]) * lf;
       py[i] += (gy - py[i]) * lf;
 
-      /* Formation particles get a subtle boost when near their target —
-         just enough to sharpen the silhouette without creating a bright overlay.
-         Condensation radius 14 px, max +0.13 opacity, +0.35 size. */
+      /* Formation particles brighten as they settle onto their target.
+         Condensation radius 28 px — strong boost makes icon sharp and dense.
+         Max +0.52 opacity (dim base 0.13–0.28 → settled peak 0.65–0.80).
+         Max +1.60 size (base 0.45–1.15 → settled 2.05–2.75 px). */
       let op = pOp[i], sz = pSz[i];
       if (i < N_FORM) {
         const dx = px[i] - ftx[i], dy = py[i] - fty[i];
         const d2 = dx*dx + dy*dy;
-        const COND_R2 = 196; // 14 px²
+        const COND_R2 = 784; // 28 px²
         if (d2 < COND_R2) {
-          const t = 1 - d2 / COND_R2;  // 0→1 as particle nears target
+          const t = 1 - d2 / COND_R2;
           const boost = t * t * (3 - 2 * t);  // smoothstep
-          op += boost * 0.13;
-          sz += boost * 0.35;
+          op += boost * 0.52;
+          sz += boost * 1.60;
         }
       }
       ctx.globalAlpha = op;
