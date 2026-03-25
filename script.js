@@ -703,7 +703,7 @@ function initShowcase() {
 
   const isMob  = CW < 680;
   const N_TOT  = isMob ? 1000 : 2000;
-  const N_FORM = isMob ?  360 :  720;
+  const N_FORM = isMob ?  500 : 1000;  // 50 % of particles form the icon
 
   /* ── State metadata ── */
   const STATES = [
@@ -720,12 +720,13 @@ function initShowcase() {
      Shapes match the reference icons (layers / SAP logo / circles)
   ══════════════════════════════════════════════════════════════════ */
 
-  /* Professional: 3 compact elliptical bars (stacked layers icon — rounded, dense) */
+  /* Professional: 3 compact elliptical bars matching the stacked-layers icon.
+     Dense uniform disc fill — readable from density alone, no brightness boost needed. */
   function genProfessional(W, H, n) {
     const cx  = W * 0.5, cy = H * 0.5;
-    const bw  = W * 0.23;   // semi-major axis (half-width of each ellipse)
-    const bh  = H * 0.058;  // semi-minor axis (half-height)
-    const gap = H * 0.058;  // gap between bars
+    const bw  = W * 0.195;  // semi-major (half-width)
+    const bh  = H * 0.052;  // semi-minor (half-height)
+    const gap = H * 0.050;  // gap between bar centres
     const totalH = 3 * bh * 2 + 2 * gap;
     const cy0    = cy - totalH * 0.5 + bh;
     const perBar = Math.floor(n / 3);
@@ -734,7 +735,6 @@ function initShowcase() {
       const cyb = cy0 + b * (bh * 2 + gap);
       const cnt = b < 2 ? perBar : n - 2 * perBar;
       for (let i = 0; i < cnt; i++) {
-        /* Uniform fill of ellipse via polar with sqrt for area distribution */
         const r = Math.sqrt(Math.random());
         const a = Math.random() * TWO_PI;
         out.push(cx + bw * r * Math.cos(a), cyb + bh * r * Math.sin(a));
@@ -745,53 +745,49 @@ function initShowcase() {
     return arr;
   }
 
-  /* SAP: matches the SAP logo silhouette — large square body with a prominent
-     diagonal notch cut from the upper-right corner.
-     Diagonal edge gets the heaviest particle density so it reads clearly. */
+  /* SAP: pentagon silhouette matching the SAP logo —
+     square body with upper-right corner cut by a prominent diagonal.
+     30 % of particles on the diagonal edge; 70 % fill the body uniformly.
+     With 1000 formation particles the density alone makes it readable. */
   function genSAP(W, H, n) {
     const cx = W * 0.5, cy = H * 0.5;
-    const s  = Math.min(W * 0.40, H * 0.46) * 0.5;
-    /* Pentagon vertices — notch covers ~40% of each side for a clear diagonal:
-       TL → Tcut → Rcut → BR → BL                                             */
+    const s  = Math.min(W * 0.36, H * 0.42) * 0.5;
+    /* Pentagon (clockwise): TL → Tcut → Rcut → BR → BL
+       Notch spans ~40 % of each side — same proportions as the real logo. */
     const P = [
       [cx - s,        cy - s       ],   // TL
-      [cx + s * 0.18, cy - s       ],   // Tcut  (top edge, 60% across)
-      [cx + s,        cy - s * 0.18],   // Rcut  (right edge, 60% down)
+      [cx + s * 0.20, cy - s       ],   // Tcut
+      [cx + s,        cy - s * 0.20],   // Rcut
       [cx + s,        cy + s       ],   // BR
       [cx - s,        cy + s       ],   // BL
     ];
 
-    /* Allocate: 35% diagonal edge  +  65% interior fill */
-    const diagN  = Math.round(n * 0.35);
-    const fillN  = n - diagN;
-    const out    = [];
+    const diagN = Math.round(n * 0.30);
+    const fillN = n - diagN;
+    const out   = [];
 
-    /* ── Diagonal edge (Tcut → Rcut) — very dense, tight scatter ── */
+    /* Dense diagonal edge */
     for (let i = 0; i < diagN; i++) {
       const t = Math.random();
       out.push(
-        P[1][0] + (P[2][0]-P[1][0]) * t + (Math.random()-0.5) * 2,
-        P[1][1] + (P[2][1]-P[1][1]) * t + (Math.random()-0.5) * 2
+        P[1][0] + (P[2][0]-P[1][0]) * t + (Math.random()-0.5) * 1.8,
+        P[1][1] + (P[2][1]-P[1][1]) * t + (Math.random()-0.5) * 1.8
       );
     }
 
-    /* ── Pentagon interior fill (fan-triangulate from P[0]) ── */
-    const tris = [
-      [P[0], P[1], P[4]],
-      [P[1], P[2], P[4]],
-      [P[2], P[3], P[4]],
-    ];
-    const triArea = ([a, b, c]) =>
+    /* Fill pentagon body via fan-triangulation from P[0] */
+    const tris = [[P[0],P[1],P[4]], [P[1],P[2],P[4]], [P[2],P[3],P[4]]];
+    const triArea = ([a,b,c]) =>
       Math.abs((b[0]-a[0])*(c[1]-a[1]) - (c[0]-a[0])*(b[1]-a[1])) * 0.5;
     const areas = tris.map(triArea);
-    const total = areas.reduce((s, a) => s + a, 0);
+    const total = areas.reduce((s,a) => s+a, 0);
     let rem = fillN;
-    tris.forEach(([A, B, C], i) => {
+    tris.forEach(([A,B,C], i) => {
       const cnt = i < 2 ? Math.round(fillN * areas[i] / total) : rem;
       rem -= cnt;
       for (let k = 0; k < cnt; k++) {
         let r1 = Math.random(), r2 = Math.random();
-        if (r1 + r2 > 1) { r1 = 1-r1; r2 = 1-r2; }
+        if (r1+r2 > 1) { r1=1-r1; r2=1-r2; }
         const r3 = 1-r1-r2;
         out.push(A[0]*r1+B[0]*r2+C[0]*r3, A[1]*r1+B[1]*r2+C[1]*r3);
       }
@@ -802,20 +798,19 @@ function initShowcase() {
     return arr;
   }
 
-  /* Fullstack: 3 solid filled circles in tight equilateral triangle (connected-circles icon).
-     Each circle is a dense uniform disc — no edge lines, just 3 pure circle fills. */
+  /* Fullstack: 3 overlapping solid circles matching the connected-nodes reference icon.
+     Circles are slightly overlapping (dist = 1.75 × radius) for a tight cluster feel. */
   function genFullstack(W, H, n) {
     const cx = W * 0.5, cy = H * 0.5;
-    const cr   = Math.min(W * 0.115, H * 0.135);  // circle radius
-    const dist = cr * 2.14;                         // center-to-center (nearly touching)
-    /* Equilateral triangle of circle centers, centroid at (cx, cy) */
-    const h3 = dist * Math.sqrt(3) * 0.5;
+    const cr   = Math.min(W * 0.110, H * 0.125);  // circle radius
+    const dist = cr * 2.50;                         // centres — clear gap between circles
+    const h3   = dist * Math.sqrt(3) * 0.5;
     const nodes = [
       [cx,            cy - h3 * (2 / 3)],   // top
       [cx - dist*0.5, cy + h3 * (1 / 3)],   // bottom-left
       [cx + dist*0.5, cy + h3 * (1 / 3)],   // bottom-right
     ];
-    const out = [];
+    const out    = [];
     const perNode = Math.floor(n / 3);
     for (let v = 0; v < 3; v++) {
       const [nx, ny] = nodes[v];
@@ -881,8 +876,8 @@ function initShowcase() {
     }
 
     /* ── Uniform base appearance — identical for formation and ambient ── */
-    pSz[i]  = 0.55 + Math.random() * 0.85;   // 0.55–1.40 px
-    pOp[i]  = 0.17 + Math.random() * 0.23;   // 0.17–0.40 (brighter ambient base)
+    pSz[i]  = 0.70 + Math.random() * 1.00;   // 0.70–1.70 px  — same for ALL particles
+    pOp[i]  = 0.28 + Math.random() * 0.24;   // 0.28–0.52     — same for ALL particles
     pDRx[i] = 3.5  + Math.random() * 6.5;    // wide drift fills canvas
     pDRy[i] = 3.5  + Math.random() * 6.5;
     pDFx[i] = 0.08 + Math.random() * 0.18;
@@ -940,11 +935,11 @@ function initShowcase() {
     for (let i = 0; i < N_FORM; i++) { ftx[i] = t[i * 2]; fty[i] = t[i * 2 + 1]; }
   }
 
-  /* ── Render loop ── */
-  /* Condensation radius: within this distance a formation particle brightens/grows,
-     making the icon emerge from the field rather than appearing pre-formed. */
-  const CONDENSE_R = Math.min(CW, CH) * 0.09;
-
+  /* ── Render loop ──
+     All particles use identical visual properties — the icon silhouette
+     emerges purely from the density of 1000 formation particles converging
+     into a compact area versus 1000 ambient particles spread across the
+     whole canvas. No brightness tier, no separate "icon layer". One field. */
   let t_a = 0, prev = performance.now(), raf;
 
   function frame(now) {
@@ -962,11 +957,11 @@ function initShowcase() {
       let gx, gy;
 
       if (i < N_FORM) {
-        /* Formation: converge on target with a tiny organic wobble at rest */
-        gx = ftx[i] + Math.sin(t_a * pDFx[i] + pDPx[i]) * 1.8;
-        gy = fty[i] + Math.cos(t_a * pDFy[i] + pDPy[i]) * 1.8;
+        /* Formation: converge on shape target with minimal organic wobble */
+        gx = ftx[i] + Math.sin(t_a * pDFx[i] + pDPx[i]) * 1.5;
+        gy = fty[i] + Math.cos(t_a * pDFy[i] + pDPy[i]) * 1.5;
       } else {
-        /* Ambient: drift widely around home — fills the whole section */
+        /* Ambient: drift around home position — fills the whole section */
         gx = hx[i] + Math.sin(t_a * pDFx[i] + pDPx[i]) * pDRx[i];
         gy = hy[i] + Math.cos(t_a * pDFy[i] + pDPy[i]) * pDRy[i];
       }
@@ -974,25 +969,25 @@ function initShowcase() {
       px[i] += (gx - px[i]) * lf;
       py[i] += (gy - py[i]) * lf;
 
-      let drawSz = pSz[i];
-      let drawOp = pOp[i];
-
+      /* Formation particles get a subtle boost when near their target —
+         just enough to sharpen the silhouette without creating a bright overlay.
+         Condensation radius 14 px, max +0.13 opacity, +0.35 size. */
+      let op = pOp[i], sz = pSz[i];
       if (i < N_FORM) {
-        /* Condensation: particle brightens and grows only as it nears its target.
-           While travelling through the field it looks identical to ambient particles.
-           smoothstep gives a gentle ease-in to the boost. */
-        const dx   = px[i] - ftx[i], dy = py[i] - fty[i];
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const t    = 1 - Math.min(dist / CONDENSE_R, 1);
-        const s    = t * t * (3 - 2 * t);   // smoothstep
-        drawSz += s * 1.10;
-        drawOp  = Math.min(pOp[i] + s * 0.50, 1);
+        const dx = px[i] - ftx[i], dy = py[i] - fty[i];
+        const d2 = dx*dx + dy*dy;
+        const COND_R2 = 196; // 14 px²
+        if (d2 < COND_R2) {
+          const t = 1 - d2 / COND_R2;  // 0→1 as particle nears target
+          const boost = t * t * (3 - 2 * t);  // smoothstep
+          op += boost * 0.13;
+          sz += boost * 0.35;
+        }
       }
-
-      ctx.globalAlpha = drawOp;
+      ctx.globalAlpha = op;
       ctx.fillStyle   = pCS[i];
       ctx.beginPath();
-      ctx.arc(px[i], py[i], drawSz, 0, TWO_PI);
+      ctx.arc(px[i], py[i], sz, 0, TWO_PI);
       ctx.fill();
     }
 
