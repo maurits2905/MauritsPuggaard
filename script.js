@@ -745,51 +745,53 @@ function initShowcase() {
     return arr;
   }
 
-  /* SAP: pentagon silhouette matching the SAP logo —
-     square body with upper-right corner cut by a prominent diagonal.
-     30 % of particles on the diagonal edge; 70 % fill the body uniformly.
-     With 1000 formation particles the density alone makes it readable. */
+  /* SAP logo silhouette — pentagon matching the reference image exactly:
+       Rectangle body with the upper-right corner removed by a diagonal.
+       Diagonal runs from the CENTRE of the top edge → CENTRE of the right edge,
+       giving the characteristic ~45° slash of the real SAP logo.
+       40 % of particles sit on the diagonal so it reads as a sharp slash. */
   function genSAP(W, H, n) {
     const cx = W * 0.5, cy = H * 0.5;
-    const s  = Math.min(W * 0.44, H * 0.50) * 0.5;  // ~22 % larger
-    /* Pentagon (clockwise): TL → Tcut → Rcut → BR → BL
-       Notch spans ~40 % of each side — same proportions as the real logo. */
-    const P = [
-      [cx - s,        cy - s       ],   // TL
-      [cx + s * 0.20, cy - s       ],   // Tcut
-      [cx + s,        cy - s * 0.20],   // Rcut
-      [cx + s,        cy + s       ],   // BR
-      [cx - s,        cy + s       ],   // BL
-    ];
+    const sw = Math.min(W * 0.255, H * 0.300);   // half-width
+    const sh = sw * 0.80;                          // half-height — gentle landscape ratio
 
-    const diagN = Math.round(n * 0.30);
+    /* Pentagon vertices (clockwise):
+       TL → Tcut (centre top) → Rcut (centre right) → BR → BL */
+    const TL   = [cx - sw, cy - sh];  // top-left
+    const Tcut = [cx,      cy - sh];  // centre of top edge  — diagonal START
+    const Rcut = [cx + sw, cy      ]; // centre of right edge — diagonal END
+    const BR   = [cx + sw, cy + sh];  // bottom-right
+    const BL   = [cx - sw, cy + sh];  // bottom-left
+
+    const diagN = Math.round(n * 0.40);  // 40 % on the slash — sharp, readable
     const fillN = n - diagN;
     const out   = [];
 
-    /* Dense diagonal edge */
+    /* Dense diagonal edge: Tcut → Rcut */
     for (let i = 0; i < diagN; i++) {
       const t = Math.random();
       out.push(
-        P[1][0] + (P[2][0]-P[1][0]) * t + (Math.random()-0.5) * 1.8,
-        P[1][1] + (P[2][1]-P[1][1]) * t + (Math.random()-0.5) * 1.8
+        Tcut[0] + (Rcut[0] - Tcut[0]) * t + (Math.random() - 0.5) * 1.6,
+        Tcut[1] + (Rcut[1] - Tcut[1]) * t + (Math.random() - 0.5) * 1.6
       );
     }
 
-    /* Fill pentagon body via fan-triangulation from P[0] */
-    const tris = [[P[0],P[1],P[4]], [P[1],P[2],P[4]], [P[2],P[3],P[4]]];
+    /* Fill pentagon body via fan-triangulation from BL (index 4) */
+    const pts  = [TL, Tcut, Rcut, BR, BL];
+    const tris = [[pts[0],pts[1],pts[4]], [pts[1],pts[2],pts[4]], [pts[2],pts[3],pts[4]]];
     const triArea = ([a,b,c]) =>
       Math.abs((b[0]-a[0])*(c[1]-a[1]) - (c[0]-a[0])*(b[1]-a[1])) * 0.5;
     const areas = tris.map(triArea);
-    const total = areas.reduce((s,a) => s+a, 0);
+    const total = areas.reduce((s,a) => s + a, 0);
     let rem = fillN;
-    tris.forEach(([A,B,C], i) => {
-      const cnt = i < 2 ? Math.round(fillN * areas[i] / total) : rem;
+    tris.forEach(([A,B,C], idx) => {
+      const cnt = idx < 2 ? Math.round(fillN * areas[idx] / total) : rem;
       rem -= cnt;
       for (let k = 0; k < cnt; k++) {
         let r1 = Math.random(), r2 = Math.random();
-        if (r1+r2 > 1) { r1=1-r1; r2=1-r2; }
-        const r3 = 1-r1-r2;
-        out.push(A[0]*r1+B[0]*r2+C[0]*r3, A[1]*r1+B[1]*r2+C[1]*r3);
+        if (r1 + r2 > 1) { r1 = 1 - r1; r2 = 1 - r2; }
+        const r3 = 1 - r1 - r2;
+        out.push(A[0]*r1 + B[0]*r2 + C[0]*r3, A[1]*r1 + B[1]*r2 + C[1]*r3);
       }
     });
 
