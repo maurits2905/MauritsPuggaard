@@ -834,7 +834,11 @@ function initShowcase() {
     ];
   }
   let allTargets = buildTargets();
-  let currentIdx = 0;
+  let currentIdx  = 0;
+  let pendingIdx  = 0;
+  let transPhase  = 'form';   // 'scatter' → dissolve to home | 'form' → stream to icon
+  let transTimer  = 0;
+  const SCATTER_DUR = 0.45;   // seconds: how long particles fly outward before reforming
 
   /* ══════════════════════════════════════════════════════════════════
      ONE unified particle pool — no separate formation / ambient arrays.
@@ -885,9 +889,9 @@ function initShowcase() {
     pDPx[i] = Math.random() * TWO_PI;
     pDPy[i] = Math.random() * TWO_PI;
 
-    /* Formation snaps fast; ambient drifts very slowly */
+    /* Formation streams at visible speed; ambient glides very slowly */
     pLr[i] = i < N_FORM
-      ? 0.055 + Math.random() * 0.025   // formation: fast snap
+      ? 0.038 + Math.random() * 0.020   // formation: visible streaming motion
       : 0.008 + Math.random() * 0.006;  // ambient: very slow glide
 
     /* Color: blue-white / cobalt / soft-purple */
@@ -915,9 +919,13 @@ function initShowcase() {
   const descEl  = document.getElementById('showcaseDesc');
 
   function setState(idx) {
-    if (idx === currentIdx) return;
-    currentIdx = idx;
+    /* Guard: ignore if already on this state and fully settled */
+    if (idx === currentIdx && transPhase === 'form') return;
 
+    currentIdx = idx;
+    pendingIdx = idx;
+
+    /* Update UI immediately */
     titleEl && titleEl.classList.add('scTrans');
     descEl  && descEl .classList.add('scTrans');
     setTimeout(() => {
@@ -931,21 +939,42 @@ function initShowcase() {
       btn.setAttribute('aria-pressed', on ? 'true' : 'false');
     });
 
-    const t = allTargets[idx];
-    for (let i = 0; i < N_FORM; i++) { ftx[i] = t[i * 2]; fty[i] = t[i * 2 + 1]; }
+    /* Start scatter phase — formation particles fly back to home positions.
+       New icon targets are assigned only after scatter completes, so particles
+       first spread out across the section, then stream inward to form the icon. */
+    transPhase = 'scatter';
+    transTimer = 0;
+    /* NOTE: ftx/fty intentionally NOT updated here — done after scatter ends */
   }
 
   /* ── Render loop ──
-     All particles use identical visual properties — the icon silhouette
-     emerges purely from the density of 1000 formation particles converging
-     into a compact area versus 1000 ambient particles spread across the
-     whole canvas. No brightness tier, no separate "icon layer". One field. */
+     Two-phase transition creates the "whole field streaming in" effect:
+     SCATTER: formation particles fly back to their home positions (spread across canvas).
+              The active icon dissolves as particles leave.
+     FORM:    formation particles stream from home positions toward the icon targets.
+              Condensation boost materialises the icon as particles arrive.
+     On initial page load transPhase='form' so particles stream in from the start. */
   let t_a = 0, prev = performance.now(), raf;
 
   function frame(now) {
     const dt = Math.min((now - prev) * 0.001, 0.05);
     prev  = now;
     t_a  += dt;
+
+    /* ── Phase transition management ── */
+    if (transPhase === 'scatter') {
+      transTimer += dt;
+      if (transTimer >= SCATTER_DUR) {
+        /* Scatter done — assign new icon targets and begin streaming in */
+        const tgt = allTargets[pendingIdx];
+        for (let i = 0; i < N_FORM; i++) {
+          ftx[i] = tgt[i * 2];
+          fty[i] = tgt[i * 2 + 1];
+        }
+        transPhase = 'form';
+        transTimer = 0;
+      }
+    }
 
     const W = canvas.width, H = canvas.height;
     ctx.clearRect(0, 0, W, H);
@@ -957,11 +986,17 @@ function initShowcase() {
       let gx, gy;
 
       if (i < N_FORM) {
-        /* Formation: settle onto shape target — no wobble, clean silhouette */
-        gx = ftx[i];
-        gy = fty[i];
+        if (transPhase === 'scatter') {
+          /* Scatter: fly back to home — icon dissolves, particles spread across section */
+          gx = hx[i] + Math.sin(t_a * pDFx[i] + pDPx[i]) * pDRx[i];
+          gy = hy[i] + Math.cos(t_a * pDFy[i] + pDPy[i]) * pDRy[i];
+        } else {
+          /* Form: stream toward icon target — visibly flies in from across the section */
+          gx = ftx[i];
+          gy = fty[i];
+        }
       } else {
-        /* Ambient: slow calm drift across the full section */
+        /* Ambient: slow calm drift across the full section at all times */
         gx = hx[i] + Math.sin(t_a * pDFx[i] + pDPx[i]) * pDRx[i];
         gy = hy[i] + Math.cos(t_a * pDFy[i] + pDPy[i]) * pDRy[i];
       }
