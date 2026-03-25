@@ -879,9 +879,9 @@ function initShowcase() {
       fty[i] = initT[i * 2 + 1];
     }
 
-    /* ── Base appearance — ambient is dim/small; formation boost on condensation ── */
-    pSz[i]  = 0.45 + Math.random() * 0.70;   // 0.45–1.15 px (dim ambient base)
-    pOp[i]  = 0.13 + Math.random() * 0.15;   // 0.13–0.28    (dim ambient base)
+    /* ── Base appearance — visible while flying; condensation adds extra boost ── */
+    pSz[i]  = 0.80 + Math.random() * 0.90;   // 0.80–1.70 px — visible in transit & ambient
+    pOp[i]  = 0.28 + Math.random() * 0.22;   // 0.28–0.50    — clearly visible at all times
     pDRx[i] = 1.5  + Math.random() * 2.5;    // calm drift amplitude
     pDRy[i] = 1.5  + Math.random() * 2.5;
     pDFx[i] = 0.04 + Math.random() * 0.08;   // slow drift frequency
