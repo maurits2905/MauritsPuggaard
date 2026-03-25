@@ -703,8 +703,7 @@ function initShowcase() {
 
   const isMob  = CW < 680;
   const N_TOT  = isMob ? 1000 : 2000;
-  const N_FORM = isMob ?  360 :  720;   // formation particles (0 … N_FORM-1)
-  /* ambient particles: N_FORM … N_TOT-1 — spread across full canvas */
+  const N_FORM = isMob ?  360 :  720;
 
   /* ── State metadata ── */
   const STATES = [
@@ -717,145 +716,119 @@ function initShowcase() {
   ];
 
   /* ══════════════════════════════════════════════════════════════════
-     Shape generators — return Float32Array[N_FORM * 2]
-     Each generator fills exactly n target positions [x0,y0, x1,y1 …]
+     Shape generators — return Float32Array[n * 2]
+     Shapes match the reference icons (layers / SAP logo / circles)
   ══════════════════════════════════════════════════════════════════ */
 
-  /* Professional: 5 equal-width horizontal bars (stacked-layers icon) */
+  /* Professional: 3 stacked horizontal bars (layers icon) */
   function genProfessional(W, H, n) {
-    const barW  = W * 0.60;
-    const barH  = H * 0.055;
-    const gap   = H * 0.050;
-    const totalH = 5 * barH + 4 * gap;
-    const startY = (H - totalH) * 0.5;
-    const cx = W * 0.5;
-    const out = [];
-    const perBar = Math.floor(n / 5);
-    for (let b = 0; b < 5; b++) {
-      const cy  = startY + b * (barH + gap) + barH * 0.5;
-      const cnt = b < 4 ? perBar : n - 4 * perBar;
+    const barW   = W * 0.50;
+    const barH   = H * 0.090;
+    const gap    = H * 0.060;
+    const totalH = 3 * barH + 2 * gap;
+    const cy0    = (H - totalH) * 0.5 + barH * 0.5;
+    const cx     = W * 0.5;
+    const perBar = Math.floor(n / 3);
+    const out    = [];
+    for (let b = 0; b < 3; b++) {
+      const cy  = cy0 + b * (barH + gap);
+      const cnt = b < 2 ? perBar : n - 2 * perBar;
       for (let i = 0; i < cnt; i++) {
         out.push(cx + (Math.random() - 0.5) * barW,
                  cy + (Math.random() - 0.5) * barH);
       }
     }
-    while (out.length < n * 2)
-      out.push(cx + (Math.random() - 0.5) * barW * 0.5,
-               H * 0.5 + (Math.random() - 0.5) * barH);
     const arr = new Float32Array(n * 2);
     arr.set(out.slice(0, n * 2));
     return arr;
   }
 
-  /* SAP: equilateral triangle — vertex nodes + edges + center hub + spokes */
+  /* SAP: right-triangle shape (approximation of SAP logo flag) */
   function genSAP(W, H, n) {
-    const cx = W * 0.5, cy = H * 0.5;
-    const R  = Math.min(W * 0.36, H * 0.40);
+    const cx   = W * 0.5, cy = H * 0.5;
+    const size = Math.min(W * 0.44, H * 0.52) * 0.5;
+    /* Triangle vertices: top-left, top-right, bottom-right (SAP flag orientation) */
+    const A = [cx - size,       cy - size * 0.85];
+    const B = [cx + size,       cy - size * 0.85];
+    const C = [cx + size,       cy + size * 0.85];
     const out = [];
-    const verts = Array.from({ length: 3 }, (_, v) => {
+
+    /* Dense edges: hypotenuse A→C is the signature diagonal */
+    const edgeN = Math.round(n * 0.50);
+    const nAC   = Math.round(edgeN * 0.48); // diagonal — most prominent
+    const nAB   = Math.round(edgeN * 0.26); // top horizontal
+    const nBC   = edgeN - nAC - nAB;        // right vertical
+    const addEdge = (x0, y0, x1, y1, cnt) => {
+      for (let i = 0; i < cnt; i++) {
+        const t = Math.random();
+        out.push(x0 + (x1 - x0) * t + (Math.random() - 0.5) * 2.5,
+                 y0 + (y1 - y0) * t + (Math.random() - 0.5) * 2.5);
+      }
+    };
+    addEdge(A[0], A[1], C[0], C[1], nAC);
+    addEdge(A[0], A[1], B[0], B[1], nAB);
+    addEdge(B[0], B[1], C[0], C[1], nBC);
+
+    /* Sparse interior fill */
+    while (out.length < n * 2) {
+      let r1 = Math.random(), r2 = Math.random();
+      if (r1 + r2 > 1) { r1 = 1 - r1; r2 = 1 - r2; }
+      const r3 = 1 - r1 - r2;
+      out.push(A[0] * r1 + B[0] * r2 + C[0] * r3,
+               A[1] * r1 + B[1] * r2 + C[1] * r3);
+    }
+
+    const arr = new Float32Array(n * 2);
+    arr.set(out.slice(0, n * 2));
+    return arr;
+  }
+
+  /* Fullstack: 3 circular node clusters + connecting edges (connected-circles icon) */
+  function genFullstack(W, H, n) {
+    const cx  = W * 0.5, cy = H * 0.5;
+    const R   = Math.min(W * 0.30, H * 0.34);
+    const nr  = R * 0.24; // node blob radius
+    const out = [];
+
+    /* 3 nodes in equilateral triangle */
+    const nodes = Array.from({ length: 3 }, (_, v) => {
       const a = -Math.PI / 2 + v * TWO_PI / 3;
       return [cx + Math.cos(a) * R, cy + Math.sin(a) * R];
     });
 
-    /* Edges */
-    const edgeN   = Math.round(n * 0.44);
-    const perEdge = Math.floor(edgeN / 3);
-    for (let e = 0; e < 3; e++) {
-      const [x0, y0] = verts[e];
-      const [x1, y1] = verts[(e + 1) % 3];
-      const cnt = e < 2 ? perEdge : edgeN - 2 * perEdge;
-      for (let i = 0; i < cnt; i++) {
-        const t = Math.random();
-        out.push(x0 + (x1 - x0) * t + (Math.random() - 0.5) * 3,
-                 y0 + (y1 - y0) * t + (Math.random() - 0.5) * 3);
-      }
-    }
-
-    /* Vertex node blobs */
-    const nodeN   = Math.round(n * 0.34);
+    /* Node blobs */
+    const nodeN   = Math.round(n * 0.56);
     const perNode = Math.floor(nodeN / 3);
     for (let v = 0; v < 3; v++) {
-      const [vx, vy] = verts[v];
-      const nr = R * 0.09;
+      const [nx, ny] = nodes[v];
       const cnt = v < 2 ? perNode : nodeN - 2 * perNode;
       for (let i = 0; i < cnt; i++) {
         const r = nr * Math.sqrt(Math.random());
         const a = Math.random() * TWO_PI;
-        out.push(vx + Math.cos(a) * r, vy + Math.sin(a) * r);
+        out.push(nx + Math.cos(a) * r, ny + Math.sin(a) * r);
       }
     }
 
-    /* Center hub */
-    const hubN = Math.round(n * 0.10);
-    for (let i = 0; i < hubN; i++) {
-      const r = R * 0.05 * Math.sqrt(Math.random());
-      const a = Math.random() * TWO_PI;
-      out.push(cx + Math.cos(a) * r, cy + Math.sin(a) * r);
-    }
-
-    /* Spokes to reach n */
-    while (out.length < n * 2) {
-      const [vx, vy] = verts[Math.floor(Math.random() * 3)];
-      const t = Math.random();
-      out.push(cx + (vx - cx) * t, cy + (vy - cy) * t);
-    }
-
-    const arr = new Float32Array(n * 2);
-    arr.set(out.slice(0, n * 2));
-    return arr;
-  }
-
-  /* Fullstack: hexagonal wheel — center hub + 6 outer nodes + arcs + spokes */
-  function genFullstack(W, H, n) {
-    const cx = W * 0.5, cy = H * 0.5;
-    const R  = Math.min(W * 0.38, H * 0.42);
-    const out = [];
-    const outerV = Array.from({ length: 6 }, (_, v) => {
-      const a = -Math.PI / 2 + v * TWO_PI / 6;
-      return [cx + Math.cos(a) * R, cy + Math.sin(a) * R];
-    });
-
-    /* Outer ring arcs */
-    const arcN   = Math.round(n * 0.38);
-    const perArc = Math.floor(arcN / 6);
-    for (let e = 0; e < 6; e++) {
-      const [x0, y0] = outerV[e];
-      const [x1, y1] = outerV[(e + 1) % 6];
-      const cnt = e < 5 ? perArc : arcN - 5 * perArc;
+    /* Connecting edges between all 3 nodes */
+    const edgeN   = Math.round(n * 0.38);
+    const perEdge = Math.floor(edgeN / 3);
+    for (let e = 0; e < 3; e++) {
+      const [x0, y0] = nodes[e];
+      const [x1, y1] = nodes[(e + 1) % 3];
+      const cnt = e < 2 ? perEdge : edgeN - 2 * perEdge;
       for (let i = 0; i < cnt; i++) {
         const t = Math.random();
-        out.push(x0 + (x1 - x0) * t + (Math.random() - 0.5) * 3,
-                 y0 + (y1 - y0) * t + (Math.random() - 0.5) * 3);
+        out.push(x0 + (x1 - x0) * t + (Math.random() - 0.5) * 2.5,
+                 y0 + (y1 - y0) * t + (Math.random() - 0.5) * 2.5);
       }
     }
 
-    /* Outer node blobs */
-    const outerN  = Math.round(n * 0.27);
-    const perNode = Math.floor(outerN / 6);
-    for (let v = 0; v < 6; v++) {
-      const [ox, oy] = outerV[v];
-      const nr = R * 0.07;
-      const cnt = v < 5 ? perNode : outerN - 5 * perNode;
-      for (let i = 0; i < cnt; i++) {
-        const r = nr * Math.sqrt(Math.random());
-        const a = Math.random() * TWO_PI;
-        out.push(ox + Math.cos(a) * r, oy + Math.sin(a) * r);
-      }
-    }
-
-    /* Center hub */
-    const hubN = Math.round(n * 0.10);
-    for (let i = 0; i < hubN; i++) {
-      const r = R * 0.08 * Math.sqrt(Math.random());
-      const a = Math.random() * TWO_PI;
-      out.push(cx + Math.cos(a) * r, cy + Math.sin(a) * r);
-    }
-
-    /* Spokes to reach n */
+    /* Fill to n */
     while (out.length < n * 2) {
-      const [ox, oy] = outerV[Math.floor(Math.random() * 6)];
-      const t = Math.random();
-      out.push(cx + (ox - cx) * t, cy + (oy - cy) * t);
+      const [nx, ny] = nodes[Math.floor(Math.random() * 3)];
+      const r = nr * Math.sqrt(Math.random());
+      const a = Math.random() * TWO_PI;
+      out.push(nx + Math.cos(a) * r, ny + Math.sin(a) * r);
     }
 
     const arr = new Float32Array(n * 2);
@@ -863,7 +836,6 @@ function initShowcase() {
     return arr;
   }
 
-  /* ── Build formation targets ── */
   function buildTargets() {
     return [
       genProfessional(CW, CH, N_FORM),
@@ -874,58 +846,59 @@ function initShowcase() {
   let allTargets = buildTargets();
   let currentIdx = 0;
 
-  /* ── Particle pools ── */
-  const N_AMB  = N_TOT - N_FORM;
+  /* ══════════════════════════════════════════════════════════════════
+     ONE unified particle pool — no separate formation / ambient arrays.
+     All particles share the same base visual properties. Formation
+     particles (0…N_FORM-1) are pulled toward shape targets; the rest
+     drift freely. Brightness/size increases only as a particle nears
+     its target (condensation), so the icon literally emerges from the
+     ambient field rather than appearing as a separate blob.
+  ══════════════════════════════════════════════════════════════════ */
   const px   = new Float32Array(N_TOT);
   const py   = new Float32Array(N_TOT);
-  const ftx  = new Float32Array(N_FORM);   // formation targets
+  const ftx  = new Float32Array(N_FORM);  // shape targets (formation only)
   const fty  = new Float32Array(N_FORM);
-  const hx   = new Float32Array(N_AMB);    // ambient home positions
-  const hy   = new Float32Array(N_AMB);
+  const hx   = new Float32Array(N_TOT);   // home / ambient anchor (all)
+  const hy   = new Float32Array(N_TOT);
 
+  /* Per-particle constants */
   const pSz  = new Float32Array(N_TOT);
   const pOp  = new Float32Array(N_TOT);
-  const pDRx = new Float32Array(N_TOT);    // drift amplitude x
-  const pDRy = new Float32Array(N_TOT);    // drift amplitude y
-  const pDFx = new Float32Array(N_TOT);    // drift frequency x
-  const pDFy = new Float32Array(N_TOT);    // drift frequency y
-  const pDPx = new Float32Array(N_TOT);    // drift phase x
-  const pDPy = new Float32Array(N_TOT);    // drift phase y
-  const pLr  = new Float32Array(N_TOT);    // per-particle lerp rate
-  const pCS  = [];                          // color strings
+  const pDRx = new Float32Array(N_TOT);
+  const pDRy = new Float32Array(N_TOT);
+  const pDFx = new Float32Array(N_TOT);
+  const pDFy = new Float32Array(N_TOT);
+  const pDPx = new Float32Array(N_TOT);
+  const pDPy = new Float32Array(N_TOT);
+  const pLr  = new Float32Array(N_TOT);
+  const pCS  = [];
 
   const initT = allTargets[0];
   for (let i = 0; i < N_TOT; i++) {
-    const isForm = i < N_FORM;
-
     px[i] = Math.random() * CW;
     py[i] = Math.random() * CH;
+    hx[i] = Math.random() * CW;   // every particle has an ambient home
+    hy[i] = Math.random() * CH;
 
-    if (isForm) {
+    if (i < N_FORM) {
       ftx[i] = initT[i * 2];
       fty[i] = initT[i * 2 + 1];
-      pSz[i]  = 0.90 + Math.random() * 1.60;
-      pOp[i]  = 0.50 + Math.random() * 0.50;
-      pDRx[i] = 0.40 + Math.random() * 1.20;
-      pDRy[i] = 0.40 + Math.random() * 1.20;
-      pDFx[i] = 0.15 + Math.random() * 0.40;
-      pDFy[i] = 0.15 + Math.random() * 0.40;
-      pLr[i]  = 0.030 + Math.random() * 0.014;
-    } else {
-      const ai = i - N_FORM;
-      hx[ai]  = Math.random() * CW;
-      hy[ai]  = Math.random() * CH;
-      pSz[i]  = 0.50 + Math.random() * 0.90;
-      pOp[i]  = 0.12 + Math.random() * 0.28;
-      pDRx[i] = 2.00 + Math.random() * 5.00;
-      pDRy[i] = 2.00 + Math.random() * 5.00;
-      pDFx[i] = 0.08 + Math.random() * 0.20;
-      pDFy[i] = 0.08 + Math.random() * 0.20;
-      pLr[i]  = 0.016 + Math.random() * 0.010;
     }
 
+    /* ── Uniform base appearance — identical for formation and ambient ── */
+    pSz[i]  = 0.55 + Math.random() * 0.85;   // 0.55–1.40 px
+    pOp[i]  = 0.13 + Math.random() * 0.22;   // 0.13–0.35 (dim ambient base)
+    pDRx[i] = 3.5  + Math.random() * 6.5;    // wide drift fills canvas
+    pDRy[i] = 3.5  + Math.random() * 6.5;
+    pDFx[i] = 0.08 + Math.random() * 0.18;
+    pDFy[i] = 0.08 + Math.random() * 0.18;
     pDPx[i] = Math.random() * TWO_PI;
     pDPy[i] = Math.random() * TWO_PI;
+
+    /* Formation particles pull faster so shape snaps cleanly */
+    pLr[i] = i < N_FORM
+      ? 0.034 + Math.random() * 0.018
+      : 0.013 + Math.random() * 0.009;
 
     /* Color: blue-white / cobalt / soft-purple */
     const c = Math.random();
@@ -972,7 +945,11 @@ function initShowcase() {
     for (let i = 0; i < N_FORM; i++) { ftx[i] = t[i * 2]; fty[i] = t[i * 2 + 1]; }
   }
 
-  /* ── Render loop (lerp, no spring/velocity) ── */
+  /* ── Render loop ── */
+  /* Condensation radius: within this distance a formation particle brightens/grows,
+     making the icon emerge from the field rather than appearing pre-formed. */
+  const CONDENSE_R = Math.min(CW, CH) * 0.13;
+
   let t_a = 0, prev = performance.now(), raf;
 
   function frame(now) {
@@ -986,28 +963,41 @@ function initShowcase() {
     ctx.scale(DPR, DPR);
 
     for (let i = 0; i < N_TOT; i++) {
-      /* Framerate-independent lerp factor */
       const lf = 1 - Math.pow(1 - pLr[i], dt * 60);
-      let gx, gy;   /* goal position this frame */
+      let gx, gy;
 
       if (i < N_FORM) {
-        /* Formation: lerp toward shape target with gentle wobble */
-        gx = ftx[i] + Math.sin(t_a * pDFx[i] + pDPx[i]) * pDRx[i];
-        gy = fty[i] + Math.cos(t_a * pDFy[i] + pDPy[i]) * pDRy[i];
+        /* Formation: converge on target with a tiny organic wobble at rest */
+        gx = ftx[i] + Math.sin(t_a * pDFx[i] + pDPx[i]) * 1.8;
+        gy = fty[i] + Math.cos(t_a * pDFy[i] + pDPy[i]) * 1.8;
       } else {
-        /* Ambient: drift around home position */
-        const ai = i - N_FORM;
-        gx = hx[ai] + Math.sin(t_a * pDFx[i] + pDPx[i]) * pDRx[i];
-        gy = hy[ai] + Math.cos(t_a * pDFy[i] + pDPy[i]) * pDRy[i];
+        /* Ambient: drift widely around home — fills the whole section */
+        gx = hx[i] + Math.sin(t_a * pDFx[i] + pDPx[i]) * pDRx[i];
+        gy = hy[i] + Math.cos(t_a * pDFy[i] + pDPy[i]) * pDRy[i];
       }
 
       px[i] += (gx - px[i]) * lf;
       py[i] += (gy - py[i]) * lf;
 
-      ctx.globalAlpha = pOp[i];
+      let drawSz = pSz[i];
+      let drawOp = pOp[i];
+
+      if (i < N_FORM) {
+        /* Condensation: particle brightens and grows only as it nears its target.
+           While travelling through the field it looks identical to ambient particles.
+           smoothstep gives a gentle ease-in to the boost. */
+        const dx   = px[i] - ftx[i], dy = py[i] - fty[i];
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const t    = 1 - Math.min(dist / CONDENSE_R, 1);
+        const s    = t * t * (3 - 2 * t);   // smoothstep
+        drawSz += s * 1.35;
+        drawOp  = Math.min(pOp[i] + s * 0.58, 1);
+      }
+
+      ctx.globalAlpha = drawOp;
       ctx.fillStyle   = pCS[i];
       ctx.beginPath();
-      ctx.arc(px[i], py[i], pSz[i], 0, TWO_PI);
+      ctx.arc(px[i], py[i], drawSz, 0, TWO_PI);
       ctx.fill();
     }
 
@@ -1039,7 +1029,7 @@ function initShowcase() {
     allTargets = buildTargets();
     const t = allTargets[currentIdx];
     for (let i = 0; i < N_FORM; i++) { ftx[i] = t[i * 2]; fty[i] = t[i * 2 + 1]; }
-    for (let i = 0; i < N_AMB; i++) { hx[i] = Math.random() * CW; hy[i] = Math.random() * CH; }
+    for (let i = 0; i < N_TOT;  i++) { hx[i]  = Math.random() * CW; hy[i] = Math.random() * CH; }
   }).observe(canvas);
 }
 
