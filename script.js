@@ -825,9 +825,9 @@ function initShowcase() {
 
   function buildTargets() {
     return [
-      genProfessional(CW, CH, N_FORM),
-      genSAP(CW, CH, N_FORM),
       genFullstack(CW, CH, N_FORM),
+      genSAP(CW, CH, N_FORM),
+      genProfessional(CW, CH, N_FORM),
     ];
   }
   let allTargets = buildTargets();
