@@ -7904,12 +7904,10 @@ html.noReveal .aboutRevealWrap {
 /* ── Canvas ── */
 
 .showcaseCanvasWrap {
-  /* Break out of .wrap's max-width/padding so the canvas goes edge-to-edge.
-     margin-left: calc(50% - 50vw) shifts the element left by exactly the
-     amount the wrap is narrower than the viewport, regardless of padding. */
+  /* 100vw breaks out of .wrap's max-width. The parent's align-items:center
+     already centers this oversized item correctly — no extra margin needed. */
   position: relative;
   width: 100vw;
-  margin-left: calc(50% - 50vw);
 }
 
 #showcaseCanvas {
