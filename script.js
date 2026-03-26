@@ -849,6 +849,8 @@ function initShowcase() {
   /* Magnetic pull radius — only particles within this distance of their
      assigned target point feel the pull. Particles outside drift freely. */
   const PULL_R = 420;
+  const REP_R  = 140;   // CSS px — mouse repulsion radius
+  const REP_F  = 180;   // goal-displacement push strength (CSS px)
 
   /* ══════════════════════════════════════════════════════════════════
      ONE unified particle pool — no separate formation / ambient arrays.
@@ -877,6 +879,9 @@ function initShowcase() {
   const pLr    = new Float32Array(N_TOT);
   const pBoost = new Float32Array(N_FORM);  // smoothed condensation boost 0–1
   const pCS  = [];
+  const pR   = new Uint8Array(N_TOT);   // base colour channels (for mouse tint)
+  const pG   = new Uint8Array(N_TOT);
+  const pB   = new Uint8Array(N_TOT);
 
   const initT = allTargets[0];
   for (let i = 0; i < N_TOT; i++) {
@@ -955,6 +960,7 @@ function initShowcase() {
       b = 208 + Math.round(Math.random() * 38);  // 208–246
     }
     pCS.push(`rgb(${r},${g},${b})`);
+    pR[i] = r; pG[i] = g; pB[i] = b;
   }
 
   /* ── State switching ── */
@@ -983,6 +989,15 @@ function initShowcase() {
     const t = allTargets[idx];
     for (let i = 0; i < N_FORM; i++) { ftx[i] = t[i * 2]; fty[i] = t[i * 2 + 1]; }
   }
+
+  /* ── Mouse repulsion tracking ── */
+  let mx = -99999, my = -99999;
+  canvas.addEventListener('mousemove', e => {
+    const rect = canvas.getBoundingClientRect();
+    mx = e.clientX - rect.left;
+    my = e.clientY - rect.top;
+  });
+  canvas.addEventListener('mouseleave', () => { mx = -99999; my = -99999; });
 
   /* ── Render loop ──
      Magnetic pull model: the active icon shape acts as an invisible magnet.
@@ -1031,6 +1046,21 @@ function initShowcase() {
         gy = ambGy;
       }
 
+      /* Mouse repulsion — push goal position away from cursor */
+      let repF = 0;
+      if (mx > -9999) {
+        const rdx = px[i] - mx;
+        const rdy = py[i] - my;
+        const rd  = Math.sqrt(rdx * rdx + rdy * rdy);
+        if (rd < REP_R && rd > 0.5) {
+          const t  = 1 - rd / REP_R;
+          repF     = t * t;           // 0 → 1 as particle nears cursor
+          const st = repF * REP_F;
+          gx += (rdx / rd) * st;
+          gy += (rdy / rd) * st;
+        }
+      }
+
       px[i] += (gx - px[i]) * lf;
       py[i] += (gy - py[i]) * lf;
 
@@ -1057,8 +1087,18 @@ function initShowcase() {
         op += pBoost[i] * 0.52;
         sz += pBoost[i] * 1.60;
       }
-      ctx.globalAlpha = op;
-      ctx.fillStyle   = pCS[i];
+      /* Mouse proximity — shift colour toward bright cyan-white and enlarge */
+      if (repF > 0.01) {
+        const cr = Math.round(pR[i] + (210 - pR[i]) * repF);
+        const cg = Math.round(pG[i] + (230 - pG[i]) * repF);
+        const cb = 255;
+        ctx.fillStyle = `rgb(${cr},${cg},${cb})`;
+        op += repF * 0.40;
+        sz += repF * 1.20;
+      } else {
+        ctx.fillStyle = pCS[i];
+      }
+      ctx.globalAlpha = Math.min(1, op);
       ctx.beginPath();
       ctx.arc(px[i], py[i], sz, 0, TWO_PI);
       ctx.fill();
