@@ -653,28 +653,7 @@ function initReveals() {
      to    translateY(0)     scale(1.00) opacity(1.00)
 ─────────────────────────────────────────────────────────────────────── */
 function initAboutReveal() {
-  const wrap = document.querySelector('.aboutRevealWrap');
-  if (!wrap || prefersReducedMotion() || !window.gsap || !window.ScrollTrigger) return;
-
-  gsap.registerPlugin(ScrollTrigger);
-
-  gsap.fromTo(
-    wrap,
-    { opacity: 0.45, y: 140, scale: 0.87 },
-    {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      ease: 'none',
-      scrollTrigger: {
-        id: 'about-reveal',
-        trigger: '#about',
-        start: 'top bottom+=120',  // starts before about enters viewport
-        end: 'top 60%',            // completes at 60 % — ~40 % faster
-        scrub: 0.65,               // responsive yet smooth
-      },
-    }
-  );
+  // No-op: about section uses CSS entry animation only
 }
 
 /* ── Expertise showcase — canvas particle morphing ───────────────────────
@@ -2467,55 +2446,59 @@ function initMoreDropdown() {
   });
 }
 
-function initAboutHoverDeck() {
-  const reduced =
-    window.matchMedia &&
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+function initAboutTabs() {
+  const bar    = document.querySelector('.abtTabBar');
+  const tabs   = document.querySelectorAll('.abtTab');
+  const panels = document.querySelectorAll('.abtPanel');
+  const ink    = document.querySelector('.abtTabInk');
+  if (!bar || !tabs.length) return;
 
-  const cards = document.querySelectorAll(".aboutCard--info.aboutHover");
-  if (!cards.length) return;
+  function moveInk(tab) {
+    if (!ink) return;
+    ink.style.left  = tab.offsetLeft + 'px';
+    ink.style.width = tab.offsetWidth + 'px';
+  }
 
-  cards.forEach((card) => {
-    const tiles = Array.from(card.querySelectorAll(".aboutHoverTile"));
-    if (!tiles.length) return;
-
-    // Start clean (no active card)
-    card.setAttribute("data-active", "-1");
-
-    const setActive = (idx) => {
-      const v = typeof idx === "number" ? idx : -1;
-      card.setAttribute("data-active", String(v));
-    };
-
-    tiles.forEach((tile) => {
-      const idx = Number(tile.getAttribute("data-idx") || "-1");
-
-      tile.addEventListener("mouseenter", () => {
-        if (reduced) return;
-        setActive(idx);
-      });
-
-      tile.addEventListener("focusin", () => {
-        setActive(idx);
-      });
-
-      // Click/tap toggles (useful on touch)
-      tile.addEventListener("click", () => {
-        const cur = Number(card.getAttribute("data-active") || "-1");
-        setActive(cur === idx ? -1 : idx);
-      });
+  function activate(idx) {
+    tabs.forEach((t, i) => {
+      const on = i === idx;
+      t.classList.toggle('is-on', on);
+      t.setAttribute('aria-selected', String(on));
     });
+    panels.forEach((p, i) => p.classList.toggle('is-on', i === idx));
+    moveInk(tabs[idx]);
+  }
 
-    card.addEventListener("mouseleave", () => {
-      if (reduced) return;
-      setActive(-1);
-    });
-
-    card.addEventListener("focusout", (e) => {
-      const next = e.relatedTarget;
-      if (!next || !card.contains(next)) setActive(-1);
-    });
+  tabs.forEach((tab, idx) => {
+    tab.addEventListener('click', () => activate(idx));
   });
+
+  // Set initial ink position after layout
+  requestAnimationFrame(() => moveInk(tabs[0]));
+}
+
+function initAboutStats() {
+  const nums = document.querySelectorAll('.abtStatN');
+  if (!nums.length) return;
+
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      obs.unobserve(entry.target);
+      const el  = entry.target;
+      const to  = parseInt(el.dataset.to || '0', 10);
+      const dur = 1200;
+      const start = performance.now();
+      (function tick(now) {
+        const t = Math.min((now - start) / dur, 1);
+        const ease = 1 - Math.pow(1 - t, 3);
+        el.textContent = Math.round(ease * to);
+        if (t < 1) requestAnimationFrame(tick);
+      })(start);
+    });
+  }, { threshold: 0.6 });
+
+  nums.forEach(n => obs.observe(n));
 }
 
 /* ------------------------------
@@ -2534,7 +2517,7 @@ async function init() {
   initBackground();
   //initDeepFade();
   initHeaderPillNav();
-  initAboutHoverDeck();
+  initAboutTabs();
 
   // Fonts can be one of the slowest first-paint items (Google Fonts)
   try {
@@ -2743,6 +2726,7 @@ async function init() {
 
   initReveals();
   initAboutReveal();
+  initAboutStats();
   initStory();
 
   // Career
