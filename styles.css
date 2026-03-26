@@ -657,15 +657,15 @@ input {
   bottom: -1px;
   left: 0;
   z-index: 2;
-  /* Backs the canvas mask — fills in the solid page colour so no
-     gap exists between the faded stars and the next section */
+  /* Fades the star canvas to the actual page black (#000 in stars mode).
+     rgba(0,0,0,…) matches body[data-bg="stars"] background perfectly. */
   height: clamp(320px, 45vh, 560px);
   background: linear-gradient(
     to bottom,
-    rgba(6, 7, 17, 0)    0%,
-    rgba(6, 7, 17, 0.30) 38%,
-    rgba(6, 7, 17, 0.75) 65%,
-    #060711              100%
+    rgba(0, 0, 0, 0)    0%,
+    rgba(0, 0, 0, 0.30) 38%,
+    rgba(0, 0, 0, 0.75) 65%,
+    #000000              100%
   );
   pointer-events: none;
   content: "";
@@ -7432,10 +7432,11 @@ html.noReveal .aboutRevealWrap {
    HERO v4 â€” Three.js Torus + Serif Editorial
 ================================================ */
 
-/* Hero base — matches page background so the star fade is seamless */
+/* Hero base — use the CSS variable so it matches the actual body bg
+   (body[data-bg="stars"] sets --bg:#000; default is #060711) */
 #hero.heroSpace {
   position: relative !important;
-  background: #060711 !important;
+  background: var(--bg) !important;
   overflow: hidden !important;
   display: flex !important;
   flex-direction: column !important;
@@ -7695,7 +7696,7 @@ html.noReveal .aboutRevealWrap {
 
 /* Light mode: hero always stays dark (ring particles need dark bg) */
 [data-theme="light"] #hero.heroSpace {
-  background: #060711 !important;
+  background: #060711 !important; /* keep dark even when page is light */
 }
 [data-theme="light"] .heroCanvas { opacity: 1; }
 /* Text stays white in light mode hero since bg is always dark */
