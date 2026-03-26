@@ -886,10 +886,10 @@ function initShowcase() {
        wander in and out of the magnetic pull zone.
        Ambient particles are spread across the full section. */
     if (isForm) {
-      /* Homes concentrated in the central 65% so particles regularly sweep
-         through the magnetic pull zone around the icon. */
-      hx[i] = CW * 0.5 + (Math.random() - 0.5) * CW * 0.80;
-      hy[i] = CH * 0.5 + (Math.random() - 0.5) * CH * 0.65;
+      /* Homes spread across most of the canvas so particles use the full
+         space when drifting, but still funnel into the pull zone to form shapes. */
+      hx[i] = CW * 0.5 + (Math.random() - 0.5) * CW * 1.10;
+      hy[i] = CH * 0.5 + (Math.random() - 0.5) * CH * 0.90;
     } else {
       hx[i] = Math.random() * CW;
       hy[i] = Math.random() * CH;

@@ -7452,23 +7452,23 @@ html.noReveal .aboutRevealWrap {
   width: 100%;
   height: 100%;
   pointer-events: none;
-  /* Fade star density away toward the bottom — canvas becomes
-     transparent so the page background bleeds through naturally */
+  /* Stars stay fully visible almost to the bottom so they visually
+     connect with the background stars in the next section */
   -webkit-mask-image: linear-gradient(
     to bottom,
-    black  0%,
-    black  35%,
-    rgba(0,0,0,0.55) 60%,
-    rgba(0,0,0,0.10) 82%,
-    transparent 100%
+    black            0%,
+    black            68%,
+    rgba(0,0,0,0.55) 82%,
+    rgba(0,0,0,0.15) 93%,
+    transparent      100%
   );
   mask-image: linear-gradient(
     to bottom,
-    black  0%,
-    black  35%,
-    rgba(0,0,0,0.55) 60%,
-    rgba(0,0,0,0.10) 82%,
-    transparent 100%
+    black            0%,
+    black            68%,
+    rgba(0,0,0,0.55) 82%,
+    rgba(0,0,0,0.15) 93%,
+    transparent      100%
   );
 }
 
@@ -7913,7 +7913,7 @@ html.noReveal .aboutRevealWrap {
 #showcaseCanvas {
   display: block;
   width: 100%;
-  height: clamp(320px, 46vw, 520px);
+  height: clamp(480px, 68vw, 780px);
 }
 
 /* ── Pills ── */
@@ -7964,6 +7964,6 @@ html.noReveal .aboutRevealWrap {
 @media (max-width: 760px) {
   .showcaseSection { padding-top: 56px; padding-bottom: 48px; }
   .showcaseHeader { padding-bottom: 12px; }
-  #showcaseCanvas { height: clamp(260px, 70vw, 360px); }
+  #showcaseCanvas { height: clamp(360px, 90vw, 520px); }
   .showcasePill { padding: 8px 18px; font-size: 11px; }
 }
