@@ -85,6 +85,9 @@ function createPreloader() {
   const pct = document.getElementById("prePct");
   const bottomLine = document.getElementById("preBottomLine");
   const nameWrap = document.getElementById("preName");
+  const ring = document.getElementById("preRingFill");
+  const statusEl = document.getElementById("ldrStatus");
+  const CIRC = 2 * Math.PI * 96; // stroke-dasharray circumference ≈ 603.2
 
   const reduced =
     window.matchMedia &&
@@ -143,6 +146,17 @@ function createPreloader() {
     if (pct) pct.textContent = pctText;
     if (fill) fill.style.width = `${clamped}%`;
     if (bottomLine) bottomLine.style.width = `${clamped}%`;
+
+    // SVG ring: stroke-dashoffset goes from CIRC (empty) → 0 (full)
+    if (ring) ring.style.strokeDashoffset = String(CIRC * (1 - clamped / 100));
+
+    // Status label
+    if (statusEl) {
+      if (clamped < 25) statusEl.textContent = "Initializing";
+      else if (clamped < 55) statusEl.textContent = "Loading assets";
+      else if (clamped < 85) statusEl.textContent = "Preparing experience";
+      else statusEl.textContent = "Ready";
+    }
   }
 
   // --- smooth cinematic progress (slow -> faster -> 100%) ---

@@ -24,46 +24,16 @@
     />
 
     <style>
-      /* Boot overlay so the loader looks right BEFORE external CSS loads */
+      /* Boot overlay — shown before styles.css loads */
       #preloader {
         position: fixed;
         inset: 0;
         z-index: 9999;
-        display: grid;
-        place-items: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         overflow: hidden;
-
-        background:
-          radial-gradient(
-            circle at 50% 45%,
-            rgba(255, 35, 55, 0.2),
-            transparent 55%
-          ),
-          radial-gradient(
-            circle at 18% 22%,
-            rgba(255, 80, 40, 0.1),
-            transparent 50%
-          ),
-          radial-gradient(
-            circle at 78% 72%,
-            rgba(255, 20, 90, 0.1),
-            transparent 55%
-          ),
-          #04040a;
-      }
-
-      /* subtle vignette like your real loader */
-      #preloader::after {
-        content: "";
-        position: absolute;
-        inset: -10%;
-        background: radial-gradient(
-          circle at 50% 40%,
-          transparent 40%,
-          rgba(0, 0, 0, 0.68) 72%,
-          rgba(0, 0, 0, 0.94) 100%
-        );
-        pointer-events: none;
+        background: #060711;
       }
     </style>
 
@@ -72,7 +42,6 @@
 
   <body data-bg="stars" class="isLoading">
     <!-- Preloader (shown on first paint) -->
-    <!-- Preloader (shown on first paint) -->
     <div
       id="preloader"
       class="preloader"
@@ -80,33 +49,56 @@
       aria-live="polite"
       aria-label="Loading"
     >
-      <!-- Decorative corner elements -->
-      <div class="corner-decor top-left" aria-hidden="true"></div>
-      <div class="corner-decor top-right" aria-hidden="true"></div>
-      <div class="corner-decor bottom-left" aria-hidden="true"></div>
-      <div class="corner-decor bottom-right" aria-hidden="true"></div>
+      <!-- Scan line sweep -->
+      <div class="ldr-scanline" aria-hidden="true"></div>
 
-      <div class="loader-content">
-        <!-- Name with letter animation (JS fills this) -->
-        <div class="name-text" id="preName" aria-hidden="true"></div>
+      <!-- Corner brackets -->
+      <div class="ldr-corner ldr-tl" aria-hidden="true"></div>
+      <div class="ldr-corner ldr-tr" aria-hidden="true"></div>
+      <div class="ldr-corner ldr-bl" aria-hidden="true"></div>
+      <div class="ldr-corner ldr-br" aria-hidden="true"></div>
 
-        <!-- Counter -->
-        <div class="counter-wrapper" aria-hidden="true">
-          <span class="counter" id="prePct">0</span>
-          <span class="percent">%</span>
-        </div>
-
-        <!-- Progress bar -->
-        <div class="progress-container" aria-hidden="true">
-          <div class="progress-bar" id="preBarFill"></div>
-        </div>
-
-        <!-- Small label -->
-        <p class="loading-text">Loading Experience</p>
+      <!-- Top label -->
+      <div class="ldr-top-label" aria-hidden="true">
+        <span class="ldr-blink-dot"></span>PORTFOLIO — 2025
       </div>
 
-      <!-- Bottom decorative line -->
-      <div class="bottom-line" id="preBottomLine" aria-hidden="true"></div>
+      <!-- Center content -->
+      <div class="ldr-body">
+
+        <!-- SVG progress ring with counter inside -->
+        <div class="ldr-ring-wrap">
+          <svg class="ldr-ring-svg" viewBox="0 0 220 220" aria-hidden="true">
+            <defs>
+              <linearGradient id="ldrGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#9b8cff"/>
+                <stop offset="100%" stop-color="#44f0b1"/>
+              </linearGradient>
+            </defs>
+            <circle class="ldr-ring-bg" cx="110" cy="110" r="96"/>
+            <circle class="ldr-ring-arc" id="preRingFill" cx="110" cy="110" r="96"/>
+          </svg>
+          <div class="ldr-ring-inner">
+            <span id="prePct">00</span><sup class="ldr-sup">%</sup>
+          </div>
+        </div>
+
+        <!-- Name (JS fills this with staggered letters) -->
+        <div class="ldr-name" id="preName" aria-hidden="true"></div>
+
+        <!-- Divider line -->
+        <div class="ldr-div" aria-hidden="true"></div>
+
+        <!-- Status text (JS updates dynamically) -->
+        <p class="ldr-status" id="ldrStatus" aria-hidden="true">Initializing</p>
+
+      </div>
+
+      <!-- Legacy compat elements (hidden, referenced by JS) -->
+      <div style="display:none" aria-hidden="true">
+        <div id="preBarFill"></div>
+        <div id="preBottomLine"></div>
+      </div>
     </div>
 
     <!-- Background -->
