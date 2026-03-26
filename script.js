@@ -740,10 +740,12 @@ function initShowcase() {
   function genProfessional(W, H, n) {
     const cx      = W * 0.50;
     const cy      = H * 0.50;
-    const rx      = W * 0.285;     // plate horizontal radius — wide disc
+    // Cap rx so plates keep a ~3.5:1 aspect ratio on any screen width.
+    // H * 0.252 = ryTop * 3.5 — beyond that they stretch into a thin line.
+    const rx      = Math.min(W * 0.285, H * 0.252);
     const ryTop   = H * 0.072;     // top-face vertical radius (flat = 3-D look)
     const thick   = H * 0.042;     // visible plate thickness below the top face
-    const spacing = H * 0.155;     // center-to-center vertical distance between plates
+    const spacing = H * 0.162;     // center-to-center vertical distance between plates
 
     const plateCy = [cy - spacing, cy, cy + spacing]; // top → middle → bottom
 
