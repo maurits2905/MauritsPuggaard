@@ -734,26 +734,60 @@ function initShowcase() {
      Shapes match the reference icons (layers / SAP logo / circles)
   ══════════════════════════════════════════════════════════════════ */
 
-  /* Professional: 3 compact elliptical bars matching the stacked-layers icon.
-     Dense uniform disc fill — readable from density alone, no brightness boost needed. */
+  /* Fullstack (idx 2): stacked-layers icon — three 3-D disc plates.
+     Each plate = top-face ellipse rim + sparse fill + visible front bottom-edge arc.
+     The flat perspective ellipses (rx >> ry) make the depth immediately readable. */
   function genProfessional(W, H, n) {
-    const cx  = W * 0.5, cy = H * 0.5;
-    const bw  = W * 0.240;  // semi-major (half-width)   ← ~23 % wider
-    const bh  = H * 0.064;  // semi-minor (half-height)  ← ~23 % taller
-    const gap = H * 0.058;  // gap between bar centres   ← scaled up
-    const totalH = 3 * bh * 2 + 2 * gap;
-    const cy0    = cy - totalH * 0.5 + bh;
-    const perBar = Math.floor(n / 3);
-    const out    = [];
-    for (let b = 0; b < 3; b++) {
-      const cyb = cy0 + b * (bh * 2 + gap);
-      const cnt = b < 2 ? perBar : n - 2 * perBar;
-      for (let i = 0; i < cnt; i++) {
-        const r = Math.sqrt(Math.random());
+    const cx      = W * 0.50;
+    const cy      = H * 0.50;
+    const rx      = W * 0.285;     // plate horizontal radius — wide disc
+    const ryTop   = H * 0.072;     // top-face vertical radius (flat = 3-D look)
+    const thick   = H * 0.042;     // visible plate thickness below the top face
+    const spacing = H * 0.155;     // center-to-center vertical distance between plates
+
+    const plateCy = [cy - spacing, cy, cy + spacing]; // top → middle → bottom
+
+    const RIM_FRAC  = 0.58;  // top-ellipse perimeter
+    const FILL_FRAC = 0.20;  // top-ellipse fill
+    // remainder → bottom-edge front arc
+
+    const out      = [];
+    const perPlate = Math.floor(n / 3);
+
+    for (let p = 0; p < 3; p++) {
+      const pcy = plateCy[p];
+      const cnt = p < 2 ? perPlate : n - 2 * perPlate;
+
+      const rimCnt  = Math.floor(cnt * RIM_FRAC);
+      const fillCnt = Math.floor(cnt * FILL_FRAC);
+      const edgeCnt = cnt - rimCnt - fillCnt;
+
+      /* ── Top-face rim (full ellipse perimeter, slight thickness scatter) ── */
+      for (let i = 0; i < rimCnt; i++) {
+        const a  = Math.random() * TWO_PI;
+        const th = 1 + (Math.random() - 0.5) * 0.07;
+        out.push(cx + Math.cos(a) * rx * th, pcy + Math.sin(a) * ryTop * th);
+      }
+
+      /* ── Top-face fill (sparse, uniform in ellipse) ── */
+      for (let i = 0; i < fillCnt; i++) {
+        const r = Math.sqrt(Math.random()) * 0.90;
         const a = Math.random() * TWO_PI;
-        out.push(cx + bw * r * Math.cos(a), cyb + bh * r * Math.sin(a));
+        out.push(cx + Math.cos(a) * rx * r, pcy + Math.sin(a) * ryTop * r);
+      }
+
+      /* ── Bottom-edge arc — front/lower half only (angles 0…π = positive sin)
+            offset down by `thick` so it peeks below the top face             ── */
+      for (let i = 0; i < edgeCnt; i++) {
+        const a  = Math.random() * Math.PI;          // 0..π → lower semi-ellipse
+        const th = 1 + (Math.random() - 0.5) * 0.07;
+        out.push(
+          cx + Math.cos(a) * rx * th,
+          pcy + thick + Math.sin(a) * ryTop * 0.85 * th
+        );
       }
     }
+
     const arr = new Float32Array(n * 2);
     arr.set(out.slice(0, n * 2));
     return arr;
