@@ -38,7 +38,430 @@
     </style>
 
     <link rel="stylesheet" href="styles.css?v=200" />
-    <link rel="stylesheet" href="about.css?v=1" />
+
+    <style id="about-css">
+/* ═══════════════════════════════════════════════════
+   ABOUT — Space Dossier  (completely new design)
+   ═══════════════════════════════════════════════════ */
+
+.abtSection {
+  scroll-margin-top: 90px;
+  padding-top: clamp(56px, 8vh, 96px);
+  padding-bottom: clamp(56px, 8vh, 96px);
+}
+
+
+/* Two-column wrapper */
+.abtInner {
+  display: grid;
+  grid-template-columns: 42% 1fr;
+  gap: clamp(32px, 4vw, 64px);
+  align-items: start;
+}
+
+/* ── Photo column ──────────────────────────────────── */
+
+.abtPhotoCol {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.abtFrame {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  aspect-ratio: 3 / 4;
+  background: #06081a;
+}
+
+/* Corner brackets — matching preloader aesthetic */
+.abtCorner {
+  position: absolute;
+  z-index: 4;
+  width: 22px;
+  height: 22px;
+  pointer-events: none;
+}
+.abtCorner--tl { top: 12px; left: 12px; border-top: 2px solid rgba(122,107,255,0.75); border-left: 2px solid rgba(122,107,255,0.75); }
+.abtCorner--tr { top: 12px; right: 12px; border-top: 2px solid rgba(122,107,255,0.75); border-right: 2px solid rgba(122,107,255,0.75); }
+.abtCorner--bl { bottom: 12px; left: 12px; border-bottom: 2px solid rgba(122,107,255,0.75); border-left: 2px solid rgba(122,107,255,0.75); }
+.abtCorner--br { bottom: 12px; right: 12px; border-bottom: 2px solid rgba(122,107,255,0.75); border-right: 2px solid rgba(122,107,255,0.75); }
+
+/* Scan line */
+.abtScan {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  z-index: 3;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(122,107,255,0.8) 40%, rgba(62,232,181,0.6) 60%, transparent);
+  box-shadow: 0 0 12px rgba(122,107,255,0.5);
+  animation: abtScanMove 3.5s linear infinite;
+  pointer-events: none;
+}
+@keyframes abtScanMove {
+  0%   { top: 0%;   opacity: 0; }
+  5%   { opacity: 1; }
+  95%  { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+
+.abtImg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  filter: contrast(1.06) saturate(0.9);
+  transition: transform 600ms ease;
+}
+.abtFrame:hover .abtImg {
+  transform: scale(1.02);
+}
+
+/* Color grade overlay — gives photo that cinematic blue tint */
+.abtImgOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background:
+    linear-gradient(to bottom, rgba(6,7,17,0) 45%, rgba(6,7,17,0.88) 100%),
+    linear-gradient(160deg, rgba(75,105,255,0.18) 0%, transparent 55%);
+  pointer-events: none;
+}
+
+/* ID label at bottom of photo */
+.abtImgLabel {
+  position: absolute;
+  bottom: 14px; left: 16px; right: 16px;
+  z-index: 3;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: ui-monospace, 'Courier New', monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: rgba(180,185,220,0.6);
+}
+.abtImgId {
+  color: rgba(122,107,255,0.85);
+  font-weight: 600;
+}
+.abtImgLoc {
+  color: rgba(62,232,181,0.7);
+}
+
+/* Availability badge */
+.abtAvail {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(62,232,181,0.9);
+  background: rgba(62,232,181,0.06);
+  border: 1px solid rgba(62,232,181,0.22);
+  border-radius: 999px;
+  align-self: flex-start;
+}
+.abtPulse {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #3ee8b5;
+  box-shadow: 0 0 10px rgba(62,232,181,0.7);
+  animation: abtPulse 1.8s ease-in-out infinite;
+  flex-shrink: 0;
+}
+@keyframes abtPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(0.85); }
+}
+
+/* ── Data column ───────────────────────────────────── */
+
+.abtDataCol {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  padding-top: 8px;
+}
+
+/* Name block */
+.abtNameBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.abtEye {
+  font-family: ui-monospace, 'Courier New', monospace;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  color: rgba(122,107,255,0.7);
+}
+
+.abtName {
+  margin: 0;
+  font-size: clamp(32px, 4.5vw, 54px);
+  font-weight: 900;
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+  color: var(--text);
+}
+
+.abtRole {
+  font-size: 14px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+/* Bio */
+.abtBio {
+  margin: 0;
+  font-size: clamp(14px, 1.4vw, 16px);
+  line-height: 1.65;
+  color: var(--muted);
+  max-width: 520px;
+}
+
+/* Stats row */
+.abtStats {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 20px 24px;
+  background: rgba(122,107,255,0.05);
+  border: 1px solid rgba(122,107,255,0.14);
+  border-radius: 14px;
+}
+.abtStat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  text-align: center;
+}
+.abtStatRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 2px;
+}
+.abtStatN {
+  font-size: clamp(28px, 3.5vw, 40px);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  color: var(--text);
+  line-height: 1;
+}
+.abtStatSuf {
+  font-size: clamp(18px, 2vw, 24px);
+  font-weight: 900;
+  color: rgba(122,107,255,0.8);
+  line-height: 1;
+}
+.abtStatL {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(180,185,220,0.5);
+}
+.abtStatDiv {
+  width: 1px;
+  height: 40px;
+  background: rgba(122,107,255,0.18);
+  flex-shrink: 0;
+}
+
+/* Tab switcher */
+.abtTabWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.abtTabBar {
+  position: relative;
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid rgba(122,107,255,0.15);
+  margin-bottom: 16px;
+}
+.abtTab {
+  position: relative;
+  z-index: 1;
+  padding: 10px 20px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(180,185,220,0.45);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 200ms ease;
+}
+.abtTab.is-on {
+  color: var(--text);
+}
+.abtTab:hover:not(.is-on) {
+  color: rgba(180,185,220,0.75);
+}
+/* Sliding ink underline */
+.abtTabInk {
+  position: absolute;
+  bottom: -1px; left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #7a6bff, #3ee8b5);
+  border-radius: 2px 2px 0 0;
+  transition: left 260ms cubic-bezier(0.4, 0, 0.2, 1), width 260ms cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.abtPanels {
+  min-height: 72px;
+}
+.abtPanel {
+  display: none;
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--muted);
+  animation: abtPanelIn 200ms ease;
+}
+.abtPanel.is-on {
+  display: block;
+}
+@keyframes abtPanelIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Tech stack */
+.abtStack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.abtStackLbl {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: rgba(180,185,220,0.4);
+}
+.abtTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.abtTag {
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: rgba(180,185,220,0.7);
+  background: rgba(122,107,255,0.06);
+  border: 1px solid rgba(122,107,255,0.18);
+  border-radius: 6px;
+  transition: color 180ms, border-color 180ms, background 180ms;
+  cursor: default;
+}
+.abtTag:hover {
+  color: rgba(122,107,255,0.95);
+  border-color: rgba(122,107,255,0.45);
+  background: rgba(122,107,255,0.12);
+}
+
+/* Footer bar */
+.abtFooter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: rgba(180,185,220,0.45);
+  padding-top: 4px;
+  border-top: 1px solid rgba(122,107,255,0.1);
+}
+.abtLocIcon {
+  color: rgba(62,232,181,0.65);
+  flex-shrink: 0;
+}
+.abtLocName {
+  color: rgba(180,185,220,0.65);
+  font-weight: 600;
+}
+.abtFootSep {
+  opacity: 0.35;
+}
+.abtLocMode {
+  color: rgba(180,185,220,0.45);
+}
+
+/* ── Responsive ────────────────────────────────────── */
+
+@media (max-width: 860px) {
+  .abtInner {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  .abtPhotoCol {
+    flex-direction: row;
+    align-items: flex-end;
+    gap: 20px;
+  }
+  .abtFrame {
+    width: clamp(160px, 42vw, 260px);
+    aspect-ratio: 3 / 4;
+    flex-shrink: 0;
+  }
+  .abtAvail {
+    margin-bottom: 8px;
+  }
+}
+
+@media (max-width: 560px) {
+  .abtPhotoCol {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .abtFrame {
+    width: 100%;
+    max-height: 340px;
+    aspect-ratio: auto;
+  }
+  .abtStats {
+    gap: 12px;
+    padding: 16px;
+  }
+  .abtTab {
+    padding: 8px 12px;
+    font-size: 11px;
+  }
+}
+
+/* ── Light mode overrides ──────────────────────────── */
+body[data-theme="light"] .abtFrame {
+  background: #e8eaf0;
+}
+body[data-theme="light"] .abtStats {
+  background: rgba(122,107,255,0.04);
+  border-color: rgba(122,107,255,0.18);
+}
+body[data-theme="light"] .abtTag {
+  background: rgba(122,107,255,0.05);
+  border-color: rgba(122,107,255,0.22);
+  color: rgba(40,45,80,0.75);
+}
+body[data-theme="light"] .abtTag:hover {
+  background: rgba(122,107,255,0.12);
+  color: #4b3bdd;
+}
+
+
+    </style>
   </head>
 
   <body data-bg="stars" class="isLoading">
