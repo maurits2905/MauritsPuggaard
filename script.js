@@ -2249,17 +2249,17 @@ function initHeroThree() {
   raf = requestAnimationFrame(frame);
 
   new ResizeObserver(() => {
+    const oldW = W, oldH = H;
     resize();
-    /* Re-home particles that are now outside new canvas bounds */
-    const M = 40 * DPR;
-    for (const p of particles) {
-      if (p.hx > W - M || p.hx < M) {
-        p.hx = M + Math.random() * (W - M * 2);
-        p.px = p.hx;
-      }
-      if (p.hy > H - M || p.hy < M) {
-        p.hy = M + Math.random() * (H - M * 2);
-        p.py = p.hy;
+    /* Scale all particle positions proportionally to the new canvas size.
+       This handles both shrink (particles clamp to new bounds) and
+       grow (particles spread out to fill the expanded canvas). */
+    if (oldW > 0 && oldH > 0) {
+      const sx = W / oldW;
+      const sy = H / oldH;
+      for (const p of particles) {
+        p.hx *= sx;  p.px *= sx;  p.vx *= sx;
+        p.hy *= sy;  p.py *= sy;  p.vy *= sy;
       }
     }
   }).observe(canvas);
