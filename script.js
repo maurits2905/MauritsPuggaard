@@ -681,7 +681,12 @@ function initSectionReveal() {
 
     /* ── timeline ── */
     const tl = gsap.timeline({
-      scrollTrigger: { trigger: section, start: "top 88%", once: true },
+      scrollTrigger: {
+        trigger: section,
+        start: "top 88%",
+        once: true,
+        invalidateOnRefresh: true,   // recalculate when layout shifts after projects load
+      },
       onComplete() {
         section.style.overflow = "";
         [curtain, scan, ...sparks].forEach(el => el.remove());
@@ -2911,6 +2916,12 @@ async function init() {
   }
 
   renderStack();
+
+  // Projects expanded the layout — recalculate all ScrollTrigger positions
+  // so the reveal curtains on #tech and #ask fire at the correct scroll position.
+  requestAnimationFrame(() => {
+    if (window.ScrollTrigger) ScrollTrigger.refresh();
+  });
 
   // Search
   const searchInput = document.getElementById("searchInput");
