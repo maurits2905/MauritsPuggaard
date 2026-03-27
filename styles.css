@@ -8130,20 +8130,19 @@ body[data-theme="light"] .abtTag:hover {
 }
 
 /* ════════════════════════════════════════════════════════════════
-   Section Curtain Reveal v4  — frosted holographic wipe
-   ─ Curtain: semi-transparent + blur so content "loads" behind it
-   ─ Aurora tint + blinking status text on the curtain
-   ─ 110 px beam with hot glowing core line
-   ─ MP logo pill rides the CENTRE of the beam
-   ─ Chromatic-aberration sibling lines (±16 px)
-   ─ Spark particles drift up from the beam
+   Section Curtain Reveal v5  — clean single-line wipe
+   ─ Frosted curtain (blur + aurora) shows content loading behind
+   ─ One simple 2 px line in the page accent colour (#8899ff)
+   ─ Subtle 2-layer glow only — no wide halos
+   ─ Logo in a clean rounded-square pill centred on the line
+   ─ Small accent-coloured sparks drift from the line
    ═══════════════════════════════════════════════════════════════ */
 
-/* ── Curtain — frosted glass so section elements show through ── */
+/* ── Curtain — frosted glass, section content blurs through ── */
 .sReveal {
   position: absolute;
   inset: 0;
-  background: rgba(6, 7, 17, 0.70);
+  background: rgba(6, 7, 17, 0.72);
   -webkit-backdrop-filter: blur(10px);
           backdrop-filter: blur(10px);
   z-index: 30;
@@ -8153,119 +8152,64 @@ body[data-theme="light"] .abtTag:hover {
   overflow: hidden;
 }
 
-/* Subtle aurora tint layered over the blurred content */
+/* Subtle accent tint over the blurred content */
 .sReveal::before {
   content: '';
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 60% 42% at 20% 32%, rgba(155,140,255,.11) 0%, transparent 70%),
-    radial-gradient(ellipse 50% 36% at 80% 70%, rgba( 68,240,177,.08) 0%, transparent 70%);
+    radial-gradient(ellipse 55% 38% at 18% 30%, rgba(136,153,255,.09) 0%, transparent 70%),
+    radial-gradient(ellipse 45% 32% at 82% 72%, rgba(107,133,255,.06) 0%, transparent 70%);
   animation: sRevealAurora 3.4s ease-in-out infinite alternate;
   pointer-events: none;
 }
 @keyframes sRevealAurora {
-  from { opacity: .55; transform: scale(1);    }
-  to   { opacity: 1;   transform: scale(1.07); }
+  from { opacity: .5;  transform: scale(1);    }
+  to   { opacity: 1;   transform: scale(1.06); }
 }
 
-/* Scan-status text — bottom-right corner of curtain */
-.sRevealText {
-  position: absolute;
-  bottom: 18px;
-  right: 24px;
-  font-family: ui-monospace, 'JetBrains Mono', 'Fira Code', monospace;
-  font-size: 9px;
-  letter-spacing: .24em;
-  text-transform: uppercase;
-  color: rgba(155,140,255,.50);
-  pointer-events: none;
-  animation: sRevealBlink 1.15s step-end infinite;
-}
-@keyframes sRevealBlink {
-  0%, 100% { opacity: 1;  }
-  50%       { opacity: .2; }
-}
-
-/* ── Holographic sweep beam — 110 px, centre tracks reveal edge ── */
+/* ── Single clean scan line — 2 px, page accent colour ── */
 .sScan {
   position: absolute;
   left: 0;
   right: 0;
   top: 0%;
-  height: 110px;
+  height: 2px;
   z-index: 31;
   pointer-events: none;
   opacity: 0;
   will-change: top, opacity;
-  /* Wide purple halo — gap at centre where hot core line lives */
-  background: linear-gradient(
-    to bottom,
-    transparent                 0%,
-    rgba(155,140,255,.04)       9%,
-    rgba(155,140,255,.17)      22%,
-    rgba(155,140,255,.42)      36%,
-    rgba(200,175,255,.78)      43%,
-    rgba(155,140,255,.18)      48%,   /* dip so core line pops */
-    rgba(155,140,255,.18)      52%,
-    rgba(200,175,255,.78)      57%,
-    rgba(155,140,255,.42)      64%,
-    rgba(155,140,255,.17)      78%,
-    rgba(155,140,255,.04)      91%,
-    transparent               100%
-  );
-  box-shadow:
-    0  0  5px rgba(255,255,255,.15),
-    0  0 20px rgba(200,175,255,.55),
-    0  0 52px rgba(155,140,255,.38),
-    0  0 100px rgba(155,140,255,.14);
-  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
-          mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
-}
-
-/* Hot glowing core line — sits at beam centre, child of .sScan */
-.sScanCoreLine {
-  position: absolute;
-  left: 4%;
-  right: 4%;
-  top: 50%;
-  height: 2px;
-  transform: translateY(-50%);
-  border-radius: 2px;
-  pointer-events: none;
+  /* White-hot centre fading to accent blue at the edges */
   background: linear-gradient(
     to right,
-    transparent 0%,
-    rgba(255,255,255,.80) 8%,
-    white 25%,
-    rgba(68,240,177,1)  50%,
-    white 75%,
-    rgba(255,255,255,.80) 92%,
-    transparent 100%
+    transparent              0%,
+    rgba(136,153,255,.20)   8%,
+    rgba(255,255,255,.88)  35%,
+    #8899ff                50%,
+    rgba(255,255,255,.88)  65%,
+    rgba(136,153,255,.20)  92%,
+    transparent            100%
   );
+  /* Two-layer glow only — tight + soft */
   box-shadow:
-    0 0  2px rgba(255,255,255,1),
-    0 0  8px rgba(68,240,177,.95),
-    0 0 20px rgba(155,140,255,.85),
-    0 0 44px rgba(155,140,255,.45);
+    0 0  5px rgba(136,153,255,.70),
+    0 0 16px rgba(136,153,255,.22);
 }
 
-/* MP logo pill — child of .sScan so it travels with the beam */
+/* MP logo pill — child of .sScan, travels with the line */
 .sScanPill {
   position: absolute;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  width: 74px;
-  height: 74px;
-  border-radius: 14px;
-  background: rgba(6, 7, 17, 0.94);
-  border: 1.5px solid rgba(155,140,255,.62);
+  width: 62px;
+  height: 62px;
+  border-radius: 12px;
+  background: #060711;
+  border: 1px solid rgba(136,153,255,.52);
   box-shadow:
-    0 0  0 1px rgba(68,240,177,.20),   /* teal outer ring */
-    0 0 18px rgba(155,140,255,.65),
-    0 0 42px rgba(155,140,255,.30),
-    inset 0 0 14px rgba(155,140,255,.12);
+    0 0 12px rgba(136,153,255,.30),
+    inset 0 0 10px rgba(136,153,255,.06);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -8273,45 +8217,25 @@ body[data-theme="light"] .abtTag:hover {
 }
 .sScanPill img {
   display: block;
-  width: 50px;
+  width: 44px;
   height: auto;
   -webkit-user-drag: none;
   user-select: none;
 }
 
-/* ── Chromatic aberration lines (siblings to beam, ±16 px offset) ── */
-.sScanChroma {
-  position: absolute;
-  left: 8%;
-  right: 8%;
-  height: 1px;
-  z-index: 31;
-  pointer-events: none;
-  opacity: 0;
-}
-.sScanChroma--t {
-  background: rgba(185,125,255,.72);
-  box-shadow: 0 0 6px rgba(185,125,255,.55), 0 0 20px rgba(185,125,255,.22);
-}
-.sScanChroma--b {
-  background: rgba( 68,240,177,.72);
-  box-shadow: 0 0 6px rgba( 68,240,177,.55), 0 0 20px rgba( 68,240,177,.22);
-}
-
 /* ── Spark particles ── */
 .sSpark {
   position: absolute;
-  width: 3px;
-  height: 3px;
+  width: 2px;
+  height: 2px;
   border-radius: 50%;
   z-index: 33;
   pointer-events: none;
-  box-shadow: 0 0 4px rgba(255,255,255,.9), 0 0 9px rgba(155,140,255,.7);
+  box-shadow: 0 0 3px rgba(255,255,255,.8), 0 0 7px rgba(136,153,255,.6);
 }
 
-/* ── Reduced-motion: skip everything ── */
+/* ── Reduced motion ── */
 @media (prefers-reduced-motion: reduce) {
-  .sReveal, .sReveal::before, .sRevealText,
-  .sScan, .sScanCoreLine, .sScanPill,
-  .sScanChroma, .sSpark { display: none; }
+  .sReveal, .sReveal::before,
+  .sScan, .sScanPill, .sSpark { display: none; }
 }

@@ -616,17 +616,13 @@ function initSecBridges() {
   bridges.forEach((b) => obs.observe(b));
 }
 
-/* ── Section Curtain Reveal v4 ───────────────────────────────────────────
-   Frosted holographic wipe for every .section except #hero and #contact.
-
-   Curtain is semi-transparent + blurred so section content is visible
-   blurred behind it, giving a "loading in" feel as the beam reveals it.
+/* ── Section Curtain Reveal v5 ───────────────────────────────────────────
+   Clean single-line wipe for every .section except #hero and #contact.
 
    Elements created per section (all removed on completion):
-     .sReveal          — frosted curtain, aurora tint, status text
-     .sScan            — 110 px beam with .sScanCoreLine + .sScanPill inside
-     .sScanChroma ×2   — chromatic aberration lines (±16 px from beam centre)
-     .sSpark ×12       — spark particles that rise from the beam
+     .sReveal    — frosted curtain (blur + accent aurora)
+     .sScan      — 2 px accent-blue line with .sScanPill logo inside
+     .sSpark ×10 — small accent sparks that rise from the line
    ─────────────────────────────────────────────────────────────────────── */
 function initSectionReveal() {
   if (prefersReducedMotion()) return;
@@ -634,8 +630,8 @@ function initSectionReveal() {
 
   gsap.registerPlugin(ScrollTrigger);
 
-  const SWEEP = 1.12;   // curtain-wipe duration (s)
-  const START = 0.14;   // timeline offset when wipe begins
+  const SWEEP = 1.10;
+  const START = 0.12;
 
   document.querySelectorAll(".section:not(#hero):not(#contact)").forEach((section) => {
     if (getComputedStyle(section).position === "static") section.style.position = "relative";
@@ -645,25 +641,14 @@ function initSectionReveal() {
     const curtain = document.createElement("div");
     curtain.className = "sReveal";
     curtain.setAttribute("aria-hidden", "true");
-    const scanText = document.createElement("div");
-    scanText.className = "sRevealText";
-    scanText.textContent = "ACQUIRING SIGNAL";
-    scanText.setAttribute("aria-hidden", "true");
-    curtain.appendChild(scanText);
     section.appendChild(curtain);
 
-    /* ── sweep beam ── */
+    /* ── scan line ── */
     const scan = document.createElement("div");
     scan.className = "sScan";
     scan.setAttribute("aria-hidden", "true");
 
-    /* Hot core line lives inside beam (inherits beam's mask for free) */
-    const coreLine = document.createElement("div");
-    coreLine.className = "sScanCoreLine";
-    coreLine.setAttribute("aria-hidden", "true");
-    scan.appendChild(coreLine);
-
-    /* Logo pill also inside beam — travels with it automatically */
+    /* Logo pill travels with the line as a child */
     const pill = document.createElement("div");
     pill.className = "sScanPill";
     pill.setAttribute("aria-hidden", "true");
@@ -677,35 +662,21 @@ function initSectionReveal() {
 
     section.appendChild(scan);
 
-    /* ── chromatic aberration lines (siblings to beam, ±16 px offset) ── */
-    const chromaT = document.createElement("div");
-    chromaT.className = "sScanChroma sScanChroma--t";
-    chromaT.setAttribute("aria-hidden", "true");
-    section.appendChild(chromaT);
-
-    const chromaB = document.createElement("div");
-    chromaB.className = "sScanChroma sScanChroma--b";
-    chromaB.setAttribute("aria-hidden", "true");
-    section.appendChild(chromaB);
-
-    /* ── spark particles ── */
-    const sparkPalette = ["#ffffff","#c8b4ff","#44f0b1","#ffffff","#a8d8ff","#c8b4ff"];
-    const sparks = Array.from({ length: 12 }, (_, i) => {
+    /* ── sparks ── */
+    const sparkColors = ["#8899ff","#ffffff","#6b85ff","#ffffff","#8899ff"];
+    const sparks = Array.from({ length: 10 }, (_, i) => {
       const sp = document.createElement("div");
       sp.className = "sSpark";
       sp.setAttribute("aria-hidden", "true");
-      sp.style.background = sparkPalette[i % sparkPalette.length];
+      sp.style.background = sparkColors[i % sparkColors.length];
       section.appendChild(sp);
       return sp;
     });
 
     /* ── initial states ── */
-    gsap.set(curtain,  { scaleY: 1, transformOrigin: "bottom center" });
-    /* Beam and chroma: centre at section top edge via yPercent:-50 */
+    gsap.set(curtain, { scaleY: 1, transformOrigin: "bottom center" });
     gsap.set(scan,    { top: "0%", yPercent: -50, opacity: 0 });
-    gsap.set(pill,    { scale: 0.70, opacity: 0 });
-    gsap.set(chromaT, { top: "0%", yPercent: -50, y: -16, opacity: 0 });
-    gsap.set(chromaB, { top: "0%", yPercent: -50, y: +16, opacity: 0 });
+    gsap.set(pill,    { scale: 0.75, opacity: 0 });
     sparks.forEach(sp => gsap.set(sp, { opacity: 0 }));
 
     /* ── timeline ── */
@@ -713,42 +684,42 @@ function initSectionReveal() {
       scrollTrigger: { trigger: section, start: "top 88%", once: true },
       onComplete() {
         section.style.overflow = "";
-        [curtain, scan, chromaT, chromaB, ...sparks].forEach(el => el.remove());
+        [curtain, scan, ...sparks].forEach(el => el.remove());
       },
     });
 
-    /* 1 — beam + chroma flash in; pill pops with spring */
-    tl.to([scan, chromaT, chromaB], { opacity: 1, duration: 0.12 }, 0.08);
-    tl.to(pill, { scale: 1, opacity: 1, duration: 0.26, ease: "back.out(2)" }, 0.10);
+    /* 1 — line appears; pill pops in */
+    tl.to(scan, { opacity: 1, duration: 0.10 }, 0.08);
+    tl.to(pill, { scale: 1, opacity: 1, duration: 0.22, ease: "back.out(2)" }, 0.08);
 
-    /* 2 — curtain wipes; beam + chroma descend in sync */
+    /* 2 — curtain wipes down; line descends with it */
     tl.to(curtain,
       { scaleY: 0, transformOrigin: "bottom center", duration: SWEEP, ease: "power3.inOut" },
       START
     );
-    tl.to([scan, chromaT, chromaB],
+    tl.to(scan,
       { top: "100%", duration: SWEEP, ease: "power3.inOut" },
       START
     );
 
-    /* 3 — sparks staggered across the sweep */
+    /* 3 — sparks rise from the line as it sweeps */
     sparks.forEach((sp, i) => {
       const prog    = (i + 0.5) / sparks.length;
-      const beamPct = Math.pow(prog, 0.65) * 100;   // approximate beam Y at fire time
+      const beamPct = Math.pow(prog, 0.65) * 100;
       const fireAt  = START + prog * SWEEP * 0.88;
-      const xPct    = 6 + Math.random() * 88;
-      const rise    = 36 + Math.random() * 64;
-      const dur     = 0.50 + Math.random() * 0.40;
+      const xPct    = 8 + Math.random() * 84;
+      const rise    = 28 + Math.random() * 48;
+      const dur     = 0.44 + Math.random() * 0.34;
       gsap.set(sp, { left: `${xPct}%`, top: `${beamPct}%` });
       tl.fromTo(sp,
-        { y: 0, opacity: 0.95, scale: 1 },
+        { y: 0, opacity: 0.9, scale: 1 },
         { y: -rise, opacity: 0, scale: 0.3, duration: dur, ease: "power2.out" },
         fireAt
       );
     });
 
-    /* 4 — beam + chroma + pill fade as they exit the bottom */
-    tl.to([scan, chromaT, chromaB], { opacity: 0, duration: 0.18 }, START + SWEEP * 0.88);
+    /* 4 — line fades as it exits */
+    tl.to(scan, { opacity: 0, duration: 0.16 }, START + SWEEP * 0.88);
   });
 }
 
