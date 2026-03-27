@@ -616,6 +616,80 @@ function initSecBridges() {
   bridges.forEach((b) => obs.observe(b));
 }
 
+/* ── Section Curtain Reveal ──────────────────────────────────────────────
+   For every .section except #hero:
+   1. A full-section dark overlay (.sReveal) sits on top of the content.
+   2. On scroll-trigger the curtain collapses (scaleY 1→0, origin: bottom),
+      revealing content from the top downward.
+   3. A bright scan line (.sScan) rides the top edge of the curtain,
+      creating a "signal acquisition" wipe effect.
+   4. Both elements are removed from the DOM after the animation completes.
+   ─────────────────────────────────────────────────────────────────────── */
+function initSectionReveal() {
+  if (prefersReducedMotion()) return;
+  if (!window.gsap || !window.ScrollTrigger) return;
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  document.querySelectorAll(".section:not(#hero)").forEach((section) => {
+    // Ensure a positioning context
+    const pos = getComputedStyle(section).position;
+    if (pos === "static") section.style.position = "relative";
+
+    // Clip overflow during animation so curtain/scan don't bleed out
+    section.style.overflow = "hidden";
+
+    /* --- curtain --- */
+    const curtain = document.createElement("div");
+    curtain.className = "sReveal";
+    curtain.setAttribute("aria-hidden", "true");
+    section.appendChild(curtain);
+
+    /* --- scan line --- */
+    const scan = document.createElement("div");
+    scan.className = "sScan";
+    scan.setAttribute("aria-hidden", "true");
+    section.appendChild(scan);
+
+    // Initial states
+    gsap.set(curtain, { scaleY: 1, transformOrigin: "bottom center" });
+    gsap.set(scan,    { top: "0%", opacity: 0 });
+
+    const tl = gsap.timeline({
+      scrollTrigger: {
+        trigger: section,
+        start: "top 88%",
+        once: true,
+      },
+      onComplete() {
+        section.style.overflow = "";
+        curtain.remove();
+        scan.remove();
+      },
+    });
+
+    // 1. Scan line fades in quickly at the very top
+    tl.to(scan, { opacity: 1, duration: 0.10 }, 0);
+
+    // 2. Curtain collapses downward (top edge descends) — content revealed top→bottom
+    tl.to(
+      curtain,
+      { scaleY: 0, transformOrigin: "bottom center", duration: 1.05, ease: "power3.inOut" },
+      0.06
+    );
+
+    // 3. Scan line tracks the descending top edge of the curtain
+    tl.to(
+      scan,
+      { top: "100%", duration: 1.05, ease: "power3.inOut" },
+      0.06
+    );
+
+    // 4. Scan line fades out just before it exits the section
+    tl.to(scan, { opacity: 0, duration: 0.18 }, 0.88);
+  });
+}
+
 function initReveals() {
   const isMobile = window.matchMedia("(max-width: 900px)").matches;
 
@@ -2755,6 +2829,7 @@ async function init() {
 
   initReveals();
   initSecBridges();
+  initSectionReveal();
   initAboutReveal();
   initAboutStats();
   initStory();

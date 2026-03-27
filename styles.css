@@ -8128,3 +8128,55 @@ body[data-theme="light"] .abtTag:hover {
     display: none; /* number-only on very small screens */
   }
 }
+
+/* ════════════════════════════════════════════════════════════════
+   Section Curtain Reveal  (sReveal + sScan)
+   Curtain collapses top→bottom revealing section content,
+   a glowing scan line rides the leading edge.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Dark curtain – covers entire section until GSAP collapses it */
+.sReveal {
+  position: absolute;
+  inset: 0;
+  background: #060711;
+  z-index: 30;
+  pointer-events: none;
+  will-change: transform;
+  transform-origin: bottom center;
+}
+
+/* Glowing scan line – sibling to curtain, tracks its top edge */
+.sScan {
+  position: absolute;
+  left: -4%;
+  right: -4%;
+  top: 0;
+  height: 2px;
+  z-index: 31;
+  pointer-events: none;
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(155, 140, 255, 0.0)  6%,
+    rgba(155, 140, 255, 0.75) 22%,
+    rgba(200, 180, 255, 0.95) 38%,
+    rgba(255, 255, 255, 1)    50%,
+    rgba(200, 180, 255, 0.95) 62%,
+    rgba(68,  240, 177, 0.85) 78%,
+    rgba(68,  240, 177, 0.0)  94%,
+    transparent 100%
+  );
+  box-shadow:
+    0  0  3px rgba(255, 255, 255, 0.6),
+    0  0 10px rgba(200, 180, 255, 0.8),
+    0  0 28px rgba(155, 140, 255, 0.55),
+    0  0 60px rgba(155, 140, 255, 0.20);
+  opacity: 0;
+}
+
+/* Reduced-motion: skip the whole effect */
+@media (prefers-reduced-motion: reduce) {
+  .sReveal { display: none; }
+  .sScan   { display: none; }
+}
