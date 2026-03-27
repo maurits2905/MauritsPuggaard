@@ -8130,49 +8130,101 @@ body[data-theme="light"] .abtTag:hover {
 }
 
 /* ════════════════════════════════════════════════════════════════
-   Section Curtain Reveal  (sReveal + sScan)
-   Curtain collapses top→bottom revealing section content,
-   a glowing scan line rides the leading edge.
+   Section Curtain Reveal v2  (sReveal + sScan + sScanLogo)
+   Curtain has a subtle CRT scanline texture.
+   A thick holographic beam (90 px) sweeps the curtain's top edge
+   from section-top to section-bottom, with a glowing MP logo
+   watermark appearing at the midpoint of each reveal.
    ═══════════════════════════════════════════════════════════════ */
 
-/* Dark curtain – covers entire section until GSAP collapses it */
+/* Dark curtain — CRT scanline texture over solid bg */
 .sReveal {
   position: absolute;
   inset: 0;
-  background: #060711;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent          0px,
+      transparent          3px,
+      rgba(155,140,255,.016) 3px,
+      rgba(155,140,255,.016) 4px
+    ),
+    #060711;
   z-index: 30;
   pointer-events: none;
   will-change: transform;
   transform-origin: bottom center;
 }
 
-/* Glowing scan line – sibling to curtain, tracks its top edge */
+/* Holographic sweep beam — 90 px tall, centered on the reveal edge */
 .sScan {
   position: absolute;
-  left: -4%;
-  right: -4%;
-  top: 0;
-  height: 2px;
+  left: 0;
+  right: 0;
+  top: 0%;
+  height: 90px;
   z-index: 31;
   pointer-events: none;
+  opacity: 0;
+  will-change: top, opacity;
+
+  /* Vertical gradient: purple halo → white core → teal line → white core → purple halo */
   background: linear-gradient(
+    to bottom,
+    transparent                    0%,
+    rgba(155, 140, 255, 0.04)     10%,
+    rgba(155, 140, 255, 0.18)     24%,
+    rgba(155, 140, 255, 0.46)     37%,
+    rgba(210, 190, 255, 0.82)     44%,
+    rgba(255, 255, 255, 1.00)     49%,
+    rgba( 68, 240, 177, 1.00)     50%,   /* teal centre line */
+    rgba(255, 255, 255, 1.00)     51%,
+    rgba(210, 190, 255, 0.82)     56%,
+    rgba(155, 140, 255, 0.46)     63%,
+    rgba(155, 140, 255, 0.18)     76%,
+    rgba(155, 140, 255, 0.04)     90%,
+    transparent                  100%
+  );
+
+  /* Outer bloom glow */
+  box-shadow:
+    0  0  5px rgba(255, 255, 255, 0.20),
+    0  0 16px rgba(210, 190, 255, 0.55),
+    0  0 42px rgba(155, 140, 255, 0.38),
+    0  0 90px rgba(155, 140, 255, 0.16);
+
+  /* Fade beam at the left / right edges so it bleeds naturally */
+  -webkit-mask-image: linear-gradient(
     to right,
     transparent 0%,
-    rgba(155, 140, 255, 0.0)  6%,
-    rgba(155, 140, 255, 0.75) 22%,
-    rgba(200, 180, 255, 0.95) 38%,
-    rgba(255, 255, 255, 1)    50%,
-    rgba(200, 180, 255, 0.95) 62%,
-    rgba(68,  240, 177, 0.85) 78%,
-    rgba(68,  240, 177, 0.0)  94%,
+    black 7%,
+    black 93%,
     transparent 100%
   );
-  box-shadow:
-    0  0  3px rgba(255, 255, 255, 0.6),
-    0  0 10px rgba(200, 180, 255, 0.8),
-    0  0 28px rgba(155, 140, 255, 0.55),
-    0  0 60px rgba(155, 140, 255, 0.20);
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 7%,
+    black 93%,
+    transparent 100%
+  );
+}
+
+/* MP logo watermark inside the beam */
+.sScanLogo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 90px;
+  height: auto;
   opacity: 0;
+  filter: brightness(8) saturate(0) blur(0.4px);
+  mix-blend-mode: screen;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  draggable: false;
 }
 
 /* Reduced-motion: skip the whole effect */

@@ -616,14 +616,16 @@ function initSecBridges() {
   bridges.forEach((b) => obs.observe(b));
 }
 
-/* ── Section Curtain Reveal ──────────────────────────────────────────────
-   For every .section except #hero:
-   1. A full-section dark overlay (.sReveal) sits on top of the content.
-   2. On scroll-trigger the curtain collapses (scaleY 1→0, origin: bottom),
-      revealing content from the top downward.
-   3. A bright scan line (.sScan) rides the top edge of the curtain,
-      creating a "signal acquisition" wipe effect.
-   4. Both elements are removed from the DOM after the animation completes.
+/* ── Section Curtain Reveal v2 ───────────────────────────────────────────
+   For every .section except #hero and #contact:
+   1.  A dark curtain (.sReveal) with a subtle CRT-scanline texture covers
+       the section.
+   2.  A 90 px holographic sweep beam (.sScan) — purple halo → white core →
+       teal centre line — has its CENTRE pinned to the curtain's top edge
+       (via yPercent:-50) so it always straddles the reveal boundary.
+   3.  The MP logo (.sScanLogo) appears as a glowing watermark inside the
+       beam at the midpoint of the wipe, then fades away.
+   4.  Everything is cleaned up from the DOM on completion.
    ─────────────────────────────────────────────────────────────────────── */
 function initSectionReveal() {
   if (prefersReducedMotion()) return;
@@ -631,29 +633,40 @@ function initSectionReveal() {
 
   gsap.registerPlugin(ScrollTrigger);
 
-  document.querySelectorAll(".section:not(#hero)").forEach((section) => {
-    // Ensure a positioning context
+  document.querySelectorAll(".section:not(#hero):not(#contact)").forEach((section) => {
+    // Ensure positioning context
     const pos = getComputedStyle(section).position;
     if (pos === "static") section.style.position = "relative";
-
-    // Clip overflow during animation so curtain/scan don't bleed out
     section.style.overflow = "hidden";
 
-    /* --- curtain --- */
+    /* ── curtain ── */
     const curtain = document.createElement("div");
     curtain.className = "sReveal";
     curtain.setAttribute("aria-hidden", "true");
     section.appendChild(curtain);
 
-    /* --- scan line --- */
+    /* ── sweep beam ── */
     const scan = document.createElement("div");
     scan.className = "sScan";
     scan.setAttribute("aria-hidden", "true");
+
+    /* MP logo watermark inside beam */
+    const logo = document.createElement("img");
+    logo.className = "sScanLogo";
+    logo.src = "assets/MP-logo.png";
+    logo.alt = "";
+    logo.setAttribute("aria-hidden", "true");
+    logo.setAttribute("draggable", "false");
+    scan.appendChild(logo);
+
     section.appendChild(scan);
 
-    // Initial states
+    /* Initial state:
+       - curtain covers the section fully (scaleY 1)
+       - beam sits with its CENTRE at the section's top edge (top:0%, yPercent:-50)
+         so the upper half of the beam is clipped by overflow:hidden            */
     gsap.set(curtain, { scaleY: 1, transformOrigin: "bottom center" });
-    gsap.set(scan,    { top: "0%", opacity: 0 });
+    gsap.set(scan,    { top: "0%", yPercent: -50, opacity: 0 });
 
     const tl = gsap.timeline({
       scrollTrigger: {
@@ -668,25 +681,27 @@ function initSectionReveal() {
       },
     });
 
-    // 1. Scan line fades in quickly at the very top
+    /* 1 — beam flashes in at the top edge */
     tl.to(scan, { opacity: 1, duration: 0.10 }, 0);
 
-    // 2. Curtain collapses downward (top edge descends) — content revealed top→bottom
+    /* 2 — curtain collapses downward; beam center tracks its descending top edge */
     tl.to(
       curtain,
       { scaleY: 0, transformOrigin: "bottom center", duration: 1.05, ease: "power3.inOut" },
       0.06
     );
-
-    // 3. Scan line tracks the descending top edge of the curtain
     tl.to(
       scan,
-      { top: "100%", duration: 1.05, ease: "power3.inOut" },
+      { top: "100%", yPercent: -50, duration: 1.05, ease: "power3.inOut" },
       0.06
     );
 
-    // 4. Scan line fades out just before it exits the section
-    tl.to(scan, { opacity: 0, duration: 0.18 }, 0.88);
+    /* 3 — MP logo watermark: fade in at ~30 %, fade out at ~72 % */
+    tl.to(logo, { opacity: 0.48, duration: 0.22 }, 0.30);
+    tl.to(logo, { opacity: 0,    duration: 0.22 }, 0.72);
+
+    /* 4 — beam fades out as it exits the section bottom */
+    tl.to(scan, { opacity: 0, duration: 0.20 }, 0.87);
   });
 }
 
