@@ -616,16 +616,17 @@ function initSecBridges() {
   bridges.forEach((b) => obs.observe(b));
 }
 
-/* ── Section Curtain Reveal v3 ───────────────────────────────────────────
-   Premium holographic wipe for every .section except #hero and #contact.
+/* ── Section Curtain Reveal v4 ───────────────────────────────────────────
+   Frosted holographic wipe for every .section except #hero and #contact.
+
+   Curtain is semi-transparent + blurred so section content is visible
+   blurred behind it, giving a "loading in" feel as the beam reveals it.
 
    Elements created per section (all removed on completion):
-     .sReveal       — dot-grid curtain with pulsing aurora + status text
-     .sBracket ×4   — corner bracket flashes
-     .sScan         — 110 px holographic sweep beam
-     .sScanChroma×2 — chromatic aberration lines (±16 px from beam centre)
-     .sScanBadge    — MP logo badge at section centre (visible as beam passes)
-     .sSpark ×12    — spark particles that rise from the beam
+     .sReveal          — frosted curtain, aurora tint, status text
+     .sScan            — 110 px beam with .sScanCoreLine + .sScanPill inside
+     .sScanChroma ×2   — chromatic aberration lines (±16 px from beam centre)
+     .sSpark ×12       — spark particles that rise from the beam
    ─────────────────────────────────────────────────────────────────────── */
 function initSectionReveal() {
   if (prefersReducedMotion()) return;
@@ -633,8 +634,8 @@ function initSectionReveal() {
 
   gsap.registerPlugin(ScrollTrigger);
 
-  const SWEEP = 1.12;   // total curtain-wipe duration (s)
-  const START = 0.18;   // timeline offset when wipe begins
+  const SWEEP = 1.12;   // curtain-wipe duration (s)
+  const START = 0.14;   // timeline offset when wipe begins
 
   document.querySelectorAll(".section:not(#hero):not(#contact)").forEach((section) => {
     if (getComputedStyle(section).position === "static") section.style.position = "relative";
@@ -651,22 +652,32 @@ function initSectionReveal() {
     curtain.appendChild(scanText);
     section.appendChild(curtain);
 
-    /* ── corner brackets ── */
-    const brackets = ["tl","tr","bl","br"].map(p => {
-      const el = document.createElement("div");
-      el.className = `sBracket sBracket--${p}`;
-      el.setAttribute("aria-hidden", "true");
-      section.appendChild(el);
-      return el;
-    });
-
     /* ── sweep beam ── */
     const scan = document.createElement("div");
     scan.className = "sScan";
     scan.setAttribute("aria-hidden", "true");
+
+    /* Hot core line lives inside beam (inherits beam's mask for free) */
+    const coreLine = document.createElement("div");
+    coreLine.className = "sScanCoreLine";
+    coreLine.setAttribute("aria-hidden", "true");
+    scan.appendChild(coreLine);
+
+    /* Logo pill also inside beam — travels with it automatically */
+    const pill = document.createElement("div");
+    pill.className = "sScanPill";
+    pill.setAttribute("aria-hidden", "true");
+    const pillImg = document.createElement("img");
+    pillImg.src = "assets/MP-logo.png";
+    pillImg.alt = "";
+    pillImg.setAttribute("aria-hidden", "true");
+    pillImg.setAttribute("draggable", "false");
+    pill.appendChild(pillImg);
+    scan.appendChild(pill);
+
     section.appendChild(scan);
 
-    /* ── chromatic aberration lines (siblings to beam, not inside it) ── */
+    /* ── chromatic aberration lines (siblings to beam, ±16 px offset) ── */
     const chromaT = document.createElement("div");
     chromaT.className = "sScanChroma sScanChroma--t";
     chromaT.setAttribute("aria-hidden", "true");
@@ -677,19 +688,7 @@ function initSectionReveal() {
     chromaB.setAttribute("aria-hidden", "true");
     section.appendChild(chromaB);
 
-    /* ── MP logo badge (separate from beam so it's always readable) ── */
-    const badge = document.createElement("div");
-    badge.className = "sScanBadge";
-    badge.setAttribute("aria-hidden", "true");
-    const badgeImg = document.createElement("img");
-    badgeImg.src = "assets/MP-logo.png";
-    badgeImg.alt = "";
-    badgeImg.setAttribute("aria-hidden", "true");
-    badgeImg.setAttribute("draggable", "false");
-    badge.appendChild(badgeImg);
-    section.appendChild(badge);
-
-    /* ── spark particles — section children, appear near beam as it sweeps ── */
+    /* ── spark particles ── */
     const sparkPalette = ["#ffffff","#c8b4ff","#44f0b1","#ffffff","#a8d8ff","#c8b4ff"];
     const sparks = Array.from({ length: 12 }, (_, i) => {
       const sp = document.createElement("div");
@@ -702,12 +701,11 @@ function initSectionReveal() {
 
     /* ── initial states ── */
     gsap.set(curtain,  { scaleY: 1, transformOrigin: "bottom center" });
-    // Beam and chroma centres at section top edge (yPercent:-50 = shift up by half own height)
-    gsap.set(scan,     { top: "0%", yPercent: -50, opacity: 0 });
-    gsap.set(chromaT,  { top: "0%", yPercent: -50, y: -16, opacity: 0 });
-    gsap.set(chromaB,  { top: "0%", yPercent: -50, y: +16, opacity: 0 });
-    gsap.set(badge,    { opacity: 0, scale: 0.88 });
-    gsap.set(brackets, { opacity: 0 });
+    /* Beam and chroma: centre at section top edge via yPercent:-50 */
+    gsap.set(scan,    { top: "0%", yPercent: -50, opacity: 0 });
+    gsap.set(pill,    { scale: 0.70, opacity: 0 });
+    gsap.set(chromaT, { top: "0%", yPercent: -50, y: -16, opacity: 0 });
+    gsap.set(chromaB, { top: "0%", yPercent: -50, y: +16, opacity: 0 });
     sparks.forEach(sp => gsap.set(sp, { opacity: 0 }));
 
     /* ── timeline ── */
@@ -715,18 +713,15 @@ function initSectionReveal() {
       scrollTrigger: { trigger: section, start: "top 88%", once: true },
       onComplete() {
         section.style.overflow = "";
-        [curtain, scan, chromaT, chromaB, badge, ...brackets, ...sparks]
-          .forEach(el => el.remove());
+        [curtain, scan, chromaT, chromaB, ...sparks].forEach(el => el.remove());
       },
     });
 
-    /* 0 — corner brackets snap in with stagger */
-    tl.to(brackets, { opacity: 1, duration: 0.13, stagger: 0.05 }, 0);
+    /* 1 — beam + chroma flash in; pill pops with spring */
+    tl.to([scan, chromaT, chromaB], { opacity: 1, duration: 0.12 }, 0.08);
+    tl.to(pill, { scale: 1, opacity: 1, duration: 0.26, ease: "back.out(2)" }, 0.10);
 
-    /* 1 — beam + chroma flash in at the top edge */
-    tl.to([scan, chromaT, chromaB], { opacity: 1, duration: 0.11 }, 0.10);
-
-    /* 2 — curtain wipes + beam descends over SWEEP seconds */
+    /* 2 — curtain wipes; beam + chroma descend in sync */
     tl.to(curtain,
       { scaleY: 0, transformOrigin: "bottom center", duration: SWEEP, ease: "power3.inOut" },
       START
@@ -736,36 +731,24 @@ function initSectionReveal() {
       START
     );
 
-    /* 3 — spark particles: staggered fires spread across the sweep */
+    /* 3 — sparks staggered across the sweep */
     sparks.forEach((sp, i) => {
-      // Approximate Y% of section where beam is when spark fires
-      const prog    = (i + 0.5) / sparks.length;                 // 0 → 1
-      const beamPct = Math.pow(prog, 0.65) * 100;                // rough power3.inOut shape
-      const fireAt  = START + prog * SWEEP * 0.88;               // timeline time
+      const prog    = (i + 0.5) / sparks.length;
+      const beamPct = Math.pow(prog, 0.65) * 100;   // approximate beam Y at fire time
+      const fireAt  = START + prog * SWEEP * 0.88;
       const xPct    = 6 + Math.random() * 88;
-      const rise    = 38 + Math.random() * 62;
-      const dur     = 0.52 + Math.random() * 0.38;
-
+      const rise    = 36 + Math.random() * 64;
+      const dur     = 0.50 + Math.random() * 0.40;
       gsap.set(sp, { left: `${xPct}%`, top: `${beamPct}%` });
-
       tl.fromTo(sp,
         { y: 0, opacity: 0.95, scale: 1 },
-        { y: -rise, opacity: 0, scale: 0.35, duration: dur, ease: "power2.out" },
+        { y: -rise, opacity: 0, scale: 0.3, duration: dur, ease: "power2.out" },
         fireAt
       );
     });
 
-    /* 4 — logo badge pops in as beam reaches section centre (~50% through sweep) */
-    const badgeIn  = START + SWEEP * 0.34;
-    const badgeOut = START + SWEEP * 0.72;
-    tl.to(badge, { opacity: 1, scale: 1, duration: 0.28, ease: "back.out(1.6)" }, badgeIn);
-    tl.to(badge, { opacity: 0, scale: 0.92, duration: 0.22 }, badgeOut);
-
-    /* 5 — beam + chroma fade as they exit the bottom */
+    /* 4 — beam + chroma + pill fade as they exit the bottom */
     tl.to([scan, chromaT, chromaB], { opacity: 0, duration: 0.18 }, START + SWEEP * 0.88);
-
-    /* 6 — brackets fade last */
-    tl.to(brackets, { opacity: 0, duration: 0.20, stagger: 0.04 }, START + SWEEP * 0.86);
   });
 }
 
