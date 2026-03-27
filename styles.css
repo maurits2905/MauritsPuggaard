@@ -3349,6 +3349,25 @@ html.noReveal .r,
   color: rgba(155, 140, 255, 0.45);
 }
 
+/* Blinking cursor after category label */
+.secCategory::after {
+  content: '▌';
+  display: inline-block;
+  margin-left: 2px;
+  color: rgba(155, 140, 255, 0.45);
+  animation: secCursor 1.15s step-end infinite;
+}
+@keyframes secCursor {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+/* ── Light-sweep animation for section titles ── */
+@keyframes sigSweep {
+  0%   { background-position: 0% 0%; }
+  100% { background-position: 100% 0%; }
+}
+
 /* ── Per-section heading containers ── */
 
 .careerHead {
@@ -3405,36 +3424,68 @@ html.noReveal .r,
   line-height: 0.93;
   letter-spacing: -0.055em;
   color: transparent;
-  background: linear-gradient(120deg, #9b8cff 0%, #7eb4ff 42%, #44f0b1 100%);
+  /* Wide gradient so the sweep has room to travel */
+  background: linear-gradient(
+    110deg,
+    #9b8cff 0%,
+    #c8c0ff 18%,
+    #7eb4ff 36%,
+    #44f0b1 52%,
+    #9b8cff 68%,
+    #c8c0ff 84%,
+    #9b8cff 100%
+  );
+  background-size: 250% 100%;
   -webkit-background-clip: text;
   background-clip: text;
-  filter: drop-shadow(0 0 48px rgba(155, 140, 255, 0.22));
+  animation: sigSweep 8s ease-in-out infinite alternate;
+  filter: drop-shadow(0 0 36px rgba(155, 140, 255, 0.20));
 }
 
-/* Ghost echo — outline text behind the fill */
+/* Ghost outline echo — subtle depth */
 .sectionTitle::before {
   content: attr(data-text);
   position: absolute;
-  inset: 3px 0 0 3px;
+  inset: 0;
   color: transparent;
-  -webkit-text-stroke: 1px rgba(155, 140, 255, 0.09);
+  -webkit-text-stroke: 1px rgba(155, 140, 255, 0.11);
   background: none;
   -webkit-background-clip: unset;
   background-clip: unset;
   pointer-events: none;
   z-index: -1;
+  transform: translate(3px, 5px);
 }
 
-/* Scroll-reveal state — starts hidden */
+/* Accent bar — extends under title on reveal */
+.sectionTitle::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -10px;
+  height: 1px;
+  width: 0;
+  background: linear-gradient(90deg, #9b8cff 0%, #44f0b1 55%, transparent 100%);
+  border-radius: 1px;
+  transition: width 1.1s cubic-bezier(0.22, 1, 0.36, 1) 0.25s;
+}
+
+/* Scroll-reveal — blur-in for cinematic feel */
 .sectionTitle.sig-hidden {
   opacity: 0;
-  transform: translateY(36px);
+  transform: translateY(24px);
+  filter: blur(8px) drop-shadow(0 0 0px rgba(155, 140, 255, 0));
 }
 .sectionTitle.sig-visible {
   opacity: 1;
   transform: translateY(0);
-  transition: opacity 0.85s cubic-bezier(0.22, 1, 0.36, 1),
-              transform 0.85s cubic-bezier(0.22, 1, 0.36, 1);
+  filter: drop-shadow(0 0 36px rgba(155, 140, 255, 0.20));
+  transition: opacity 0.95s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.95s cubic-bezier(0.22, 1, 0.36, 1),
+              filter 0.9s ease;
+}
+.sectionTitle.sig-visible::after {
+  width: 72px;
 }
 
 /* Limit width of Projects header text (matches Career section) */
@@ -3986,23 +4037,47 @@ html.noReveal .r,
   line-height: 0.93;
   letter-spacing: -0.055em;
   color: transparent;
-  background: linear-gradient(120deg, #9b8cff 0%, #7eb4ff 42%, #44f0b1 100%);
+  background: linear-gradient(
+    110deg,
+    #9b8cff 0%,
+    #c8c0ff 18%,
+    #7eb4ff 36%,
+    #44f0b1 52%,
+    #9b8cff 68%,
+    #c8c0ff 84%,
+    #9b8cff 100%
+  );
+  background-size: 250% 100%;
   -webkit-background-clip: text;
   background-clip: text;
-  filter: drop-shadow(0 0 48px rgba(155, 140, 255, 0.22));
+  animation: sigSweep 8s ease-in-out infinite alternate;
+  filter: drop-shadow(0 0 36px rgba(155, 140, 255, 0.20));
 }
 
 .techTitle::before {
   content: attr(data-text);
   position: absolute;
-  inset: 3px 0 0 3px;
+  inset: 0;
   color: transparent;
-  -webkit-text-stroke: 1px rgba(155, 140, 255, 0.09);
+  -webkit-text-stroke: 1px rgba(155, 140, 255, 0.11);
   background: none;
   -webkit-background-clip: unset;
   background-clip: unset;
   pointer-events: none;
   z-index: -1;
+  transform: translate(3px, 5px);
+}
+
+.techTitle::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -10px;
+  height: 1px;
+  width: 0;
+  background: linear-gradient(90deg, #9b8cff 0%, #44f0b1 55%, transparent 100%);
+  border-radius: 1px;
+  transition: width 1.1s cubic-bezier(0.22, 1, 0.36, 1) 0.25s;
 }
 
 .techTitle span {
@@ -4014,13 +4089,19 @@ html.noReveal .r,
 
 .techTitle.sig-hidden {
   opacity: 0;
-  transform: translateY(36px);
+  transform: translateY(24px);
+  filter: blur(8px) drop-shadow(0 0 0px rgba(155, 140, 255, 0));
 }
 .techTitle.sig-visible {
   opacity: 1;
   transform: translateY(0);
-  transition: opacity 0.85s cubic-bezier(0.22, 1, 0.36, 1),
-              transform 0.85s cubic-bezier(0.22, 1, 0.36, 1);
+  filter: drop-shadow(0 0 36px rgba(155, 140, 255, 0.20));
+  transition: opacity 0.95s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.95s cubic-bezier(0.22, 1, 0.36, 1),
+              filter 0.9s ease;
+}
+.techTitle.sig-visible::after {
+  width: 72px;
 }
 
 .techSphereMount {
