@@ -37,7 +37,7 @@
       }
     </style>
 
-    <link rel="stylesheet" href="styles.css?v=203" />
+    <link rel="stylesheet" href="styles.css?v=204" />
 
     <style id="about-css">
 /* ═══════════════════════════════════════════════════
@@ -161,9 +161,9 @@
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: rgba(62,232,181,0.9);
-  background: rgba(62,232,181,0.06);
-  border: 1px solid rgba(62,232,181,0.22);
+  color: rgba(255,90,90,0.92);
+  background: rgba(255,77,77,0.07);
+  border: 1px solid rgba(255,77,77,0.28);
   border-radius: 999px;
   align-self: flex-start;
 }
@@ -1030,7 +1030,7 @@ body[data-theme="light"] .abtTag:hover {
 
               <div class="contactCol">
                 <div class="contactColTitle">Legal</div>
-                <a class="contactLink" href="#">Privacy Policy</a>
+                <a class="contactLink" href="#" id="privOpenBtn">Privacy Policy</a>
                 <a class="contactLink" href="#">Terms</a>
               </div>
             </div>
@@ -1392,12 +1392,100 @@ body[data-theme="light"] .abtTag:hover {
       </div>
     </section>
 
+    <!-- Privacy Policy modal -->
+    <div class="privOverlay" id="privOverlay" hidden></div>
+    <section class="privModal" id="privModal" role="dialog" aria-modal="true" aria-labelledby="privTitle" aria-hidden="true">
+      <div class="privInner">
+        <button class="privClose" id="privClose" type="button" aria-label="Close privacy policy">&#x2715;</button>
+
+        <!-- Header -->
+        <div class="privHero">
+          <div class="privShield" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+          </div>
+          <div>
+            <p class="privEye">// LEGAL</p>
+            <h2 class="privTitle" id="privTitle">Privacy Policy</h2>
+            <p class="privMeta">Maurits Puggaard &mdash; Portfolio &nbsp;&middot;&nbsp; Last updated: March 2026</p>
+          </div>
+        </div>
+
+        <div class="privDivider"></div>
+
+        <!-- Summary pill row -->
+        <div class="privPills">
+          <span class="privPill privPill--green">No accounts</span>
+          <span class="privPill privPill--green">No tracking cookies</span>
+          <span class="privPill privPill--green">No personal data sold</span>
+          <span class="privPill privPill--amber">Anonymous counters</span>
+        </div>
+
+        <!-- Body -->
+        <div class="privBody">
+
+          <div class="privSection">
+            <h3 class="privSectionTitle">Overview</h3>
+            <p>This is a personal portfolio website. It exists to showcase my work as an SAP consultant and full-stack developer. I have no interest in harvesting your data. This policy explains the minimal information this site touches, and why.</p>
+          </div>
+
+          <div class="privSection">
+            <h3 class="privSectionTitle">Data I <em>do not</em> collect</h3>
+            <ul class="privList">
+              <li>No cookies are set by this site</li>
+              <li>No account registration, email addresses, or names</li>
+              <li>No behavioural tracking or ad profiling</li>
+              <li>No data is sold or shared with third parties for commercial purposes</li>
+            </ul>
+          </div>
+
+          <div class="privSection">
+            <h3 class="privSectionTitle">Anonymous counters</h3>
+            <p>The &ldquo;Stats&rdquo; panel displays a <strong>view count</strong> and a <strong>like count</strong>. These are powered by <a class="privLink" href="https://countapi.xyz" target="_blank" rel="noopener noreferrer">CountAPI</a>, a free anonymous counter service. A single HTTP request is made per browser session &mdash; no IP address, no fingerprint, no personal identifier is stored on my end.</p>
+            <p>If you click &ldquo;Love this portfolio&rdquo;, a flag is stored in your browser&rsquo;s <code>localStorage</code> so the counter increments only once. That flag never leaves your device.</p>
+          </div>
+
+          <div class="privSection">
+            <h3 class="privSectionTitle">AI chat (Ask Me)</h3>
+            <p>The <em>Ask Me</em> section lets you send free-text questions. Messages are processed to generate a response and are <strong>not logged or retained</strong> beyond the immediate request. Do not submit sensitive personal information through the chat interface.</p>
+          </div>
+
+          <div class="privSection">
+            <h3 class="privSectionTitle">Hosting &amp; infrastructure</h3>
+            <p>This site is hosted on <strong>GitHub Pages</strong>. GitHub may collect standard server access logs (IP address, user agent, referrer) as part of their platform operation. Please refer to <a class="privLink" href="https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement" target="_blank" rel="noopener noreferrer">GitHub&rsquo;s Privacy Statement</a> for details.</p>
+          </div>
+
+          <div class="privSection">
+            <h3 class="privSectionTitle">Third-party resources</h3>
+            <p>This page loads icons from <code>cdn.simpleicons.org</code> and animation libraries from <code>cdn.jsdelivr.net</code>. These CDNs may log standard access metadata. No personal data is transmitted to them by this site.</p>
+          </div>
+
+          <div class="privSection">
+            <h3 class="privSectionTitle">Your rights</h3>
+            <p>Because this site does not collect personal data, there is nothing to access, correct, or delete. If you have concerns, you are welcome to contact me directly.</p>
+          </div>
+
+          <div class="privSection">
+            <h3 class="privSectionTitle">Contact</h3>
+            <p>Questions about this policy? Reach out via the <strong>Contact</strong> section of this site or find me on <a class="privLink" href="https://linkedin.com/in/maurits-puggaard" target="_blank" rel="noopener noreferrer">LinkedIn</a>.</p>
+          </div>
+
+        </div><!-- /.privBody -->
+
+        <div class="privFooterNote">
+          This policy may be updated periodically. The &ldquo;Last updated&rdquo; date at the top reflects the most recent revision.
+        </div>
+
+      </div><!-- /.privInner -->
+    </section><!-- /#privModal -->
+
     <!-- Libraries -->
     <script src="three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
 
-    <script src="script.js?v=115"></script>
+    <script src="script.js?v=116"></script>
     <script src="avatar.js"></script>
   </body>
 </html>
