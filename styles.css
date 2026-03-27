@@ -8130,105 +8130,175 @@ body[data-theme="light"] .abtTag:hover {
 }
 
 /* ════════════════════════════════════════════════════════════════
-   Section Curtain Reveal v2  (sReveal + sScan + sScanLogo)
-   Curtain has a subtle CRT scanline texture.
-   A thick holographic beam (90 px) sweeps the curtain's top edge
-   from section-top to section-bottom, with a glowing MP logo
-   watermark appearing at the midpoint of each reveal.
+   Section Curtain Reveal v3  — premium holographic wipe
+   ─ Dot-grid curtain with pulsing aurora + "ACQUIRING SIGNAL" text
+   ─ Corner bracket flashes
+   ─ 110 px holographic sweep beam
+   ─ Chromatic-aberration sibling lines (±16 px offset)
+   ─ MP logo badge floats at section centre as beam passes
+   ─ Spark particles ride the beam and drift into the revealed area
    ═══════════════════════════════════════════════════════════════ */
 
-/* Dark curtain — CRT scanline texture over solid bg */
+/* ── Curtain ── */
 .sReveal {
   position: absolute;
   inset: 0;
+  /* dot grid over solid bg */
   background:
-    repeating-linear-gradient(
-      0deg,
-      transparent          0px,
-      transparent          3px,
-      rgba(155,140,255,.016) 3px,
-      rgba(155,140,255,.016) 4px
-    ),
+    radial-gradient(circle, rgba(155,140,255,.14) 1px, transparent 1px)
+      center / 44px 44px,
     #060711;
   z-index: 30;
   pointer-events: none;
   will-change: transform;
   transform-origin: bottom center;
+  overflow: hidden;
 }
 
-/* Holographic sweep beam — 90 px tall, centered on the reveal edge */
+/* Aurora blobs that breathe inside the curtain */
+.sReveal::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 58% 40% at 22% 34%, rgba(155,140,255,.13) 0%, transparent 70%),
+    radial-gradient(ellipse 48% 34% at 78% 68%, rgba( 68,240,177,.09) 0%, transparent 70%);
+  animation: sRevealAurora 3.2s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+@keyframes sRevealAurora {
+  from { opacity: .65; transform: scale(1);     }
+  to   { opacity: 1;   transform: scale(1.055); }
+}
+
+/* Scan-status text — bottom-right of curtain */
+.sRevealText {
+  position: absolute;
+  bottom: 18px;
+  right: 24px;
+  font-family: ui-monospace, 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 9px;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+  color: rgba(155,140,255,.45);
+  pointer-events: none;
+  animation: sRevealBlink 1.15s step-end infinite;
+}
+@keyframes sRevealBlink {
+  0%, 100% { opacity: 1;   }
+  50%       { opacity: .2;  }
+}
+
+/* ── Corner brackets ── */
+.sBracket {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  z-index: 32;
+  pointer-events: none;
+  border-style: solid;
+  border-color: rgba(155,140,255,.75);
+  box-shadow: 0 0 8px rgba(155,140,255,.5), 0 0 20px rgba(155,140,255,.2);
+}
+.sBracket--tl { top: 16px; left: 18px;  border-width: 1.5px 0 0 1.5px; }
+.sBracket--tr { top: 16px; right: 18px; border-width: 1.5px 1.5px 0 0; }
+.sBracket--bl { bottom: 16px; left: 18px;  border-width: 0 0 1.5px 1.5px; }
+.sBracket--br { bottom: 16px; right: 18px; border-width: 0 1.5px 1.5px 0; }
+
+/* ── Holographic sweep beam — 110 px, centred on reveal edge ── */
 .sScan {
   position: absolute;
   left: 0;
   right: 0;
   top: 0%;
-  height: 90px;
+  height: 110px;
   z-index: 31;
   pointer-events: none;
   opacity: 0;
   will-change: top, opacity;
-
-  /* Vertical gradient: purple halo → white core → teal line → white core → purple halo */
   background: linear-gradient(
     to bottom,
-    transparent                    0%,
-    rgba(155, 140, 255, 0.04)     10%,
-    rgba(155, 140, 255, 0.18)     24%,
-    rgba(155, 140, 255, 0.46)     37%,
-    rgba(210, 190, 255, 0.82)     44%,
-    rgba(255, 255, 255, 1.00)     49%,
-    rgba( 68, 240, 177, 1.00)     50%,   /* teal centre line */
-    rgba(255, 255, 255, 1.00)     51%,
-    rgba(210, 190, 255, 0.82)     56%,
-    rgba(155, 140, 255, 0.46)     63%,
-    rgba(155, 140, 255, 0.18)     76%,
-    rgba(155, 140, 255, 0.04)     90%,
-    transparent                  100%
+    transparent                  0%,
+    rgba(155,140,255,.04)        9%,
+    rgba(155,140,255,.16)       22%,
+    rgba(155,140,255,.44)       36%,
+    rgba(210,190,255,.84)       44%,
+    rgba(255,255,255,1.00)      49%,
+    rgba( 68,240,177,1.00)      50%,   /* teal centre line */
+    rgba(255,255,255,1.00)      51%,
+    rgba(210,190,255,.84)       56%,
+    rgba(155,140,255,.44)       64%,
+    rgba(155,140,255,.16)       78%,
+    rgba(155,140,255,.04)       91%,
+    transparent                100%
   );
-
-  /* Outer bloom glow */
   box-shadow:
-    0  0  5px rgba(255, 255, 255, 0.20),
-    0  0 16px rgba(210, 190, 255, 0.55),
-    0  0 42px rgba(155, 140, 255, 0.38),
-    0  0 90px rgba(155, 140, 255, 0.16);
-
-  /* Fade beam at the left / right edges so it bleeds naturally */
-  -webkit-mask-image: linear-gradient(
-    to right,
-    transparent 0%,
-    black 7%,
-    black 93%,
-    transparent 100%
-  );
-  mask-image: linear-gradient(
-    to right,
-    transparent 0%,
-    black 7%,
-    black 93%,
-    transparent 100%
-  );
+    0  0  4px rgba(255,255,255,.22),
+    0  0 18px rgba(210,190,255,.60),
+    0  0 48px rgba(155,140,255,.40),
+    0  0 96px rgba(155,140,255,.16);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
+          mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
 }
 
-/* MP logo watermark inside the beam */
-.sScanLogo {
+/* ── Chromatic aberration lines (siblings to beam, ±16 px offset) ── */
+.sScanChroma {
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  height: 1px;
+  z-index: 31;
+  pointer-events: none;
+  opacity: 0;
+}
+.sScanChroma--t {
+  background: rgba(190,130,255,.70);
+  box-shadow: 0 0 7px rgba(190,130,255,.55), 0 0 22px rgba(190,130,255,.22);
+}
+.sScanChroma--b {
+  background: rgba( 68,240,177,.70);
+  box-shadow: 0 0 7px rgba( 68,240,177,.55), 0 0 22px rgba( 68,240,177,.22);
+}
+
+/* ── Floating MP logo badge — appears at section centre ── */
+.sScanBadge {
   position: absolute;
   left: 50%;
-  top: 50%;
+  top:  50%;
   transform: translate(-50%, -50%);
-  width: 90px;
-  height: auto;
-  opacity: 0;
-  filter: brightness(8) saturate(0) blur(0.4px);
-  mix-blend-mode: screen;
+  z-index: 35;
   pointer-events: none;
+  padding: 14px 24px;
+  background: rgba(6,7,17,.92);
+  border: 1px solid rgba(155,140,255,.32);
+  border-radius: 5px;
+  box-shadow:
+    0 0 24px rgba(155,140,255,.24),
+    0 0 60px rgba(155,140,255,.10),
+    inset 0 0 18px rgba(155,140,255,.06);
+}
+.sScanBadge img {
+  display: block;
+  width: 116px;
+  height: auto;
+  -webkit-user-drag: none;
   user-select: none;
-  -webkit-user-select: none;
-  draggable: false;
 }
 
-/* Reduced-motion: skip the whole effect */
+/* ── Spark particles — ride the beam, drift upward ── */
+.sSpark {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  z-index: 33;
+  pointer-events: none;
+  box-shadow: 0 0 4px rgba(255,255,255,.9), 0 0 9px rgba(155,140,255,.7);
+}
+
+/* ── Reduced-motion: skip everything ── */
 @media (prefers-reduced-motion: reduce) {
-  .sReveal { display: none; }
-  .sScan   { display: none; }
+  .sReveal, .sReveal::before, .sRevealText,
+  .sBracket, .sScan, .sScanChroma,
+  .sScanBadge, .sSpark { display: none; }
 }

@@ -616,16 +616,16 @@ function initSecBridges() {
   bridges.forEach((b) => obs.observe(b));
 }
 
-/* ── Section Curtain Reveal v2 ───────────────────────────────────────────
-   For every .section except #hero and #contact:
-   1.  A dark curtain (.sReveal) with a subtle CRT-scanline texture covers
-       the section.
-   2.  A 90 px holographic sweep beam (.sScan) — purple halo → white core →
-       teal centre line — has its CENTRE pinned to the curtain's top edge
-       (via yPercent:-50) so it always straddles the reveal boundary.
-   3.  The MP logo (.sScanLogo) appears as a glowing watermark inside the
-       beam at the midpoint of the wipe, then fades away.
-   4.  Everything is cleaned up from the DOM on completion.
+/* ── Section Curtain Reveal v3 ───────────────────────────────────────────
+   Premium holographic wipe for every .section except #hero and #contact.
+
+   Elements created per section (all removed on completion):
+     .sReveal       — dot-grid curtain with pulsing aurora + status text
+     .sBracket ×4   — corner bracket flashes
+     .sScan         — 110 px holographic sweep beam
+     .sScanChroma×2 — chromatic aberration lines (±16 px from beam centre)
+     .sScanBadge    — MP logo badge at section centre (visible as beam passes)
+     .sSpark ×12    — spark particles that rise from the beam
    ─────────────────────────────────────────────────────────────────────── */
 function initSectionReveal() {
   if (prefersReducedMotion()) return;
@@ -633,75 +633,139 @@ function initSectionReveal() {
 
   gsap.registerPlugin(ScrollTrigger);
 
+  const SWEEP = 1.12;   // total curtain-wipe duration (s)
+  const START = 0.18;   // timeline offset when wipe begins
+
   document.querySelectorAll(".section:not(#hero):not(#contact)").forEach((section) => {
-    // Ensure positioning context
-    const pos = getComputedStyle(section).position;
-    if (pos === "static") section.style.position = "relative";
+    if (getComputedStyle(section).position === "static") section.style.position = "relative";
     section.style.overflow = "hidden";
 
     /* ── curtain ── */
     const curtain = document.createElement("div");
     curtain.className = "sReveal";
     curtain.setAttribute("aria-hidden", "true");
+    const scanText = document.createElement("div");
+    scanText.className = "sRevealText";
+    scanText.textContent = "ACQUIRING SIGNAL";
+    scanText.setAttribute("aria-hidden", "true");
+    curtain.appendChild(scanText);
     section.appendChild(curtain);
+
+    /* ── corner brackets ── */
+    const brackets = ["tl","tr","bl","br"].map(p => {
+      const el = document.createElement("div");
+      el.className = `sBracket sBracket--${p}`;
+      el.setAttribute("aria-hidden", "true");
+      section.appendChild(el);
+      return el;
+    });
 
     /* ── sweep beam ── */
     const scan = document.createElement("div");
     scan.className = "sScan";
     scan.setAttribute("aria-hidden", "true");
-
-    /* MP logo watermark inside beam */
-    const logo = document.createElement("img");
-    logo.className = "sScanLogo";
-    logo.src = "assets/MP-logo.png";
-    logo.alt = "";
-    logo.setAttribute("aria-hidden", "true");
-    logo.setAttribute("draggable", "false");
-    scan.appendChild(logo);
-
     section.appendChild(scan);
 
-    /* Initial state:
-       - curtain covers the section fully (scaleY 1)
-       - beam sits with its CENTRE at the section's top edge (top:0%, yPercent:-50)
-         so the upper half of the beam is clipped by overflow:hidden            */
-    gsap.set(curtain, { scaleY: 1, transformOrigin: "bottom center" });
-    gsap.set(scan,    { top: "0%", yPercent: -50, opacity: 0 });
+    /* ── chromatic aberration lines (siblings to beam, not inside it) ── */
+    const chromaT = document.createElement("div");
+    chromaT.className = "sScanChroma sScanChroma--t";
+    chromaT.setAttribute("aria-hidden", "true");
+    section.appendChild(chromaT);
 
+    const chromaB = document.createElement("div");
+    chromaB.className = "sScanChroma sScanChroma--b";
+    chromaB.setAttribute("aria-hidden", "true");
+    section.appendChild(chromaB);
+
+    /* ── MP logo badge (separate from beam so it's always readable) ── */
+    const badge = document.createElement("div");
+    badge.className = "sScanBadge";
+    badge.setAttribute("aria-hidden", "true");
+    const badgeImg = document.createElement("img");
+    badgeImg.src = "assets/MP-logo.png";
+    badgeImg.alt = "";
+    badgeImg.setAttribute("aria-hidden", "true");
+    badgeImg.setAttribute("draggable", "false");
+    badge.appendChild(badgeImg);
+    section.appendChild(badge);
+
+    /* ── spark particles — section children, appear near beam as it sweeps ── */
+    const sparkPalette = ["#ffffff","#c8b4ff","#44f0b1","#ffffff","#a8d8ff","#c8b4ff"];
+    const sparks = Array.from({ length: 12 }, (_, i) => {
+      const sp = document.createElement("div");
+      sp.className = "sSpark";
+      sp.setAttribute("aria-hidden", "true");
+      sp.style.background = sparkPalette[i % sparkPalette.length];
+      section.appendChild(sp);
+      return sp;
+    });
+
+    /* ── initial states ── */
+    gsap.set(curtain,  { scaleY: 1, transformOrigin: "bottom center" });
+    // Beam and chroma centres at section top edge (yPercent:-50 = shift up by half own height)
+    gsap.set(scan,     { top: "0%", yPercent: -50, opacity: 0 });
+    gsap.set(chromaT,  { top: "0%", yPercent: -50, y: -16, opacity: 0 });
+    gsap.set(chromaB,  { top: "0%", yPercent: -50, y: +16, opacity: 0 });
+    gsap.set(badge,    { opacity: 0, scale: 0.88 });
+    gsap.set(brackets, { opacity: 0 });
+    sparks.forEach(sp => gsap.set(sp, { opacity: 0 }));
+
+    /* ── timeline ── */
     const tl = gsap.timeline({
-      scrollTrigger: {
-        trigger: section,
-        start: "top 88%",
-        once: true,
-      },
+      scrollTrigger: { trigger: section, start: "top 88%", once: true },
       onComplete() {
         section.style.overflow = "";
-        curtain.remove();
-        scan.remove();
+        [curtain, scan, chromaT, chromaB, badge, ...brackets, ...sparks]
+          .forEach(el => el.remove());
       },
     });
 
-    /* 1 — beam flashes in at the top edge */
-    tl.to(scan, { opacity: 1, duration: 0.10 }, 0);
+    /* 0 — corner brackets snap in with stagger */
+    tl.to(brackets, { opacity: 1, duration: 0.13, stagger: 0.05 }, 0);
 
-    /* 2 — curtain collapses downward; beam center tracks its descending top edge */
-    tl.to(
-      curtain,
-      { scaleY: 0, transformOrigin: "bottom center", duration: 1.05, ease: "power3.inOut" },
-      0.06
+    /* 1 — beam + chroma flash in at the top edge */
+    tl.to([scan, chromaT, chromaB], { opacity: 1, duration: 0.11 }, 0.10);
+
+    /* 2 — curtain wipes + beam descends over SWEEP seconds */
+    tl.to(curtain,
+      { scaleY: 0, transformOrigin: "bottom center", duration: SWEEP, ease: "power3.inOut" },
+      START
     );
-    tl.to(
-      scan,
-      { top: "100%", yPercent: -50, duration: 1.05, ease: "power3.inOut" },
-      0.06
+    tl.to([scan, chromaT, chromaB],
+      { top: "100%", duration: SWEEP, ease: "power3.inOut" },
+      START
     );
 
-    /* 3 — MP logo watermark: fade in at ~30 %, fade out at ~72 % */
-    tl.to(logo, { opacity: 0.48, duration: 0.22 }, 0.30);
-    tl.to(logo, { opacity: 0,    duration: 0.22 }, 0.72);
+    /* 3 — spark particles: staggered fires spread across the sweep */
+    sparks.forEach((sp, i) => {
+      // Approximate Y% of section where beam is when spark fires
+      const prog    = (i + 0.5) / sparks.length;                 // 0 → 1
+      const beamPct = Math.pow(prog, 0.65) * 100;                // rough power3.inOut shape
+      const fireAt  = START + prog * SWEEP * 0.88;               // timeline time
+      const xPct    = 6 + Math.random() * 88;
+      const rise    = 38 + Math.random() * 62;
+      const dur     = 0.52 + Math.random() * 0.38;
 
-    /* 4 — beam fades out as it exits the section bottom */
-    tl.to(scan, { opacity: 0, duration: 0.20 }, 0.87);
+      gsap.set(sp, { left: `${xPct}%`, top: `${beamPct}%` });
+
+      tl.fromTo(sp,
+        { y: 0, opacity: 0.95, scale: 1 },
+        { y: -rise, opacity: 0, scale: 0.35, duration: dur, ease: "power2.out" },
+        fireAt
+      );
+    });
+
+    /* 4 — logo badge pops in as beam reaches section centre (~50% through sweep) */
+    const badgeIn  = START + SWEEP * 0.34;
+    const badgeOut = START + SWEEP * 0.72;
+    tl.to(badge, { opacity: 1, scale: 1, duration: 0.28, ease: "back.out(1.6)" }, badgeIn);
+    tl.to(badge, { opacity: 0, scale: 0.92, duration: 0.22 }, badgeOut);
+
+    /* 5 — beam + chroma fade as they exit the bottom */
+    tl.to([scan, chromaT, chromaB], { opacity: 0, duration: 0.18 }, START + SWEEP * 0.88);
+
+    /* 6 — brackets fade last */
+    tl.to(brackets, { opacity: 0, duration: 0.20, stagger: 0.04 }, START + SWEEP * 0.86);
   });
 }
 
