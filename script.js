@@ -3801,28 +3801,32 @@ function initStatsModal({ githubUsername }) {
 
   if (!openBtn || !overlay || !modal || !closeBtn) return;
 
-  // ---- Simple global counters (counterapi.dev) ----
-  // Change namespace if you want a different "bucket"
-  const COUNT_NS = "maurits-portfolio";
-  const VIEWS_KEY = "views";
-  const LIKES_KEY = "likes";
+  // ---- Counters: localStorage-first, API-synced in background ----
+  // localStorage is the source of truth so values persist across reloads
+  // even when the external API is unavailable (CORS / rate-limit / downtime).
+  const LS_VIEWS   = "pv_views";
+  const LS_LIKES   = "pv_likes";
+  const LS_LIKED   = "portfolioLiked";
+  const LS_SESSION = "pvCounted";
 
-  // countGet: safe read — returns 0 if counter doesn't exist yet or API is down
-  async function countGet(key) {
+  // API sync (best-effort, fire-and-forget)
+  const COUNT_NS  = "maurits2905-portfolio";
+  const API_BASE  = "https://api.counterapi.dev/v1";
+  async function apiHit(key) {
     try {
-      const r = await fetch(`https://api.counterapi.dev/v1/${COUNT_NS}/${key}`);
-      if (!r.ok) return 0;
+      const r = await fetch(`${API_BASE}/${COUNT_NS}/${key}/up`);
+      if (!r.ok) return null;
       const j = await r.json();
-      return Number(j.value || 0);
-    } catch { return 0; }
+      return Number(j.value) || null;
+    } catch { return null; }
   }
-
-  // countHit: increment — throws on failure so caller can handle
-  async function countHit(key) {
-    const r = await fetch(`https://api.counterapi.dev/v1/${COUNT_NS}/${key}/up`);
-    if (!r.ok) throw new Error(`Counter ${r.status}`);
-    const j = await r.json();
-    return Number(j.value || 0);
+  async function apiGet(key) {
+    try {
+      const r = await fetch(`${API_BASE}/${COUNT_NS}/${key}`);
+      if (!r.ok) return null;
+      const j = await r.json();
+      return Number(j.value) || null;
+    } catch { return null; }
   }
 
   function markLiked() {
@@ -3831,44 +3835,70 @@ function initStatsModal({ githubUsername }) {
     likeBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> Loved ✓`;
   }
 
+  function lsNum(key, fallback = 0) {
+    return Math.max(parseInt(localStorage.getItem(key) ?? "") || 0, fallback);
+  }
+
   async function loadCounts() {
-    // Views — isolated so a failure doesn't block likes
-    try {
-      const counted = sessionStorage.getItem("pvCounted") === "1";
-      const v = counted ? await countGet(VIEWS_KEY) : await countHit(VIEWS_KEY);
-      sessionStorage.setItem("pvCounted", "1");
-      if (viewsEl) viewsEl.textContent = String(v);
-    } catch (e) {
-      console.warn("Views counter:", e);
-      if (viewsEl) viewsEl.textContent = "—";
+    // ── Views ──────────────────────────────────────────────────────────────
+    let views = lsNum(LS_VIEWS);
+    const counted = sessionStorage.getItem(LS_SESSION) === "1";
+    if (!counted) {
+      views += 1;                                      // one increment per tab session
+      localStorage.setItem(LS_VIEWS, String(views));
+      sessionStorage.setItem(LS_SESSION, "1");
+      apiHit("views").then(n => {                      // sync to API (background)
+        if (n !== null && n > views) {
+          localStorage.setItem(LS_VIEWS, String(n));
+          if (viewsEl) viewsEl.textContent = String(n);
+        }
+      });
+    } else {
+      // Already counted this session — try API for the real cross-user total
+      apiGet("views").then(n => {
+        if (n !== null) {
+          const best = Math.max(n, lsNum(LS_VIEWS));
+          localStorage.setItem(LS_VIEWS, String(best));
+          if (viewsEl) viewsEl.textContent = String(best);
+        }
+      });
     }
+    if (viewsEl) viewsEl.textContent = String(views);
 
-    // Likes — isolated
-    try {
-      const likes = await countGet(LIKES_KEY);
-      if (likesEl) likesEl.textContent = String(likes);
-    } catch (e) {
-      if (likesEl) likesEl.textContent = "0";
-    }
+    // ── Likes ──────────────────────────────────────────────────────────────
+    const localLikes = lsNum(LS_LIKES);
+    if (likesEl) likesEl.textContent = String(localLikes);
+    apiGet("likes").then(n => {                        // try to get real cross-user total
+      if (n !== null) {
+        const best = Math.max(n, lsNum(LS_LIKES));
+        localStorage.setItem(LS_LIKES, String(best));
+        if (likesEl) likesEl.textContent = String(best);
+      }
+    });
 
-    // Like button state
-    if (localStorage.getItem("portfolioLiked") === "1") markLiked();
+    // ── Like button state ──────────────────────────────────────────────────
+    if (localStorage.getItem(LS_LIKED) === "1") markLiked();
     else if (likeBtn) likeBtn.disabled = false;
   }
 
-  async function onLike() {
+  function onLike() {
     if (!likeBtn || likeBtn.disabled) return;
 
-    // Optimistic update — button responds instantly regardless of API
-    const cur = parseInt(likesEl?.textContent) || 0;
-    if (likesEl) likesEl.textContent = String(cur + 1);
-    localStorage.setItem("portfolioLiked", "1");
+    // Update localStorage immediately — persists across reloads
+    const next = lsNum(LS_LIKES) + 1;
+    localStorage.setItem(LS_LIKES,  String(next));
+    localStorage.setItem(LS_LIKED,  "1");
+    if (likesEl) likesEl.textContent = String(next);
     markLiked();
 
-    // Persist to API in the background (don't block UX on failure)
-    countHit(LIKES_KEY)
-      .then(n => { if (likesEl) likesEl.textContent = String(n); })
-      .catch(e => console.warn("Like API:", e));
+    // Best-effort API sync — take the higher of API vs local
+    apiHit("likes").then(n => {
+      if (n !== null) {
+        const best = Math.max(n, lsNum(LS_LIKES));
+        localStorage.setItem(LS_LIKES, String(best));
+        if (likesEl) likesEl.textContent = String(best);
+      }
+    });
   }
 
   if (likeBtn) likeBtn.addEventListener("click", onLike);
