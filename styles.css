@@ -3419,6 +3419,7 @@ html.noReveal .r,
 .sectionTitle {
   position: relative;
   margin: 0 0 14px;
+  padding-bottom: 18px; /* space for descenders + ::after accent bar */
   font-size: clamp(56px, 8vw, 112px);
   font-weight: 900;
   line-height: 0.93;
@@ -4032,6 +4033,7 @@ html.noReveal .r,
 .techTitle {
   position: relative;
   margin: 0 0 14px;
+  padding-bottom: 18px;
   font-size: clamp(56px, 8vw, 112px);
   font-weight: 900;
   line-height: 0.93;
@@ -4698,11 +4700,11 @@ html.noReveal .r,
   text-align: center;
   font-size: 0.9rem;
   color: var(--muted);
-  margin: 6px 0 36px;
+  margin: 6px auto 36px;  /* auto left/right keeps it centred */
   letter-spacing: 0.01em;
 }
 
-/* Main panel â€” card split into two columns */
+/* Main panel — card split into two columns */
 
 .askPanel {
   display: grid;
