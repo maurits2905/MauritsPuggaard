@@ -2912,6 +2912,24 @@ async function init() {
 
   initAskMe();
 
+  /* ── Signal title scroll-reveal ── */
+  const sigTitles = document.querySelectorAll('.sectionTitle, .techTitle, .careerTitle');
+  if (sigTitles.length) {
+    const sigObs = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.remove('sig-hidden');
+          e.target.classList.add('sig-visible');
+          sigObs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.15 });
+    sigTitles.forEach(el => {
+      el.classList.add('sig-hidden');
+      sigObs.observe(el);
+    });
+  }
+
   loadTo(100);
   if (loader) loader.done();
 }

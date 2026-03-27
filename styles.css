@@ -1056,7 +1056,14 @@ html[data-theme="light"] body[data-bg="stars"] .bgDeep {
 /* --- Section heading: full-strength black --- */
 
 [data-theme="light"] .sectionTitle,
-[data-theme="light"] .techTitle,
+[data-theme="light"] .techTitle {
+  background: linear-gradient(120deg, #6a5acd 0%, #4b69ff 50%, #00b894 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: none;
+}
+
 [data-theme="light"] h1,
 [data-theme="light"] h2,
 [data-theme="light"] h3 {
@@ -3307,37 +3314,39 @@ html.noReveal .r,
    [01] [───] [CATEGORY]  then large title below
 ================================================ */
 
+/* ── Signal eyebrow label ── */
 .secLabel {
   display: inline-flex;
   align-items: center;
-  gap: 11px;
-  margin-bottom: 12px;
+  gap: 10px;
+  margin-bottom: 18px;
 }
 
 .secNum {
-  font-size: 10px;
-  font-weight: 900;
-  letter-spacing: 0.22em;
+  font-family: ui-monospace, 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--hot);
+  color: #9b8cff;
   font-variant-numeric: tabular-nums;
-  opacity: 0.88;
 }
 
 .secLabelLine {
-  width: 26px;
+  width: 48px;
   height: 1px;
-  background: linear-gradient(90deg, rgba(75, 105, 255, 0.50), rgba(255, 255, 255, 0.06));
+  background: linear-gradient(90deg, rgba(155, 140, 255, 0.55), rgba(68, 240, 177, 0.15), transparent);
   flex-shrink: 0;
   border-radius: 1px;
 }
 
 .secCategory {
+  font-family: ui-monospace, 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
   font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.30em;
+  font-weight: 500;
+  letter-spacing: 0.28em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.25);
+  color: rgba(155, 140, 255, 0.45);
 }
 
 /* ── Per-section heading containers ── */
@@ -3348,21 +3357,84 @@ html.noReveal .r,
 }
 
 .careerTitle {
-  margin: 0;
-  font-size: clamp(52px, 7.5vw, 104px);
+  position: relative;
+  margin: 0 0 14px;
+  font-size: clamp(56px, 8vw, 112px);
   font-weight: 900;
-  line-height: 1.0;
-  letter-spacing: -0.04em;
+  line-height: 0.93;
+  letter-spacing: -0.055em;
+  color: transparent;
+  background: linear-gradient(120deg, #9b8cff 0%, #7eb4ff 42%, #44f0b1 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  filter: drop-shadow(0 0 48px rgba(155, 140, 255, 0.22));
+}
+
+.careerTitle::before {
+  content: attr(data-text);
+  position: absolute;
+  inset: 3px 0 0 3px;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(155, 140, 255, 0.09);
+  background: none;
+  -webkit-background-clip: unset;
+  background-clip: unset;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.careerTitle.sig-hidden {
+  opacity: 0;
+  transform: translateY(36px);
+}
+.careerTitle.sig-visible {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.85s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.85s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* Big section title (Projects, Ask) */
 
+/* ── Signal main heading ── */
 .sectionTitle {
+  position: relative;
   margin: 0 0 14px;
-  font-size: clamp(52px, 7.5vw, 104px);
+  font-size: clamp(56px, 8vw, 112px);
   font-weight: 900;
-  line-height: 1.0;
-  letter-spacing: -0.04em;
+  line-height: 0.93;
+  letter-spacing: -0.055em;
+  color: transparent;
+  background: linear-gradient(120deg, #9b8cff 0%, #7eb4ff 42%, #44f0b1 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  filter: drop-shadow(0 0 48px rgba(155, 140, 255, 0.22));
+}
+
+/* Ghost echo — outline text behind the fill */
+.sectionTitle::before {
+  content: attr(data-text);
+  position: absolute;
+  inset: 3px 0 0 3px;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(155, 140, 255, 0.09);
+  background: none;
+  -webkit-background-clip: unset;
+  background-clip: unset;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Scroll-reveal state — starts hidden */
+.sectionTitle.sig-hidden {
+  opacity: 0;
+  transform: translateY(36px);
+}
+.sectionTitle.sig-visible {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.85s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.85s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* Limit width of Projects header text (matches Career section) */
@@ -3372,10 +3444,10 @@ html.noReveal .r,
 }
 
 .gradWord {
-  color: transparent;
-  background: linear-gradient(90deg, var(--hot), var(--hot2));
-  -webkit-background-clip: text;
-  background-clip: text;
+  color: inherit;
+  background: inherit;
+  -webkit-background-clip: inherit;
+  background-clip: inherit;
 }
 
 .careerAccent {
@@ -3907,18 +3979,48 @@ html.noReveal .r,
 }
 
 .techTitle {
-  margin: 0;
-  font-size: clamp(52px, 7.5vw, 104px);
+  position: relative;
+  margin: 0 0 14px;
+  font-size: clamp(56px, 8vw, 112px);
   font-weight: 900;
-  line-height: 1.0;
-  letter-spacing: -0.04em;
+  line-height: 0.93;
+  letter-spacing: -0.055em;
+  color: transparent;
+  background: linear-gradient(120deg, #9b8cff 0%, #7eb4ff 42%, #44f0b1 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  filter: drop-shadow(0 0 48px rgba(155, 140, 255, 0.22));
+}
+
+.techTitle::before {
+  content: attr(data-text);
+  position: absolute;
+  inset: 3px 0 0 3px;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(155, 140, 255, 0.09);
+  background: none;
+  -webkit-background-clip: unset;
+  background-clip: unset;
+  pointer-events: none;
+  z-index: -1;
 }
 
 .techTitle span {
-  color: transparent;
-  background: linear-gradient(135deg, var(--hot), var(--hot2));
-  -webkit-background-clip: text;
-  background-clip: text;
+  color: inherit;
+  background: inherit;
+  -webkit-background-clip: inherit;
+  background-clip: inherit;
+}
+
+.techTitle.sig-hidden {
+  opacity: 0;
+  transform: translateY(36px);
+}
+.techTitle.sig-visible {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.85s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.85s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .techSphereMount {
@@ -7196,19 +7298,25 @@ body[data-theme="light"] .abtTag:hover {
 }
 
 .showcaseKicker {
-  font-size: 11px;
-  letter-spacing: 0.26em;
-  font-weight: 600;
-  color: rgba(75, 105, 255, 0.80);
+  font-family: ui-monospace, 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  font-weight: 500;
+  color: rgba(155, 140, 255, 0.55);
   text-transform: uppercase;
-  margin: 0 0 16px;
+  margin: 0 0 14px;
 }
 
 .showcaseTitle {
-  font-size: clamp(26px, 3.8vw, 50px);
-  font-weight: 700;
-  letter-spacing: -0.025em;
-  color: #fff;
+  font-size: clamp(28px, 4vw, 54px);
+  font-weight: 900;
+  letter-spacing: -0.045em;
+  line-height: 0.95;
+  color: transparent;
+  background: linear-gradient(120deg, #9b8cff 0%, #7eb4ff 42%, #44f0b1 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  filter: drop-shadow(0 0 32px rgba(155, 140, 255, 0.20));
   margin: 0 0 12px;
   transition: opacity 220ms ease, transform 220ms ease;
 }
