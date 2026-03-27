@@ -4009,3 +4009,61 @@ if (document.readyState === "loading") {
 } else {
   initPrivacyModal();
 }
+
+/* ── Terms of Use modal ── */
+function initTermsModal() {
+  const openBtn  = document.getElementById("termsOpenBtn");
+  const overlay  = document.getElementById("termsOverlay");
+  const modal    = document.getElementById("termsModal");
+  const closeBtn = document.getElementById("termsClose");
+  if (!openBtn || !overlay || !modal || !closeBtn) return;
+
+  let isOpen = false;
+  let scrollY = 0;
+
+  const open = () => {
+    if (isOpen) return;
+    isOpen = true;
+    scrollY = window.scrollY || 0;
+    document.body.style.position = "fixed";
+    document.body.style.top      = `-${scrollY}px`;
+    document.body.style.left     = "0";
+    document.body.style.right    = "0";
+    document.body.style.width    = "100%";
+    overlay.hidden = false;
+    overlay.classList.add("isOpen");
+    modal.classList.add("isOpen");
+    modal.setAttribute("aria-hidden", "false");
+    setTimeout(() => closeBtn.focus(), 40);
+  };
+
+  const close = () => {
+    if (!isOpen) return;
+    isOpen = false;
+    overlay.classList.remove("isOpen");
+    modal.classList.remove("isOpen");
+    modal.setAttribute("aria-hidden", "true");
+    setTimeout(() => {
+      overlay.hidden = true;
+      document.body.style.position = "";
+      const top = document.body.style.top;
+      document.body.style.top   = "";
+      document.body.style.left  = "";
+      document.body.style.right = "";
+      document.body.style.width = "";
+      window.scrollTo(0, top ? Math.abs(parseInt(top, 10)) : scrollY);
+      openBtn.focus();
+    }, 260);
+  };
+
+  openBtn.addEventListener("click", (e) => { e.preventDefault(); open(); });
+  closeBtn.addEventListener("click", close);
+  overlay.addEventListener("click", close);
+  window.addEventListener("keydown", (e) => { if (isOpen && e.key === "Escape") close(); });
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initTermsModal);
+} else {
+  initTermsModal();
+}

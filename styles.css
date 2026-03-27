@@ -7512,6 +7512,222 @@ body[data-theme="light"] .abtTag:hover {
 }
 
 /* ================================================================
+   TERMS OF USE MODAL  (mirrors privacy modal, teal accent)
+   ================================================================ */
+
+.termsOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  background: rgba(0,0,0,0.62);
+  opacity: 0;
+  transition: opacity 240ms ease;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.termsOverlay.isOpen { opacity: 1; }
+
+.termsModal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  pointer-events: none;
+}
+.termsModal.isOpen { pointer-events: auto; }
+
+.termsInner {
+  width: min(780px, 100%);
+  max-height: min(92vh, 860px);
+  background: rgba(6,7,17,0.96);
+  border: 1px solid rgba(68,240,177,0.18);
+  border-radius: 24px;
+  box-shadow:
+    0 0 0 1px rgba(68,240,177,0.05) inset,
+    0 48px 140px rgba(0,0,0,0.75),
+    0 0 80px rgba(68,240,177,0.05);
+  opacity: 0;
+  transform: translateY(14px) scale(0.985);
+  transition: opacity 260ms cubic-bezier(0.22,1,0.36,1), transform 260ms cubic-bezier(0.22,1,0.36,1);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(68,240,177,0.22) transparent;
+}
+.termsModal.isOpen .termsInner { opacity: 1; transform: translateY(0) scale(1); }
+.termsInner::-webkit-scrollbar { width: 5px; }
+.termsInner::-webkit-scrollbar-thumb { background: rgba(68,240,177,0.22); border-radius: 99px; }
+
+.termsClose {
+  position: sticky;
+  top: 14px;
+  float: right;
+  margin: 14px 14px 0 0;
+  display: grid;
+  place-items: center;
+  width: 38px; height: 38px;
+  font-size: 18px;
+  color: rgba(255,255,255,0.7);
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 160ms, color 160ms;
+  z-index: 2;
+}
+.termsClose:hover { background: rgba(255,77,77,0.12); color: #ff6464; border-color: rgba(255,77,77,0.3); }
+
+.termsHero {
+  display: flex;
+  align-items: flex-start;
+  gap: 22px;
+  padding: 36px 36px 28px;
+  clear: both;
+}
+.termsIcon {
+  flex-shrink: 0;
+  width: 52px; height: 52px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, rgba(68,240,177,0.12), rgba(155,140,255,0.07));
+  border: 1px solid rgba(68,240,177,0.26);
+  border-radius: 16px;
+  color: #44f0b1;
+}
+.termsIcon svg { width: 26px; height: 26px; }
+
+.termsEye {
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #44f0b1;
+  opacity: 0.8;
+}
+.termsTitle {
+  margin: 0 0 6px;
+  font-size: clamp(22px,4vw,32px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  background: linear-gradient(100deg,#44f0b1 0%,#8bf5d8 50%,#9b8cff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.termsMeta {
+  margin: 0;
+  font-size: 12px;
+  color: rgba(255,255,255,0.38);
+  letter-spacing: 0.02em;
+}
+
+.termsDivider {
+  height: 1px;
+  margin: 0 36px;
+  background: linear-gradient(to right, rgba(68,240,177,0.35), rgba(155,140,255,0.2), transparent);
+}
+
+.termsPills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 22px 36px;
+}
+.termsPill {
+  padding: 5px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  border: 1px solid;
+}
+.termsPill--green {
+  color: rgba(68,240,177,0.9);
+  background: rgba(68,240,177,0.07);
+  border-color: rgba(68,240,177,0.22);
+}
+.termsPill--amber {
+  color: rgba(255,190,80,0.9);
+  background: rgba(255,190,80,0.07);
+  border-color: rgba(255,190,80,0.22);
+}
+
+.termsBody {
+  padding: 0 36px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+.termsSectionTitle {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #44f0b1;
+}
+.termsBody p {
+  margin: 0 0 8px;
+  font-size: 14px;
+  line-height: 1.75;
+  color: rgba(255,255,255,0.68);
+}
+.termsBody p:last-child { margin-bottom: 0; }
+.termsList {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.termsList li {
+  font-size: 14px;
+  line-height: 1.65;
+  color: rgba(255,255,255,0.68);
+  padding-left: 18px;
+  position: relative;
+}
+.termsList li::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 9px;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: #44f0b1;
+  opacity: 0.7;
+}
+.termsLink {
+  color: #44f0b1;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(68,240,177,0.3);
+  transition: color 150ms, border-color 150ms;
+}
+.termsLink:hover { color: #9b8cff; border-color: rgba(155,140,255,0.5); }
+
+.termsFooterNote {
+  margin: 0 36px 32px;
+  padding: 14px 18px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: rgba(255,255,255,0.32);
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 12px;
+}
+
+@media (max-width: 520px) {
+  .termsHero { padding: 24px 22px 20px; gap: 16px; }
+  .termsDivider { margin: 0 22px; }
+  .termsPills { padding: 16px 22px; }
+  .termsBody { padding: 0 22px 22px; }
+  .termsFooterNote { margin: 0 22px 24px; }
+}
+
+/* ================================================================
    LIGHT MODE – DEFINITIVE VISIBILITY FIXES  (end-of-file, !important)
    These rules appear last so they win the cascade absolutely.
    All opacity / color overrides that were losing specificity battles

@@ -37,7 +37,7 @@
       }
     </style>
 
-    <link rel="stylesheet" href="styles.css?v=204" />
+    <link rel="stylesheet" href="styles.css?v=205" />
 
     <style id="about-css">
 /* ═══════════════════════════════════════════════════
@@ -1031,7 +1031,7 @@ body[data-theme="light"] .abtTag:hover {
               <div class="contactCol">
                 <div class="contactColTitle">Legal</div>
                 <a class="contactLink" href="#" id="privOpenBtn">Privacy Policy</a>
-                <a class="contactLink" href="#">Terms</a>
+                <a class="contactLink" href="#" id="termsOpenBtn">Terms</a>
               </div>
             </div>
           </div>
@@ -1480,12 +1480,124 @@ body[data-theme="light"] .abtTag:hover {
       </div><!-- /.privInner -->
     </section><!-- /#privModal -->
 
+    <!-- Terms of Use modal -->
+    <div class="termsOverlay" id="termsOverlay" hidden></div>
+    <section class="termsModal" id="termsModal" role="dialog" aria-modal="true" aria-labelledby="termsTitle" aria-hidden="true">
+      <div class="termsInner">
+        <button class="termsClose" id="termsClose" type="button" aria-label="Close terms">&#x2715;</button>
+
+        <!-- Header -->
+        <div class="termsHero">
+          <div class="termsIcon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10 9 9 9 8 9"/>
+            </svg>
+          </div>
+          <div>
+            <p class="termsEye">// LEGAL</p>
+            <h2 class="termsTitle" id="termsTitle">Terms of Use</h2>
+            <p class="termsMeta">Maurits Puggaard &mdash; Portfolio &nbsp;&middot;&nbsp; Last updated: March 2026</p>
+          </div>
+        </div>
+
+        <div class="termsDivider"></div>
+
+        <!-- Summary pills -->
+        <div class="termsPills">
+          <span class="termsPill termsPill--green">Personal site</span>
+          <span class="termsPill termsPill--green">No warranties</span>
+          <span class="termsPill termsPill--amber">Content is mine</span>
+          <span class="termsPill termsPill--amber">Use respectfully</span>
+        </div>
+
+        <!-- Body -->
+        <div class="termsBody">
+
+          <div class="termsSection">
+            <h3 class="termsSectionTitle">Acceptance</h3>
+            <p>By accessing and using this website (<strong>maurits2905.github.io/MauritsPuggaard</strong>), you accept these Terms of Use in full. If you disagree with any part, please stop using the site. This is a personal portfolio — there is no formal registration process, so using the site constitutes acceptance.</p>
+          </div>
+
+          <div class="termsSection">
+            <h3 class="termsSectionTitle">Intellectual property</h3>
+            <p>All content on this site — including but not limited to text, code snippets, design, layout, graphics, and project descriptions — is the intellectual property of <strong>Maurits Puggaard</strong> unless otherwise stated.</p>
+            <ul class="termsList">
+              <li>You may view and reference the content for personal, non-commercial purposes</li>
+              <li>You may not reproduce, redistribute, or republish content without explicit written permission</li>
+              <li>Open-source projects linked from this site are governed by their own licences (typically MIT)</li>
+            </ul>
+          </div>
+
+          <div class="termsSection">
+            <h3 class="termsSectionTitle">Permitted use</h3>
+            <p>This site is provided for informational purposes — to showcase professional experience, projects, and skills. You are welcome to:</p>
+            <ul class="termsList">
+              <li>Browse and explore the portfolio</li>
+              <li>Share a link to this site</li>
+              <li>Use the AI chat to ask professional questions</li>
+              <li>Leave a &ldquo;Like&rdquo; via the Stats panel</li>
+            </ul>
+          </div>
+
+          <div class="termsSection">
+            <h3 class="termsSectionTitle">Prohibited use</h3>
+            <ul class="termsList">
+              <li>Scraping, crawling, or automated data extraction beyond normal browser behaviour</li>
+              <li>Attempting to disrupt, hack, or reverse-engineer any functionality</li>
+              <li>Impersonating me or misrepresenting an affiliation with this site</li>
+              <li>Submitting abusive, illegal, or harmful content through the AI chat interface</li>
+            </ul>
+          </div>
+
+          <div class="termsSection">
+            <h3 class="termsSectionTitle">AI chat disclaimer</h3>
+            <p>The <em>Ask Me</em> feature is powered by an AI model and is designed to answer questions about my professional background. Responses are generated automatically and may not always be accurate. Do not rely on AI responses for legal, financial, or medical decisions. I am not liable for any actions taken based on AI-generated content.</p>
+          </div>
+
+          <div class="termsSection">
+            <h3 class="termsSectionTitle">External links</h3>
+            <p>This site may contain links to third-party websites (GitHub, LinkedIn, project demos). I am not responsible for the content, privacy practices, or availability of those sites. Links are provided for convenience only.</p>
+          </div>
+
+          <div class="termsSection">
+            <h3 class="termsSectionTitle">Disclaimers &amp; liability</h3>
+            <p>This site is provided <strong>&ldquo;as is&rdquo;</strong> without warranties of any kind, express or implied. I do not guarantee uninterrupted availability, freedom from errors, or fitness for a particular purpose. To the maximum extent permitted by law, I am not liable for any direct, indirect, or consequential damages arising from your use of this site.</p>
+          </div>
+
+          <div class="termsSection">
+            <h3 class="termsSectionTitle">Governing law</h3>
+            <p>These terms are governed by the laws of <strong>Denmark</strong>. Any disputes shall be subject to the jurisdiction of the Danish courts.</p>
+          </div>
+
+          <div class="termsSection">
+            <h3 class="termsSectionTitle">Changes to these terms</h3>
+            <p>I may update these terms occasionally. The &ldquo;Last updated&rdquo; date at the top reflects the current version. Continued use of the site after changes constitutes acceptance of the revised terms.</p>
+          </div>
+
+          <div class="termsSection">
+            <h3 class="termsSectionTitle">Contact</h3>
+            <p>Questions or concerns about these terms? Reach out via the <strong>Contact</strong> section of this site or connect on <a class="termsLink" href="https://linkedin.com/in/maurits-puggaard" target="_blank" rel="noopener noreferrer">LinkedIn</a>.</p>
+          </div>
+
+        </div><!-- /.termsBody -->
+
+        <div class="termsFooterNote">
+          These terms apply solely to this portfolio website. They do not constitute a legal contract for any services. For professional engagements, a separate agreement will apply.
+        </div>
+
+      </div><!-- /.termsInner -->
+    </section><!-- /#termsModal -->
+
     <!-- Libraries -->
     <script src="three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
 
-    <script src="script.js?v=116"></script>
+    <script src="script.js?v=117"></script>
     <script src="avatar.js"></script>
   </body>
 </html>
