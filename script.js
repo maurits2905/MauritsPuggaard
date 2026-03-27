@@ -3801,20 +3801,20 @@ function initStatsModal({ githubUsername }) {
 
   if (!openBtn || !overlay || !modal || !closeBtn) return;
 
-  // ---- Simple global counters (CountAPI) ----
+  // ---- Simple global counters (counterapi.dev) ----
   // Change namespace if you want a different "bucket"
   const COUNT_NS = "maurits-portfolio";
   const VIEWS_KEY = "views";
   const LIKES_KEY = "likes";
 
   async function countGet(key) {
-    const r = await fetch(`https://api.countapi.xyz/get/${COUNT_NS}/${key}`);
+    const r = await fetch(`https://api.counterapi.dev/v1/${COUNT_NS}/${key}`);
     const j = await r.json();
     return Number(j.value || 0);
   }
 
   async function countHit(key) {
-    const r = await fetch(`https://api.countapi.xyz/hit/${COUNT_NS}/${key}`);
+    const r = await fetch(`https://api.counterapi.dev/v1/${COUNT_NS}/${key}/up`);
     const j = await r.json();
     return Number(j.value || 0);
   }

@@ -37,7 +37,7 @@
       }
     </style>
 
-    <link rel="stylesheet" href="styles.css?v=205" />
+    <link rel="stylesheet" href="styles.css?v=206" />
 
     <style id="about-css">
 /* ═══════════════════════════════════════════════════
@@ -1303,93 +1303,83 @@ body[data-theme="light"] .abtTag:hover {
       aria-hidden="true"
     >
       <div class="statsInner">
-        <button
-          class="statsClose"
-          id="statsClose"
-          type="button"
-          aria-label="Close stats"
-        >
-          ×
-        </button>
+  <!-- Close -->
+  <button class="statsClose" id="statsClose" type="button" aria-label="Close stats">&#x2715;</button>
 
-        <div class="statsHeader">
-          <h1 class="statsH1" id="statsTitle">About this portfolio</h1>
-          <p class="statsLead">
-            Insights and metrics about this portfolio website
-          </p>
-        </div>
+  <!-- Hero header -->
+  <div class="statsHero">
+    <div>
+      <p class="statsEye">// DATA TERMINAL</p>
+      <h1 class="statsH1" id="statsTitle">Portfolio Analytics</h1>
+      <p class="statsLead">Live insights &amp; metrics for this portfolio</p>
+    </div>
+    <span class="statsLiveBadge"><span class="statsLiveDot"></span>LIVE</span>
+  </div>
 
-        <div class="statsGridTop">
-          <article class="statsCard">
-            <div class="statsCardTop">
-              <span class="statsMiniIcon" aria-hidden="true">👁</span>
-              <div class="statsCardTitle">Total Views</div>
-            </div>
+  <div class="statsDivider"></div>
 
-            <div class="statsBigNumber" id="statsViews">—</div>
-            <div class="statsSubText">Unique page visits since Oct-2025</div>
-          </article>
-
-          <article class="statsCard">
-            <div class="statsCardTop">
-              <span class="statsMiniIcon" aria-hidden="true">♡</span>
-              <div class="statsCardTitle">Appreciation Count</div>
-            </div>
-
-            <div class="statsBigNumber hot" id="statsLikes">—</div>
-
-            <button class="statsLoveBtn" id="statsLikeBtn" type="button">
-              <span aria-hidden="true">♡</span>
-              Love this portfolio
-            </button>
-          </article>
-        </div>
-
-        <h2 class="statsH2">GitHub Stats</h2>
-        <p class="statsLead2">Insights and metrics about my GitHub profile</p>
-
-        <div class="statsHeatWrap">
-          <img
-            class="statsHeatImg"
-            id="statsHeatImg"
-            alt="GitHub contributions heatmap"
-            loading="lazy"
-          />
-          <div class="statsHeatFoot" id="statsHeatFoot">—</div>
-        </div>
-
-        <div class="statsGridBottom">
-          <article class="statsTile big ok">
-            <div class="statsTileLabel">Hireable</div>
-            <div class="statsTileValue" id="ghHireable">—</div>
-          </article>
-
-          <article class="statsTile">
-            <div class="statsTileLabel">Total Public Repositories</div>
-            <div class="statsTileValue" id="ghRepos">—</div>
-          </article>
-
-          <article class="statsTile">
-            <div class="statsTileLabel">Followers</div>
-            <div class="statsTileValue" id="ghFollowers">—</div>
-          </article>
-
-          <article class="statsTile">
-            <div class="statsTileLabel">Following</div>
-            <div class="statsTileValue" id="ghFollowing">—</div>
-          </article>
-
-          <article class="statsTile">
-            <div class="statsTileLabel">Current Company</div>
-            <div class="statsTileValue small" id="ghCompany">—</div>
-          </article>
-
-          <article class="statsTile">
-            <div class="statsTileLabel">Location</div>
-            <div class="statsTileValue small" id="ghLocation">—</div>
-          </article>
-        </div>
+  <!-- Top counters -->
+  <div class="statsGridTop">
+    <article class="statsCard statsCard--views">
+      <div class="statsCardTop">
+        <svg class="statsCardIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        <span class="statsCardTitle">Total Views</span>
       </div>
+      <div class="statsBigNumber" id="statsViews">—</div>
+      <div class="statsSubText">Unique sessions tracked since Oct 2025</div>
+    </article>
+
+    <article class="statsCard statsCard--likes">
+      <div class="statsCardTop">
+        <svg class="statsCardIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        <span class="statsCardTitle">Appreciation</span>
+      </div>
+      <div class="statsBigNumber" id="statsLikes">—</div>
+      <button class="statsLoveBtn" id="statsLikeBtn" type="button">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        Love this portfolio
+      </button>
+    </article>
+  </div>
+
+  <!-- GitHub section -->
+  <div class="statsGhHeader">
+    <p class="statsEye">// GITHUB PROFILE</p>
+    <h2 class="statsH2">maurits2905</h2>
+  </div>
+
+  <div class="statsHeatWrap">
+    <img class="statsHeatImg" id="statsHeatImg" alt="GitHub contribution heatmap" loading="lazy" />
+    <div class="statsHeatFoot" id="statsHeatFoot">Loading contribution data…</div>
+  </div>
+
+  <div class="statsGridBottom">
+    <article class="statsTile statsTile--hireable">
+      <div class="statsTileLabel">Hireable</div>
+      <div class="statsTileValue" id="ghHireable">—</div>
+    </article>
+    <article class="statsTile">
+      <div class="statsTileLabel">Public Repos</div>
+      <div class="statsTileValue" id="ghRepos">—</div>
+    </article>
+    <article class="statsTile">
+      <div class="statsTileLabel">Followers</div>
+      <div class="statsTileValue" id="ghFollowers">—</div>
+    </article>
+    <article class="statsTile">
+      <div class="statsTileLabel">Following</div>
+      <div class="statsTileValue" id="ghFollowing">—</div>
+    </article>
+    <article class="statsTile statsTile--wide">
+      <div class="statsTileLabel">Company</div>
+      <div class="statsTileValue statsTileValue--sm" id="ghCompany">—</div>
+    </article>
+    <article class="statsTile statsTile--wide">
+      <div class="statsTileLabel">Location</div>
+      <div class="statsTileValue statsTileValue--sm" id="ghLocation">—</div>
+    </article>
+  </div>
+</div>
     </section>
 
     <!-- Privacy Policy modal -->
@@ -1597,7 +1587,7 @@ body[data-theme="light"] .abtTag:hover {
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
 
-    <script src="script.js?v=117"></script>
+    <script src="script.js?v=118"></script>
     <script src="avatar.js"></script>
   </body>
 </html>
