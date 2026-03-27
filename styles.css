@@ -6555,6 +6555,12 @@ html.noReveal .r,
   background: rgba(68,240,177,0.07);
   border-color: rgba(68,240,177,0.2);
 }
+.statsTile--hireable .statsTileValue { color: #44f0b1; }
+.statsTile--nohire {
+  background: rgba(255,64,64,0.07);
+  border-color: rgba(255,64,64,0.22);
+}
+.statsTile--nohire .statsTileValue { color: #ff6464; }
 .statsTile--wide { grid-column: span 2; }
 .statsTileLabel {
   font-size: 11px;

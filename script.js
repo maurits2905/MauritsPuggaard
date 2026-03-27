@@ -3807,52 +3807,68 @@ function initStatsModal({ githubUsername }) {
   const VIEWS_KEY = "views";
   const LIKES_KEY = "likes";
 
+  // countGet: safe read — returns 0 if counter doesn't exist yet or API is down
   async function countGet(key) {
-    const r = await fetch(`https://api.counterapi.dev/v1/${COUNT_NS}/${key}`);
+    try {
+      const r = await fetch(`https://api.counterapi.dev/v1/${COUNT_NS}/${key}`);
+      if (!r.ok) return 0;
+      const j = await r.json();
+      return Number(j.value || 0);
+    } catch { return 0; }
+  }
+
+  // countHit: increment — throws on failure so caller can handle
+  async function countHit(key) {
+    const r = await fetch(`https://api.counterapi.dev/v1/${COUNT_NS}/${key}/up`);
+    if (!r.ok) throw new Error(`Counter ${r.status}`);
     const j = await r.json();
     return Number(j.value || 0);
   }
 
-  async function countHit(key) {
-    const r = await fetch(`https://api.counterapi.dev/v1/${COUNT_NS}/${key}/up`);
-    const j = await r.json();
-    return Number(j.value || 0);
+  function markLiked() {
+    if (!likeBtn) return;
+    likeBtn.disabled = true;
+    likeBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> Loved ✓`;
   }
 
   async function loadCounts() {
+    // Views — isolated so a failure doesn't block likes
     try {
-      // Count 1 view per session (per browser tab session)
       const counted = sessionStorage.getItem("pvCounted") === "1";
       const v = counted ? await countGet(VIEWS_KEY) : await countHit(VIEWS_KEY);
       sessionStorage.setItem("pvCounted", "1");
       if (viewsEl) viewsEl.textContent = String(v);
+    } catch (e) {
+      console.warn("Views counter:", e);
+      if (viewsEl) viewsEl.textContent = "—";
+    }
 
+    // Likes — isolated
+    try {
       const likes = await countGet(LIKES_KEY);
       if (likesEl) likesEl.textContent = String(likes);
-
-      const alreadyLiked = localStorage.getItem("portfolioLiked") === "1";
-      if (likeBtn) {
-        likeBtn.disabled = alreadyLiked;
-        if (alreadyLiked) likeBtn.textContent = "Loved ✓";
-      }
     } catch (e) {
-      console.error(e);
-      if (viewsEl) viewsEl.textContent = "0";
       if (likesEl) likesEl.textContent = "0";
     }
+
+    // Like button state
+    if (localStorage.getItem("portfolioLiked") === "1") markLiked();
+    else if (likeBtn) likeBtn.disabled = false;
   }
 
   async function onLike() {
-    try {
-      if (!likeBtn || likeBtn.disabled) return;
-      const next = await countHit(LIKES_KEY);
-      if (likesEl) likesEl.textContent = String(next);
-      localStorage.setItem("portfolioLiked", "1");
-      likeBtn.disabled = true;
-      likeBtn.textContent = "Loved ✓";
-    } catch (e) {
-      console.error(e);
-    }
+    if (!likeBtn || likeBtn.disabled) return;
+
+    // Optimistic update — button responds instantly regardless of API
+    const cur = parseInt(likesEl?.textContent) || 0;
+    if (likesEl) likesEl.textContent = String(cur + 1);
+    localStorage.setItem("portfolioLiked", "1");
+    markLiked();
+
+    // Persist to API in the background (don't block UX on failure)
+    countHit(LIKES_KEY)
+      .then(n => { if (likesEl) likesEl.textContent = String(n); })
+      .catch(e => console.warn("Like API:", e));
   }
 
   if (likeBtn) likeBtn.addEventListener("click", onLike);
@@ -3864,7 +3880,14 @@ function initStatsModal({ githubUsername }) {
       if (!r.ok) throw new Error("GitHub user fetch failed");
       const u = await r.json();
 
-      if (hireableEl) hireableEl.textContent = u.hireable ? "Yes" : "No";
+      if (hireableEl) {
+        hireableEl.textContent = u.hireable ? "Yes" : "No";
+        const tile = hireableEl.closest(".statsTile");
+        if (tile) {
+          tile.classList.toggle("statsTile--hireable", !!u.hireable);
+          tile.classList.toggle("statsTile--nohire",   !u.hireable);
+        }
+      }
       if (reposEl) reposEl.textContent = String(u.public_repos ?? "—");
       if (followersEl) followersEl.textContent = String(u.followers ?? "—");
       if (followingEl) followingEl.textContent = String(u.following ?? "—");
