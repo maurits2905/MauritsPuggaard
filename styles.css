@@ -2311,7 +2311,7 @@ html.noReveal .r,
 .section {
   position: relative;
   z-index: 1;
-  padding: 56px 0 0;
+  padding: clamp(80px, 11vh, 128px) 0 0;
 }
 
 .centerHead {
@@ -8010,3 +8010,121 @@ body[data-theme="light"] .abtTag:hover {
   .showcasePill { padding: 8px 18px; font-size: 11px; }
 }
 /* cache-bust: 20260326 */
+
+/* ═══════════════════════════════════════════════════════════
+   Signal Bridge — section transition dividers
+   ═══════════════════════════════════════════════════════════ */
+.secBridge {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 0 18px;
+  height: 72px;          /* vertical rhythm between sections  */
+  overflow: hidden;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* ── Left line: purple, grows left → right ── */
+.sbLine--l {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right,
+    transparent 0%,
+    rgba(155, 140, 255, 0.08) 20%,
+    rgba(155, 140, 255, 0.45) 100%
+  );
+  transform: scaleX(0);
+  transform-origin: right center;
+  transition: transform 0.85s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ── Right line: teal, grows right → left ── */
+.sbLine--r {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to left,
+    transparent 0%,
+    rgba(68, 240, 177, 0.08) 20%,
+    rgba(68, 240, 177, 0.35) 100%
+  );
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.85s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ── Badge ── */
+.sbBadge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 16px;
+  background: rgba(155, 140, 255, 0.04);
+  border: 1px solid rgba(155, 140, 255, 0.16);
+  border-radius: 4px;
+  opacity: 0;
+  transform: translateY(5px) scale(0.97);
+  transition:
+    opacity  0.45s ease 0.55s,
+    transform 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.55s;
+  box-shadow: 0 0 18px rgba(155, 140, 255, 0.05);
+}
+
+.sbDiamond {
+  font-size: 9px;
+  color: #9b8cff;
+  opacity: 0.7;
+  line-height: 1;
+}
+
+.sbNum {
+  font-family: ui-monospace, 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: #9b8cff;
+}
+
+.sbDash {
+  width: 14px;
+  height: 1px;
+  background: linear-gradient(to right, rgba(155, 140, 255, 0.5), rgba(68, 240, 177, 0.4));
+  border-radius: 1px;
+  flex-shrink: 0;
+}
+
+.sbLabel {
+  font-family: ui-monospace, 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgba(68, 240, 177, 0.65);
+}
+
+/* ── Activated state (added by JS IntersectionObserver) ── */
+.secBridge.sb-live .sbLine--l,
+.secBridge.sb-live .sbLine--r {
+  transform: scaleX(1);
+}
+
+.secBridge.sb-live .sbBadge {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* ── Mobile: simpler, no animation ── */
+@media (max-width: 640px) {
+  .secBridge {
+    height: 56px;
+    padding: 0 14px;
+  }
+  .sbBadge {
+    padding: 5px 12px;
+  }
+  .sbLabel {
+    display: none; /* number-only on very small screens */
+  }
+}

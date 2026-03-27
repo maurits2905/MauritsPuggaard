@@ -596,6 +596,26 @@ function prefersReducedMotion() {
   );
 }
 
+/* Signal Bridges — animate the section dividers on scroll */
+function initSecBridges() {
+  const bridges = document.querySelectorAll(".secBridge");
+  if (!bridges.length) return;
+
+  const obs = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("sb-live");
+          obs.unobserve(entry.target);
+        }
+      });
+    },
+    { threshold: 0.4 }
+  );
+
+  bridges.forEach((b) => obs.observe(b));
+}
+
 function initReveals() {
   const isMobile = window.matchMedia("(max-width: 900px)").matches;
 
@@ -2734,6 +2754,7 @@ async function init() {
   }
 
   initReveals();
+  initSecBridges();
   initAboutReveal();
   initAboutStats();
   initStory();
