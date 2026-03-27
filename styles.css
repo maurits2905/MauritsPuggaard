@@ -3179,7 +3179,7 @@ html.noReveal .r,
 
 .contactColTitle {
   margin-bottom: 14px;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 900;
   letter-spacing: 0.02em;
   color: rgba(255, 255, 255, 0.86);
@@ -6263,7 +6263,7 @@ html.noReveal .r,
   font-weight: 650;
   line-height: inherit;
   text-align: left;
-  color: inherit;
+  color: rgba(255, 255, 255, 0.62); /* match .contactLink, not parent white */
   background: transparent;
   border: 0;
   cursor: pointer;

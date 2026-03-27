@@ -2677,6 +2677,15 @@ async function init() {
       open();
     });
 
+    // Footer "Contact" button opens the same sheet
+    const footerContactBtn = document.getElementById("footerContactBtn");
+    if (footerContactBtn) {
+      footerContactBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        open();
+      });
+    }
+
     closeBtn.addEventListener("click", close);
 
     overlay.addEventListener("click", close);
