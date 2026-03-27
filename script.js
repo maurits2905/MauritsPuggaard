@@ -3877,8 +3877,14 @@ function initStatsModal({ githubUsername }) {
     });
 
     // ── Like button state ──────────────────────────────────────────────────
-    if (localStorage.getItem(LS_LIKED) === "1") markLiked();
-    else if (likeBtn) likeBtn.disabled = false;
+    if (localStorage.getItem(LS_LIKED) === "1") {
+      // Reconcile: if user already liked but count wasn't saved, ensure ≥ 1
+      if (lsNum(LS_LIKES) === 0) {
+        localStorage.setItem(LS_LIKES, "1");
+        if (likesEl) likesEl.textContent = "1";
+      }
+      markLiked();
+    } else if (likeBtn) likeBtn.disabled = false;
   }
 
   function onLike() {
