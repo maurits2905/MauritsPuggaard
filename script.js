@@ -3261,434 +3261,123 @@ function tileHTML(item) {
   `;
 }
 
+
 async function renderTechStack() {
   const mount = document.getElementById("techGrid");
   if (!mount) return;
 
-  // Flatten your existing groups into one list (keeps your data source)
-  const items = (TECH_GROUPS || []).flatMap((g) =>
-    (g.items || []).map((it) => ({ ...it, group: g.title })),
-  );
+  const CAT_META = {
+    "Languages":                     { color: "#7eb4ff", rgb: "126,180,255",  short: "Languages"  },
+    "SAP & Enterprise":              { color: "#f0c060", rgb: "240,192,96",   short: "SAP"        },
+    "Frameworks & Machine Learning": { color: "#44f0b1", rgb: "68,240,177",   short: "Frameworks" },
+    "Data & Databases":              { color: "#b08dff", rgb: "176,141,255",  short: "Data"       },
+    "DevOps & Infrastructure":       { color: "#ff8c42", rgb: "255,140,66",   short: "DevOps"     },
+    "Development Tools":             { color: "#6ef3c5", rgb: "110,243,197",  short: "Tools"      },
+    "AI & Platforms":                { color: "#e060ff", rgb: "224,96,255",   short: "AI"         },
+  };
 
-  // Build stage (sphere)
+  const WIDE_CATS = new Set(["SAP & Enterprise", "Languages", "Frameworks & Machine Learning"]);
+
+  const filtersHtml = [
+    `<button class="ars-tab active" data-cat="all" aria-pressed="true">All</button>`,
+    ...TECH_GROUPS.map((g) => {
+      const meta = CAT_META[g.title] || {};
+      const label = meta.short || g.title;
+      return `<button class="ars-tab" data-cat="${escapeHtml(g.title)}" aria-pressed="false">${escapeHtml(label)}</button>`;
+    }),
+  ].join("\n      ");
+
+  const panelsHtml = TECH_GROUPS.map((group) => {
+    const meta = CAT_META[group.title] || { color: "#9b8cff", rgb: "155,140,255" };
+    const spanClass = WIDE_CATS.has(group.title) ? " span2" : "";
+
+    const chipsHtml = group.items.map((item) =>
+      `<a class="ars-chip"
+          href="${escapeHtml(item.url || "#")}"
+          target="_blank" rel="noopener noreferrer"
+          aria-label="${escapeHtml(item.name)} (opens official site)">
+        <span class="ars-chip-icon" data-icon="${escapeHtml(item.slug || "")}" aria-hidden="true"></span>
+        <span class="ars-chip-name">${escapeHtml(item.name)}</span>
+      </a>`
+    ).join("\n        ");
+
+    return `
+    <div class="ars-panel${spanClass}"
+         data-cat="${escapeHtml(group.title)}"
+         style="--cat-color:${meta.color};--cat-rgb:${meta.rgb}">
+      <div class="ars-panel-head">
+        <span class="ars-cat-dot"></span>
+        <span class="ars-cat-name">${escapeHtml(group.title)}</span>
+        <span class="ars-cat-count">${group.items.length}</span>
+      </div>
+      <div class="ars-chips">
+        ${chipsHtml}
+      </div>
+    </div>`;
+  }).join("\n");
+
   mount.innerHTML = `
-    <div class="techSphereStage" id="techSphereStage">
-      <div class="techSphereBackdrop" aria-hidden="true"></div>
-      <div class="techSphereBall" id="techSphereBall" aria-hidden="true"></div>
-      <svg class="techNetSvg" id="techNetSvg" aria-hidden="true"></svg>
-
-      <div class="techSphere" id="techSphere"></div>
-      <div class="techSphereHint" aria-hidden="true">Drag to rotate • Hover to highlight</div>
+  <div class="arsenal-wrap">
+    <div class="arsenal-filters" role="group" aria-label="Filter by category">
+      ${filtersHtml}
     </div>
-  `;
+    <div class="arsenal-grid">
+      ${panelsHtml}
+    </div>
+  </div>`;
 
-  const stage = document.getElementById("techSphereStage");
-  const ball = document.getElementById("techSphereBall");
-  const net = document.getElementById("techSphereNet");
-  const sphere = document.getElementById("techSphere");
-  if (!stage || !sphere || !ball) return;
-
-  const reduced =
-    window.matchMedia &&
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-  // Create orbs
-  const orbs = items.map((it) => {
-    const a = document.createElement("a");
-    a.className = "techOrb";
-    a.draggable = false;
-    a.setAttribute("draggable", "false");
-    a.addEventListener("dragstart", (e) => e.preventDefault());
-    a.href = it.url || "#";
-    a.target = "_blank";
-    a.rel = "noopener noreferrer";
-    a.setAttribute("aria-label", `${it.name} (opens official site)`);
-
-    a.innerHTML = `
-      <span class="techOrbIcon" data-icon="${it.slug || ""}" aria-hidden="true"></span>
-      <span class="techOrbLabel">${escapeHtml(it.name || "")}</span>
-    `;
-
-    a.addEventListener("mouseenter", () => a.classList.add("isHot"));
-    a.addEventListener("mouseleave", () => a.classList.remove("isHot"));
-    a.addEventListener("focus", () => a.classList.add("isHot"));
-    a.addEventListener("blur", () => a.classList.remove("isHot"));
-
-    sphere.appendChild(a);
-    return a;
-  });
-
-  // Load icons using your existing icon pipeline
-  const iconHolders = [...sphere.querySelectorAll(".techOrbIcon[data-icon]")];
-
+  const iconEls = [...mount.querySelectorAll(".ars-chip-icon[data-icon]")];
   await Promise.all(
-    iconHolders.map(async (el) => {
+    iconEls.map(async (el) => {
       const slug = el.getAttribute("data-icon");
       try {
-        const markup = await getIconMarkup(slug);
-        el.innerHTML = markup;
-      } catch (e) {
-        console.warn("Icon failed:", slug, e);
-        el.innerHTML = `
-          <svg viewBox="0 0 24 24" role="img" aria-label="${slug}">
-            <circle cx="12" cy="12" r="8" fill="currentColor" opacity="0.35"></circle>
-          </svg>`;
+        el.innerHTML = await getIconMarkup(slug);
+      } catch (_) {
+        el.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="currentColor" opacity="0.35"/></svg>`;
       }
-    }),
+    })
   );
 
-  // --- Sphere math / animation ---
-  const N = orbs.length;
-  const points = [];
-  const golden = Math.PI * (3 - Math.sqrt(5)); // ~2.399.
+  const panels = [...mount.querySelectorAll(".ars-panel")];
 
-  for (let i = 0; i < N; i++) {
-    // Fibonacci sphere distribution
-    const y = 1 - (i / Math.max(1, N - 1)) * 2; // 1..-1
-    const r = Math.sqrt(Math.max(0, 1 - y * y));
-    const theta = golden * i;
-    const x = Math.cos(theta) * r;
-    const z = Math.sin(theta) * r;
-    points.push({ x, y, z });
-  }
-
-  // Use the BALL element as the true center/radius so icons never drift off the sphere
-  let cx = 0;
-  let cy = 0;
-  let radius = 240;
-
-  const measure = () => {
-    const sr = stage.getBoundingClientRect();
-    const br = ball.getBoundingClientRect();
-
-    cx = br.left - sr.left + br.width / 2;
-    cy = br.top - sr.top + br.height / 2;
-    radius = (br.width / 2) * 0.96; // keep icons slightly “inside” the edge
-  };
-  measure();
-  window.addEventListener("resize", () => requestAnimationFrame(measure));
-
-  const netSvg = document.getElementById("techNetSvg");
-
-  const NET_LAT = 8; // rings
-  const NET_LON = 10; // longitudes
-  const NET_STEPS = 72;
-
-  const netPaths = [];
-  function buildNet() {
-    if (!netSvg) return;
-    netSvg.innerHTML = "";
-    netPaths.length = 0;
-
-    // Set a viewBox so we can draw in "ball-space" pixels
-    netSvg.setAttribute("viewBox", "0 0 1000 1000");
-    netSvg.setAttribute("preserveAspectRatio", "none");
-
-    const makePath = (cls) => {
-      const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
-      if (cls) p.setAttribute("class", cls);
-      netSvg.appendChild(p);
-      return p;
-    };
-
-    // latitude rings: front + back
-    for (let i = 1; i <= NET_LAT; i++) {
-      const front = makePath("front");
-      const back = makePath("back");
-      netPaths.push({ kind: "lat", idx: i, front, back });
-    }
-
-    // longitude lines: front + back
-    for (let i = 0; i < NET_LON; i++) {
-      const front = makePath("front");
-      const back = makePath("back");
-      netPaths.push({ kind: "lon", idx: i, front, back });
-    }
-  }
-  buildNet();
-
-  // --- Intro "fly in" when section becomes visible ---
-  let introActive = false;
-  let introStart = 0;
-  const introPos = points.map(() => ({ x: 0, y: 0 }));
-
-  const startIntro = () => {
-    if (introActive || reduced) return;
-    introActive = true;
-    introStart = performance.now();
-
-    const sr = stage.getBoundingClientRect();
-    for (let i = 0; i < N; i++) {
-      const fromLeft = Math.random() < 0.5;
-      introPos[i].x = fromLeft
-        ? -sr.width * (0.25 + Math.random() * 0.35)
-        : sr.width * (1.25 + Math.random() * 0.35);
-      introPos[i].y = sr.height * (0.2 + Math.random() * 0.6);
-    }
+  const triggerEntrance = () => {
+    panels.forEach((p, i) => {
+      setTimeout(() => p.classList.add("in-view"), i * 70);
+    });
   };
 
   const io = new IntersectionObserver(
     (entries) => {
-      if (entries.some((en) => en.isIntersecting)) {
-        startIntro();
+      if (entries.some((e) => e.isIntersecting)) {
+        triggerEntrance();
         io.disconnect();
       }
     },
-    { threshold: 0.35 },
+    { threshold: 0.12 }
   );
-  io.observe(stage);
+  io.observe(mount);
 
   requestAnimationFrame(() => {
-    const r = stage.getBoundingClientRect();
-    const inView =
-      r.top < window.innerHeight * 0.8 && r.bottom > window.innerHeight * 0.2;
-    if (inView) startIntro();
+    const r = mount.getBoundingClientRect();
+    if (r.top < window.innerHeight * 0.85) {
+      triggerEntrance();
+      io.disconnect();
+    }
   });
 
-  // Rotation state
-  let rotX = -0.25;
-  let rotY = 0.55;
-  let velX = 0.0;
-  let velY = 0.0;
-
-  // Drag
-  let dragging = false;
-  let lastX = 0;
-  let lastY = 0;
-
-  let dragDist = 0;
-  let didDrag = false;
-  let justDragged = false;
-
-  const onDown = (e) => {
-    dragging = true;
-    stage.classList.add("isDragging");
-    stage.setPointerCapture?.(e.pointerId);
-
-    lastX = e.clientX;
-    lastY = e.clientY;
-
-    dragDist = 0;
-    didDrag = false;
-  };
-
-  const onMove = (e) => {
-    if (!dragging) return;
-
-    const dx = e.clientX - lastX;
-    const dy = e.clientY - lastY;
-    lastX = e.clientX;
-    lastY = e.clientY;
-
-    dragDist += Math.abs(dx) + Math.abs(dy);
-    if (dragDist > 6) {
-      didDrag = true;
-    }
-
-    // free rotation anywhere (no borders/constraints)
-    velY = dx * 0.0042;
-    velX = -dy * 0.0032;
-  };
-
-  const onUp = () => {
-    if (didDrag) {
-      justDragged = true;
-      setTimeout(() => (justDragged = false), 0);
-    }
-
-    dragging = false;
-    stage.classList.remove("isDragging");
-  };
-
-  stage.addEventListener("pointerdown", onDown);
-  window.addEventListener("pointermove", onMove, { passive: true });
-  window.addEventListener("pointerup", onUp, { passive: true });
-  window.addEventListener("pointercancel", onUp, { passive: true });
-
-  sphere.addEventListener(
-    "click",
-    (e) => {
-      if (!justDragged) return;
-      e.preventDefault();
-      e.stopPropagation();
-    },
-    true,
-  );
-
-  let raf = 0;
-
-  const tick = () => {
-    // Idle drift
-    if (!dragging) {
-      velY += 0.00022;
-      velX += 0.00008;
-    }
-
-    // Apply velocity (damping)
-    rotX += velX;
-    rotY += velY;
-    velX *= 0.92;
-    velY *= 0.92;
-
-    const sx = Math.sin(rotX);
-    const cxr = Math.cos(rotX);
-    const sy = Math.sin(rotY);
-    const cyr = Math.cos(rotY);
-
-    // ===== 3D Wireframe Update (front/back split) =====
-    if (netSvg && netPaths.length) {
-      const R = 500;
-      const C = 500;
-
-      // simple perspective factor (makes it feel more spherical)
-      const persp = 0.28;
-
-      const project = (px, py, pz) => {
-        // rotate Y
-        const x1 = px * cyr + pz * sy;
-        const z1 = -px * sy + pz * cyr;
-
-        // rotate X
-        const y2 = py * cxr - z1 * sx;
-        const z2 = py * sx + z1 * cxr;
-
-        // depth 0..1
-        const depth = (z2 + 1) / 2;
-
-        // subtle perspective
-        const k = 1 + (depth - 0.5) * persp;
-
-        return { x: C + x1 * R * k, y: C + y2 * R * k, depth };
-      };
-
-      const buildPath = (pts) => {
-        let d = "";
-        for (let i = 0; i < pts.length; i++) {
-          const p = pts[i];
-          d +=
-            (i === 0 ? "M" : "L") + p.x.toFixed(2) + " " + p.y.toFixed(2) + " ";
-        }
-        return d.trim();
-      };
-
-      const H = 0.5; // hemisphere split
-      const EPS = 0.02; // small hysteresis band to avoid flicker on the edge
-
-      const pushD = (d, p, move) =>
-        d + (move ? "M" : "L") + p.x.toFixed(2) + " " + p.y.toFixed(2) + " ";
-
-      for (const seg of netPaths) {
-        let dFront = "";
-        let dBack = "";
-
-        let prevSide = null; // "front" | "back"
-        let frontMove = true;
-        let backMove = true;
-
-        const addPoint = (pr) => {
-          const side =
-            pr.depth > H + EPS
-              ? "front"
-              : pr.depth < H - EPS
-                ? "back"
-                : prevSide || "front";
-
-          // When side changes, break the path so SVG doesn’t draw a straight line across
-          if (side !== prevSide) {
-            if (side === "front") frontMove = true;
-            else backMove = true;
-          }
-
-          if (side === "front") {
-            dFront = pushD(dFront, pr, frontMove);
-            frontMove = false;
-          } else {
-            dBack = pushD(dBack, pr, backMove);
-            backMove = false;
-          }
-
-          prevSide = side;
-        };
-
-        if (seg.kind === "lat") {
-          const t = seg.idx / (NET_LAT + 1);
-          const y = 1 - t * 2;
-          const rr = Math.sqrt(Math.max(0, 1 - y * y));
-
-          for (let s = 0; s <= NET_STEPS; s++) {
-            const a = (s / NET_STEPS) * Math.PI * 2;
-            const px = Math.cos(a) * rr;
-            const pz = Math.sin(a) * rr;
-            addPoint(project(px, y, pz));
-          }
-        } else {
-          const a0 = (seg.idx / NET_LON) * Math.PI * 2;
-
-          for (let s = 0; s <= NET_STEPS; s++) {
-            const t = s / NET_STEPS;
-            const y = 1 - t * 2;
-            const rr = Math.sqrt(Math.max(0, 1 - y * y));
-            const px = Math.cos(a0) * rr;
-            const pz = Math.sin(a0) * rr;
-            addPoint(project(px, y, pz));
-          }
-        }
-
-        seg.front.setAttribute("d", dFront.trim());
-        seg.back.setAttribute("d", dBack.trim());
-
-        seg.front.style.opacity = "0.55";
-        seg.back.style.opacity = "0.22";
-      }
-    }
-
-    for (let i = 0; i < N; i++) {
-      const p = points[i];
-
-      // Rotate around Y
-      const x1 = p.x * cyr + p.z * sy;
-      const z1 = -p.x * sy + p.z * cyr;
-
-      // Rotate around X
-      const y2 = p.y * cxr - z1 * sx;
-      const z2 = p.y * sx + z1 * cxr;
-
-      // Depth: 0..1 (back..front)
-      const depth = (z2 + 1) / 2;
-      const front = Math.max(0, Math.min(1, (depth - 0.25) / 0.75));
-
-      // Project to 2D (always anchored to the ball center/radius)
-      const x = cx + x1 * radius;
-      const y = cy + y2 * radius;
-
-      // Larger in front, smaller at edge/back
-      const s = 0.55 + front * 0.78;
-
-      const el = orbs[i];
-      el.style.setProperty("--front", front.toFixed(3));
-
-      // Intro lerp: icons fly in from left/right, then fully dynamic
-      let px = x;
-      let py = y;
-      if (introActive) {
-        const t = Math.min(1, (performance.now() - introStart) / 900);
-        const ease = 1 - Math.pow(1 - t, 3); // easeOutCubic
-        px = introPos[i].x + (x - introPos[i].x) * ease;
-        py = introPos[i].y + (y - introPos[i].y) * ease;
-        if (t >= 1) introActive = false;
-      }
-
-      el.style.transform = `translate3d(${px}px, ${py}px, 0) translate(-50%, -50%) scale(${s})`;
-      el.style.zIndex = String(10 + Math.floor(front * 200));
-      el.style.opacity = String(0.22 + front * 0.78);
-      el.style.filter = `blur(${(1 - front) * 0.75}px)`;
-      el.style.pointerEvents = front < 0.08 ? "none" : "auto";
-    }
-
-    raf = requestAnimationFrame(tick);
-  };
-
-  if (!reduced) tick();
+  const tabs = [...mount.querySelectorAll(".ars-tab")];
+  tabs.forEach((tab) => {
+    tab.addEventListener("click", () => {
+      const cat = tab.dataset.cat;
+      tabs.forEach((t) => { t.classList.remove("active"); t.setAttribute("aria-pressed", "false"); });
+      tab.classList.add("active");
+      tab.setAttribute("aria-pressed", "true");
+      panels.forEach((p) => {
+        const match = cat === "all" || p.dataset.cat === cat;
+        p.classList.toggle("hidden", !match);
+      });
+    });
+  });
 }
 
 // run when ready
