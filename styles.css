@@ -39,9 +39,10 @@
   --pill-x: 0px;
 
   /* Career sizing */
-  --career-gap: 36px;
-  --career-row-gap: 64px;
-  --career-year-size: 38px;
+  --ce-year-w: 160px;
+  --ce-gap: 28px;
+  --ce-node-w: 32px;
+  --ce-spine-x: calc(var(--ce-year-w) + var(--ce-gap) + var(--ce-node-w) / 2);
 
   /* Other */
   --contact-red: rgba(255, 90, 20, 1);
@@ -3509,319 +3510,261 @@ html.noReveal .r,
   background-clip: text;
 }
 
-/* Outer glass container */
+/* ---- Timeline track ---- */
 
-.careerGrid {
+.cTimeline {
   position: relative;
-  margin-top: 18px;
-  padding: 26px 22px;
-  background: color-mix(in srgb, var(--glass2) 55%, transparent);
-  border: 1px solid color-mix(in srgb, var(--stroke) 75%, transparent);
-  border-radius: var(--r1);
-  box-shadow: var(--shadow);
-  overflow: hidden;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 12px 20px 40px;
 }
 
-/* Soft glow */
+/* Base spine */
 
-.careerGrid::before {
-  position: absolute;
-  inset: -2px;
-  background: radial-gradient(
-    640px 240px at 50% 0%,
-    color-mix(in srgb, var(--hot) 14%, transparent),
-    transparent 62%
-  );
-  opacity: 0.9;
-  filter: blur(10px);
-  pointer-events: none;
+.cTimeline::before {
   content: "";
-}
-
-/* Row grid:
-  [left roles] [years] [line] [right desc] */
-
-.careerRows {
-  position: relative;
-  display: grid;
-  align-items: center;
-  row-gap: var(--career-row-gap);
-  column-gap: var(--career-gap);
-  grid-template-columns: minmax(260px, 1.15fr) 120px 34px minmax(320px, 1.35fr);
-  grid-auto-rows: minmax(72px, auto);
-}
-
-.careerRow {
-  display: contents;
-}
-
-/* Left */
-
-.careerItemBtn {
-  grid-column: 1;
-  padding: 0;
-  text-align: left;
-  background: transparent;
-  border: 0;
-  cursor: pointer;
-}
-
-.careerRole {
-  font-size: 22px;
-  font-weight: 900;
-  letter-spacing: -0.02em;
-  color: color-mix(in srgb, var(--text) 92%, transparent);
-  text-shadow: 0 0 18px color-mix(in srgb, var(--accent) 32%, transparent);
-}
-
-.careerSub {
-  margin-top: 6px;
-  font-size: 13px;
-  letter-spacing: 0.02em;
-  color: rgba(148, 168, 255, 0.70);
-}
-
-.careerItemBtn.dim .careerRole,
-.careerItemBtn.dim .careerSub {
-  opacity: 0.34;
-}
-
-/* Active row glow (when dot is near it) */
-
-.careerItemBtn.active .careerRole,
-.careerItemBtn.active .careerSub {
-  opacity: 1 !important;
-}
-
-.careerYear.active {
-  color: color-mix(in srgb, var(--text) 96%, transparent);
-  opacity: 1 !important;
-  text-shadow:
-    0 0 18px color-mix(in srgb, var(--hot) 40%, transparent),
-    0 0 40px color-mix(in srgb, var(--accent) 22%, transparent);
-}
-
-.careerRightItem.active {
-  opacity: 1 !important;
-  border-color: color-mix(in srgb, var(--hot) 38%, var(--stroke));
-  background: color-mix(in srgb, var(--glass) 80%, transparent);
-  box-shadow:
-    inset 3px 0 0 color-mix(in srgb, var(--hot) 55%, transparent),
-    0 0 24px color-mix(in srgb, var(--hot) 8%, transparent);
-}
-
-.careerRightItem.active .careerDesc {
-  color: color-mix(in srgb, var(--text) 82%, var(--muted));
-}
-
-/* Years */
-
-.careerYear {
-  grid-column: 2;
-  padding: 8px 0;
-  font-size: var(--career-year-size);
-  font-weight: 950;
-  line-height: 1;
-  letter-spacing: -0.02em;
-  text-align: left;
-  color: color-mix(in srgb, var(--text) 86%, transparent);
-}
-
-.careerYear.dim {
-  opacity: 0.28;
-}
-
-/* Right */
-
-.careerRightItem {
-  position: relative;
-  display: flex;
-  align-items: center;
-  grid-column: 4;
-  min-height: 56px;
-  padding: 14px 18px;
-  background: color-mix(in srgb, var(--glass2) 55%, transparent);
-  border: 1px solid color-mix(in srgb, var(--stroke) 55%, transparent);
-  border-radius: var(--r2);
-  transition:
-    opacity 0.25s ease,
-    border-color 0.25s ease,
-    background 0.25s ease,
-    box-shadow 0.25s ease;
-  overflow: hidden;
-}
-
-.careerRightItem.dim {
-  opacity: 0.28;
-}
-
-.careerDesc {
-  max-width: 62ch;
-  font-size: 13px;
-  line-height: 1.6;
-  color: var(--muted);
-}
-
-/* Timeline column (grid item in column 3) */
-
-/* Absolutely positioned so height is set by JS (grid-row: 1/-1 only spans
-   explicit rows; with display:contents rows are implicit, giving wrong height) */
-
-.careerLineWrap {
   position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 3;
-  width: 34px;
-  pointer-events: none;
-}
-
-/* Actual line */
-
-.careerLine {
-  position: absolute;
+  left: calc(20px + var(--ce-spine-x));
   top: 0;
   bottom: 0;
-  left: 50%;
-  width: 2px;
-  background: color-mix(in srgb, var(--stroke) 92%, transparent);
-  opacity: 0.35;
-  border-radius: 999px;
+  width: 1px;
   transform: translateX(-50%);
-}
-
-/* Fancy gradient fill (TOP -> DOWN) */
-
-.careerFill {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  width: 3px;
-  height: 0px;
-  background: linear-gradient(
-    180deg,
-    rgba(75, 105, 255, 0) 0%,
-    rgba(75, 105, 255, 0.92) 28%,
-    rgba(120, 150, 255, 0.88) 65%,
-    rgba(75, 105, 255, 0.5) 100%
-  );
-  filter: drop-shadow(0 0 10px rgba(75, 105, 255, 0.4))
-    drop-shadow(0 0 22px rgba(120, 150, 255, 0.2));
-  border-radius: 999px;
-  transform: translateX(-50%);
-  transition: height 120ms linear;
-}
-
-/* Dot */
-
-.careerDot {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  z-index: 4;
-  width: 10px;
-  height: 10px;
-  background: radial-gradient(circle at 30% 30%, #ffffff, var(--hot));
-  border-radius: 999px;
-  box-shadow:
-    0 0 0 6px color-mix(in srgb, var(--hot) 18%, transparent),
-    0 0 28px color-mix(in srgb, var(--hot2) 32%, transparent);
-  transform: translate(-50%, -50%);
-}
-
-/* â€œHue blink while scrollingâ€ feel */
-
-.careerDot.scrolling {
-  box-shadow:
-    0 0 0 8px rgba(75, 105, 255, 0.18),
-    0 0 34px rgba(120, 150, 255, 0.28),
-    0 0 52px rgba(75, 105, 255, 0.14);
-}
-
-/* Pulse when active changes */
-
-.careerDot.pulse {
-  animation: dotPulse 520ms ease-out 1;
-}
-
-@keyframes dotPulse {
-  0% {
-    transform: translate(-50%, -50%) scale(1);
-  }
-
-  35% {
-    transform: translate(-50%, -50%) scale(1.55);
-  }
-
-  100% {
-    transform: translate(-50%, -50%) scale(1);
-  }
-}
-
-/* Optional subtle â€œtailâ€ */
-
-.careerDot::after {
-  position: absolute;
-  top: 10px;
-  left: 50%;
-  width: 16px;
-  height: 84px;
-  background: linear-gradient(
-    180deg,
-    rgba(75, 105, 255, 0) 0%,
-    rgba(75, 105, 255, 0.2) 35%,
-    rgba(120, 150, 255, 0.1) 100%
-  );
-  opacity: 0.95;
-  filter: blur(2px);
-  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
   pointer-events: none;
-  transform: translateX(-50%);
-  content: "";
 }
 
-/* Responsive */
+/* Animated gradient fill */
 
-@media (max-width: 1040px) {
-  .topbar {
-    grid-template-columns: 1fr auto 1fr;
-  }
+.cSpineFill {
+  position: absolute;
+  left: calc(20px + var(--ce-spine-x));
+  top: 0;
+  width: 2px;
+  height: 0;
+  transform: translateX(-50%);
+  background: linear-gradient(
+    180deg,
+    rgba(155, 140, 255, 0) 0%,
+    #9b8cff 10%,
+    #44f0b1 55%,
+    rgba(255, 96, 220, 0.7) 100%
+  );
+  filter: drop-shadow(0 0 7px rgba(155, 140, 255, 0.45))
+    drop-shadow(0 0 18px rgba(68, 240, 177, 0.18));
+  border-radius: 999px;
+  transition: height 80ms linear;
+  pointer-events: none;
+}
 
-  .socialRail {
-    display: none !important;
-  }
+/* ---- Entry ---- */
 
-  .storyGrid {
-    grid-template-columns: 1fr;
-  }
+.cEntry {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--ce-year-w) var(--ce-node-w) 1fr;
+  column-gap: var(--ce-gap);
+  padding-bottom: 52px;
+  opacity: 0;
+  transform: translateX(28px);
+  transition:
+    opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
 
-  .careerRows {
-    grid-template-columns: 28px 1fr;
-    column-gap: 16px;
-    row-gap: 20px;
-    align-items: start;
-  }
+.cEntry.cVisible {
+  opacity: 1;
+  transform: translateX(0);
+}
 
-  .careerLineWrap {
-    width: 28px;
-  }
+/* ---- Ghost year ---- */
 
-  .careerItemBtn,
-  .careerYear,
-  .careerRightItem {
-    grid-column: 2;
-  }
+.cYear {
+  grid-column: 1;
+  align-self: start;
+  padding-top: 6px;
+  text-align: right;
+  font-size: clamp(36px, 4.5vw, 62px);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.07);
+  transition:
+    -webkit-text-stroke 0.5s ease,
+    opacity 0.5s ease;
+  user-select: none;
+  pointer-events: none;
+}
 
-  .careerYear {
-    font-size: 28px;
-    opacity: 0.9;
-    margin-top: 4px;
-    padding: 0;
-  }
+.cEntry.cActive .cYear {
+  -webkit-text-stroke: 1px var(--ce-color, #9b8cff);
+  opacity: 0.5;
+}
 
-  .careerRightItem {
-    padding: 12px 14px;
-  }
+/* ---- Node (dot on spine) ---- */
+
+.cNode {
+  grid-column: 2;
+  align-self: start;
+  display: flex;
+  justify-content: center;
+  padding-top: 16px;
+}
+
+.cDot {
+  position: relative;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 32% 32%,
+    rgba(255, 255, 255, 0.9),
+    var(--ce-color, #9b8cff)
+  );
+  box-shadow:
+    0 0 0 3px rgba(155, 140, 255, 0.1),
+    0 0 12px rgba(155, 140, 255, 0.2);
+  flex-shrink: 0;
+  transition:
+    transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.5s ease;
+}
+
+.cEntry.cActive .cDot {
+  transform: scale(1.4);
+  box-shadow:
+    0 0 0 5px color-mix(in srgb, var(--ce-color, #9b8cff) 18%, transparent),
+    0 0 24px color-mix(in srgb, var(--ce-color, #9b8cff) 45%, transparent),
+    0 0 42px rgba(68, 240, 177, 0.18);
+}
+
+/* ---- Card ---- */
+
+.cCard {
+  grid-column: 3;
+  position: relative;
+  padding: 20px 22px 22px 24px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  overflow: hidden;
+  transition:
+    background 0.5s ease,
+    border-color 0.5s ease,
+    box-shadow 0.5s ease;
+}
+
+/* Left accent bar */
+
+.cCard::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 18px;
+  bottom: 18px;
+  width: 2.5px;
+  border-radius: 999px;
+  background: var(--ce-color, #9b8cff);
+  opacity: 0.2;
+  transition:
+    opacity 0.5s ease,
+    filter 0.5s ease;
+}
+
+/* Top glow line */
+
+.cCard::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 30px;
+  right: 30px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--ce-color, #9b8cff),
+    transparent
+  );
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.cEntry.cActive .cCard {
+  background: rgba(255, 255, 255, 0.055);
+  border-color: rgba(255, 255, 255, 0.11);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--ce-color, #9b8cff) 10%, transparent),
+    0 18px 52px rgba(0, 0, 0, 0.45),
+    inset 0 0 32px color-mix(in srgb, var(--ce-color, #9b8cff) 3%, transparent);
+}
+
+.cEntry.cActive .cCard::before {
+  opacity: 0.85;
+  filter: drop-shadow(0 0 8px var(--ce-color, #9b8cff));
+}
+
+.cEntry.cActive .cCard::after {
+  opacity: 0.35;
+}
+
+/* ---- Card content ---- */
+
+.cCard__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.cCard__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  font-family: ui-monospace, 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ce-color, #9b8cff);
+  border: 1px solid color-mix(in srgb, var(--ce-color, #9b8cff) 50%, transparent);
+  border-radius: 999px;
+  opacity: 0.8;
+  flex-shrink: 0;
+}
+
+.cCard__company {
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.38);
+}
+
+.cCard__role {
+  margin: 0 0 10px;
+  font-size: clamp(16px, 2.1vw, 21px);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.2;
+  transition: color 0.5s ease;
+}
+
+.cEntry.cActive .cCard__role {
+  color: #ffffff;
+}
+
+.cCard__desc {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.68;
+  color: rgba(255, 255, 255, 0.42);
+  max-width: 60ch;
+  transition: color 0.5s ease;
+}
+
+.cEntry.cActive .cCard__desc {
+  color: rgba(255, 255, 255, 0.65);
 }
 
 /* =========================
@@ -5398,60 +5341,29 @@ html.noReveal .r,
   }
 
   /* =========================
-     Career timeline
+     Career timeline — mobile
   ========================= */
 
-  #career.section {
-    padding-left: 0;
-    padding-right: 0;
+  :root {
+    --ce-year-w: 0px;
+    --ce-gap: 0px;
+    --ce-node-w: 28px;
+    --ce-spine-x: 14px;
   }
 
-  #career .careerGrid {
-    padding: 18px 14px;
+  .cTimeline::before,
+  .cSpineFill {
+    left: calc(20px + 14px);
   }
 
-  #career .careerRows {
-    display: grid;
-    grid-template-columns: 22px 1fr;
+  .cEntry {
+    grid-template-columns: 28px 1fr;
     column-gap: 14px;
-    row-gap: 14px;
-    align-items: start;
   }
 
-  #career .careerLineWrap {
-    width: 22px;
-  }
-
-  #career .careerItemBtn,
-  #career .careerYear,
-  #career .careerRightItem {
-    grid-column: 2;
-    width: 100%;
-  }
-
-  #career .careerYear {
-    font-size: 22px;
-    opacity: 0.92;
-    margin-top: 6px;
-    padding: 0;
-  }
-
-  #career .careerRightItem {
-    padding: 10px 12px;
-  }
-
-  #career .careerRole {
-    font-size: 14px;
-  }
-
-  #career .careerMeta {
-    font-size: 12px;
-  }
-
-  #career .careerDesc {
-    font-size: 12.5px;
-    line-height: 1.42;
-  }
+  .cNode { grid-column: 1; }
+  .cYear { display: none; }
+  .cCard { grid-column: 2; }
 }
 
 /* Static story mode for mobile (ONLY when JS adds #story.storyStatic) */

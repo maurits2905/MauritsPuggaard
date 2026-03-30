@@ -1625,10 +1625,7 @@ function renderStack() {
 }
 
 /* ------------------------------
-   Career (data-driven)
-   - Fixed: dot movement
-   - Fixed: fill height
-   - Fixed: ScrollTrigger wiring (no more conflicting scroll logic)
+   Career — Signal Log Timeline
 ------------------------------ */
 const careerData = [
   {
@@ -1641,7 +1638,7 @@ const careerData = [
     role: "AI & Automation",
     sub: "Internal projects",
     year: "2025",
-    desc: "Developing AI-driven tools to support consulting work. Hands-on with LLM-based assistants, multi-agent systems, and practical automation. MSc in Computer Science Completed summer 2025",
+    desc: "Developing AI-driven tools to support consulting work. Hands-on with LLM-based assistants, multi-agent systems, and practical automation. MSc in Computer Science completed summer 2025.",
   },
   {
     role: "Full-Stack Development",
@@ -1669,197 +1666,97 @@ const careerData = [
   },
 ];
 
+const CAREER_COLORS = [
+  "#9b8cff",
+  "#44f0b1",
+  "#9b8cff",
+  "#44f0b1",
+  "#9b8cff",
+  "#44f0b1",
+];
+
 function renderCareer() {
-  const grid = document.getElementById("careerGrid");
-  const rowsRoot = document.getElementById("careerRows");
-  if (!grid || !rowsRoot) return;
+  const track = document.getElementById("cTimeline");
+  if (!track) return;
 
-  // Hvis du clear’er #careerRows, sletter du også .careerLineWrap (dot + fill).
-  // Så vi detacher den først, rydder rækkerne, og sætter den tilbage.
-  const keptLineWrap = rowsRoot.querySelector(".careerLineWrap");
-  if (keptLineWrap) keptLineWrap.remove();
+  const fill = document.getElementById("cSpineFill");
 
-  rowsRoot.innerHTML = "";
-
-  if (keptLineWrap) rowsRoot.appendChild(keptLineWrap);
-
-  // Re-grab dot/fill efter lineWrap er tilbage i DOM
-  const dot = document.getElementById("careerDot");
-  const fill = document.getElementById("careerFill");
-  if (!dot || !fill) return;
-
-  // Build rows: left | years | right (same row-gap via grid)
   careerData.forEach((item, i) => {
-    const row = document.createElement("div");
-    row.className = "careerRow";
-    row.dataset.index = String(i);
+    const color = CAREER_COLORS[i] || "#9b8cff";
+    const entry = document.createElement("div");
+    entry.className = "cEntry";
+    entry.dataset.index = String(i);
+    entry.style.setProperty("--ce-color", color);
+    entry.style.transitionDelay = i * 55 + "ms";
 
-    row.innerHTML = `
-      <button type="button" class="careerItemBtn dim careerRowLeft" data-index="${i}">
-        <div class="careerRole">${escapeHtml(item.role)}</div>
-        <div class="careerSub">${escapeHtml(item.sub)}</div>
-      </button>
+    entry.innerHTML =
+      '<div class="cYear" aria-hidden="true">' + escapeHtml(item.year) + "</div>" +
+      '<div class="cNode" aria-hidden="true"><div class="cDot"></div></div>' +
+      "<article class=\"cCard\">" +
+        '<div class="cCard__head">' +
+          '<span class="cCard__badge">' + escapeHtml(item.year) + "</span>" +
+          '<span class="cCard__company">' + escapeHtml(item.sub) + "</span>" +
+        "</div>" +
+        '<h3 class="cCard__role">' + escapeHtml(item.role) + "</h3>" +
+        '<p class="cCard__desc">' + escapeHtml(item.desc) + "</p>" +
+      "</article>";
 
-      <div class="careerYear dim careerRowYear" data-index="${i}">
-        ${escapeHtml(item.year)}
-      </div>
-
-      <div class="careerRightItem dim careerRowRight" id="careerRow-${i}" data-index="${i}">
-        <div class="careerDesc">${escapeHtml(item.desc)}</div>
-      </div>
-    `;
-
-    rowsRoot.appendChild(row);
+    track.appendChild(entry);
   });
 
-  const leftBtns = Array.from(rowsRoot.querySelectorAll(".careerItemBtn"));
-  const yearEls = Array.from(rowsRoot.querySelectorAll(".careerYear"));
-  const rightEls = Array.from(rowsRoot.querySelectorAll(".careerRightItem"));
-  const lineWrap = grid.querySelector(".careerLineWrap");
+  const entries = Array.from(track.querySelectorAll(".cEntry"));
 
-  // Click left -> scroll corresponding right item
-  leftBtns.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const idx = Number(btn.dataset.index);
-      const anchor = document.getElementById(`careerRow-${idx}`);
-      if (anchor)
-        anchor.scrollIntoView({ behavior: "smooth", block: "center" });
-    });
-  });
+  const revealIO = new IntersectionObserver(
+    (records) => {
+      records.forEach((rec) => {
+        if (rec.isIntersecting) {
+          rec.target.classList.add("cVisible");
+          revealIO.unobserve(rec.target);
+        }
+      });
+    },
+    { rootMargin: "0px 0px -12% 0px", threshold: 0.05 }
+  );
+  entries.forEach((e) => revealIO.observe(e));
 
-  let currentIdx = 0;
+  let currentActive = -1;
   let raf = 0;
-  let pulseTimeout = 0;
 
-  function pulseDot() {
-    dot.classList.remove("pulse");
-    void dot.offsetWidth;
-    dot.classList.add("pulse");
-  }
-
-  function setActive(idx, doPulse = false) {
-    currentIdx = idx;
-
-    leftBtns.forEach((b) => {
-      const on = Number(b.dataset.index) === idx;
-      b.classList.toggle("active", on);
-      b.classList.toggle("dim", !on);
-    });
-
-    yearEls.forEach((y) => {
-      const on = Number(y.dataset.index) === idx;
-      y.classList.toggle("active", on);
-      y.classList.toggle("dim", !on);
-    });
-
-    rightEls.forEach((r) => {
-      const on = Number(r.dataset.index) === idx;
-      r.classList.toggle("active", on);
-      r.classList.toggle("dim", !on);
-    });
-
-    if (doPulse) pulseDot();
-  }
-
-  function updateFromScroll() {
+  function updateScroll() {
     raf = 0;
-    if (!lineWrap || !yearEls.length) return;
+    if (!entries.length) return;
 
-    const wrapRect = lineWrap.getBoundingClientRect();
+    const vh = window.innerHeight;
+    const trackRect = track.getBoundingClientRect();
+    const progress = Math.min(
+      1,
+      Math.max(0, (vh * 0.5 - trackRect.top) / Math.max(1, trackRect.height))
+    );
+    if (fill) fill.style.height = progress * trackRect.height + "px";
 
-    // Viewport center i wrap-koordinater
-    const centerInWrap = window.innerHeight * 0.5 - wrapRect.top;
-
-    // Midtpunkter for hver YEAR i wrap-koordinater
-    const mids = yearEls.map((y) => {
-      const r = y.getBoundingClientRect();
-      return r.top + r.height * 0.5 - wrapRect.top;
-    });
-
-    // 1) Progress baseret på viewport-center mellem første og sidste YEAR
-    const first = mids[0];
-    const last = mids[mids.length - 1];
-    const t = (centerInWrap - first) / Math.max(1, last - first);
-    const progress = Math.min(1, Math.max(0, t));
-
-    // 2) Map progress til HELE lineWrap (så den kan nå bunden)
-    const dotH = dot.offsetHeight || 10;
-    const minY = dotH / 2;
-    const maxY = Math.max(minY, wrapRect.height - dotH / 2);
-    const dotY = minY + progress * (maxY - minY);
-
-    dot.style.top = `${dotY}px`;
-    fill.style.height = `${dotY}px`;
-
-    // 3) Active row: find YEAR der er tættest på viewport-center (ikke dotY)
+    const viewCenter = vh * 0.5;
     let bestIdx = 0;
     let bestDist = Infinity;
+    entries.forEach((entry, i) => {
+      const r = entry.getBoundingClientRect();
+      const dist = Math.abs(r.top + r.height * 0.5 - viewCenter);
+      if (dist < bestDist) { bestDist = dist; bestIdx = i; }
+    });
 
-    for (let i = 0; i < yearEls.length; i++) {
-      const y = yearEls[i];
-      const dist = Math.abs(mids[i] - centerInWrap);
-      if (dist < bestDist) {
-        bestDist = dist;
-        bestIdx = Number(y.dataset.index);
-      }
+    if (bestIdx !== currentActive) {
+      if (currentActive >= 0) entries[currentActive].classList.remove("cActive");
+      entries[bestIdx].classList.add("cActive");
+      currentActive = bestIdx;
     }
-
-    const changed = bestIdx !== currentIdx;
-    setActive(bestIdx, changed);
-
-    clearTimeout(pulseTimeout);
-    dot.classList.add("scrolling");
-    pulseTimeout = setTimeout(() => dot.classList.remove("scrolling"), 120);
   }
 
   function onScroll() {
-    if (raf) return;
-    raf = requestAnimationFrame(updateFromScroll);
+    if (!raf) raf = requestAnimationFrame(updateScroll);
   }
-
-  function updateLineWrap() {
-    if (!lineWrap || !rowsRoot) return;
-
-    // Stretch lineWrap to cover the full height of the rows container.
-    // (grid-row: 1/-1 only covers explicit rows; display:contents creates
-    //  implicit rows, so we must set height manually.)
-    lineWrap.style.height = rowsRoot.offsetHeight + "px";
-
-    // Position horizontally:
-    //  - desktop (>1040px): centre in the gap between year col and desc col
-    //  - tablet/mobile    : left edge of the grid (column 1 space)
-    if (window.innerWidth > 1040 && yearEls.length && rightEls.length) {
-      const rowsRect = rowsRoot.getBoundingClientRect();
-      const yearRect = yearEls[0].getBoundingClientRect();
-      const rightRect = rightEls[0].getBoundingClientRect();
-      const midX = (yearRect.right + rightRect.left) / 2;
-      const leftPx = midX - rowsRect.left - lineWrap.offsetWidth / 2;
-      lineWrap.style.left = Math.max(0, leftPx) + "px";
-    } else {
-      lineWrap.style.left = "0px";
-    }
-
-    updateFromScroll();
-  }
-
-  // Add top margin between entries on compact layouts for readability
-  leftBtns.forEach((btn, i) => {
-    if (i > 0 && window.innerWidth <= 1040) btn.style.marginTop = "20px";
-  });
 
   window.addEventListener("scroll", onScroll, { passive: true });
-  window.addEventListener("resize", () => {
-    leftBtns.forEach((btn, i) => {
-      btn.style.marginTop =
-        i > 0 && window.innerWidth <= 1040 ? "20px" : "";
-    });
-    updateLineWrap();
-  });
-
-  requestAnimationFrame(() => {
-    setActive(0, true);
-    updateLineWrap();
-  });
+  window.addEventListener("resize", updateScroll);
+  requestAnimationFrame(updateScroll);
 }
 
 // Always start at top on refresh (prevents browser restoring old scroll position)
