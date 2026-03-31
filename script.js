@@ -3267,32 +3267,30 @@ async function renderTechStack() {
   if (!mount) return;
 
   const CAT_META = {
-    "Languages":                     { color: "#7eb4ff", rgb: "126,180,255",  short: "Languages"  },
-    "SAP & Enterprise":              { color: "#f0c060", rgb: "240,192,96",   short: "SAP"        },
-    "Frameworks & Machine Learning": { color: "#44f0b1", rgb: "68,240,177",   short: "Frameworks" },
-    "Data & Databases":              { color: "#b08dff", rgb: "176,141,255",  short: "Data"       },
-    "DevOps & Infrastructure":       { color: "#ff8c42", rgb: "255,140,66",   short: "DevOps"     },
-    "Development Tools":             { color: "#6ef3c5", rgb: "110,243,197",  short: "Tools"      },
-    "AI & Platforms":                { color: "#e060ff", rgb: "224,96,255",   short: "AI"         },
+    "Languages":                     { color: "#7eb4ff", rgb: "126,180,255", short: "LANG",   label: "Languages"  },
+    "SAP & Enterprise":              { color: "#f0c060", rgb: "240,192,96",  short: "SAP",    label: "SAP"        },
+    "Frameworks & Machine Learning": { color: "#44f0b1", rgb: "68,240,177",  short: "FWK",    label: "Frameworks" },
+    "Data & Databases":              { color: "#b08dff", rgb: "176,141,255", short: "DATA",   label: "Data"       },
+    "DevOps & Infrastructure":       { color: "#ff8c42", rgb: "255,140,66",  short: "OPS",    label: "DevOps"     },
+    "Development Tools":             { color: "#6ef3c5", rgb: "110,243,197", short: "TOOLS",  label: "Tools"      },
+    "AI & Platforms":                { color: "#e060ff", rgb: "224,96,255",  short: "AI",     label: "AI"         },
   };
 
-  const WIDE_CATS = new Set(["SAP & Enterprise", "Languages", "Frameworks & Machine Learning"]);
-
+  // Build filter tabs
   const filtersHtml = [
     `<button class="ars-tab active" data-cat="all" aria-pressed="true">All</button>`,
     ...TECH_GROUPS.map((g) => {
       const meta = CAT_META[g.title] || {};
-      const label = meta.short || g.title;
-      return `<button class="ars-tab" data-cat="${escapeHtml(g.title)}" aria-pressed="false">${escapeHtml(label)}</button>`;
+      return `<button class="ars-tab" data-cat="${escapeHtml(g.title)}" aria-pressed="false">${escapeHtml(meta.label || g.title)}</button>`;
     }),
   ].join("\n      ");
 
-  const panelsHtml = TECH_GROUPS.map((group) => {
-    const meta = CAT_META[group.title] || { color: "#9b8cff", rgb: "155,140,255" };
-    const spanClass = WIDE_CATS.has(group.title) ? " span2" : "";
+  // Build strips
+  const stripsHtml = TECH_GROUPS.map((group) => {
+    const meta = CAT_META[group.title] || { color: "#9b8cff", rgb: "155,140,255", short: "TECH" };
 
-    const chipsHtml = group.items.map((item) =>
-      `<a class="ars-chip"
+    const chipsHtml = group.items.map((item, idx) =>
+      `<a class="ars-chip" style="--chip-i:${idx}"
           href="${escapeHtml(item.url || "#")}"
           target="_blank" rel="noopener noreferrer"
           aria-label="${escapeHtml(item.name)} (opens official site)">
@@ -3302,16 +3300,19 @@ async function renderTechStack() {
     ).join("\n        ");
 
     return `
-    <div class="ars-panel${spanClass}"
+    <div class="ars-strip"
          data-cat="${escapeHtml(group.title)}"
          style="--cat-color:${meta.color};--cat-rgb:${meta.rgb}">
-      <div class="ars-panel-head">
-        <span class="ars-cat-dot"></span>
-        <span class="ars-cat-name">${escapeHtml(group.title)}</span>
-        <span class="ars-cat-count">${group.items.length}</span>
-      </div>
-      <div class="ars-chips">
-        ${chipsHtml}
+      <div class="ars-strip-inner">
+        <span class="ars-strip-ghost" aria-hidden="true">${escapeHtml(meta.short)}</span>
+        <div class="ars-strip-head">
+          <span class="ars-cat-dot"></span>
+          <span class="ars-cat-name">${escapeHtml(group.title)}</span>
+          <span class="ars-cat-count">${group.items.length}</span>
+        </div>
+        <div class="ars-chips">
+          ${chipsHtml}
+        </div>
       </div>
     </div>`;
   }).join("\n");
@@ -3321,11 +3322,12 @@ async function renderTechStack() {
     <div class="arsenal-filters" role="group" aria-label="Filter by category">
       ${filtersHtml}
     </div>
-    <div class="arsenal-grid">
-      ${panelsHtml}
+    <div class="ars-strips">
+      ${stripsHtml}
     </div>
   </div>`;
 
+  // ── Load icons ──
   const iconEls = [...mount.querySelectorAll(".ars-chip-icon[data-icon]")];
   await Promise.all(
     iconEls.map(async (el) => {
@@ -3338,11 +3340,12 @@ async function renderTechStack() {
     })
   );
 
-  const panels = [...mount.querySelectorAll(".ars-panel")];
+  // ── Staggered entrance via IntersectionObserver ──
+  const strips = [...mount.querySelectorAll(".ars-strip")];
 
   const triggerEntrance = () => {
-    panels.forEach((p, i) => {
-      setTimeout(() => p.classList.add("in-view"), i * 70);
+    strips.forEach((s, i) => {
+      setTimeout(() => s.classList.add("in-view"), i * 80);
     });
   };
 
@@ -3353,7 +3356,7 @@ async function renderTechStack() {
         io.disconnect();
       }
     },
-    { threshold: 0.12 }
+    { threshold: 0.08 }
   );
   io.observe(mount);
 
@@ -3365,6 +3368,7 @@ async function renderTechStack() {
     }
   });
 
+  // ── Filter tabs — collapse/expand with featured spotlight ──
   const tabs = [...mount.querySelectorAll(".ars-tab")];
   tabs.forEach((tab) => {
     tab.addEventListener("click", () => {
@@ -3372,9 +3376,27 @@ async function renderTechStack() {
       tabs.forEach((t) => { t.classList.remove("active"); t.setAttribute("aria-pressed", "false"); });
       tab.classList.add("active");
       tab.setAttribute("aria-pressed", "true");
-      panels.forEach((p) => {
-        const match = cat === "all" || p.dataset.cat === cat;
-        p.classList.toggle("hidden", !match);
+
+      if (cat === "all") {
+        strips.forEach((s) => s.classList.remove("featured", "collapsed"));
+        return;
+      }
+
+      strips.forEach((s) => {
+        const match = s.dataset.cat === cat;
+        if (match) {
+          s.classList.remove("collapsed");
+          s.classList.add("featured");
+          // Retrigger chip pop animations
+          s.querySelectorAll(".ars-chip").forEach((chip) => {
+            chip.style.animationName = "none";
+            chip.offsetHeight; // reflow
+            chip.style.animationName = "";
+          });
+        } else {
+          s.classList.remove("featured");
+          s.classList.add("collapsed");
+        }
       });
     });
   });

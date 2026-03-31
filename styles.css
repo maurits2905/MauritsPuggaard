@@ -8198,124 +8198,218 @@ body[data-theme="light"] .abtTag:hover {
   box-shadow: 0 0 18px rgba(155, 140, 255, 0.18), inset 0 0 10px rgba(155, 140, 255, 0.06);
 }
 
-/* ── Panel grid ── */
-.arsenal-grid {
+/* ── Keyframes ── */
+@keyframes arsChipPop {
+  from { opacity: 0; transform: scale(0.82) translateY(6px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0); }
+}
+
+@keyframes arsGhostBloom {
+  from { opacity: 0; transform: translateY(-50%) scale(0.72); letter-spacing: -0.08em; }
+  to   { opacity: 1; transform: translateY(-50%) scale(1);    letter-spacing: -0.04em; }
+}
+
+@keyframes arsShimmer {
+  0%   { left: -80%; }
+  100% { left: 160%; }
+}
+
+@keyframes arsGhostFloat {
+  0%, 100% { transform: translateY(-50%); }
+  50%       { transform: translateY(calc(-50% - 7px)); }
+}
+
+/* ── Strip layout — grid-row trick for smooth collapse ── */
+.ars-strips {
+  display: flex;
+  flex-direction: column;
+}
+
+.ars-strip {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
-}
-
-@media (max-width: 900px) {
-  .arsenal-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 560px) {
-  .arsenal-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* ── Individual panel ── */
-.ars-panel {
-  position: relative;
-  padding: 22px 20px 20px;
-  background: rgba(255, 255, 255, 0.028);
-  border: 1px solid rgba(255, 255, 255, 0.065);
-  border-radius: 18px;
-  overflow: hidden;
-  /* entrance: start hidden */
+  grid-template-rows: 1fr;
+  border-top: 1px solid rgba(255, 255, 255, 0.055);
+  /* entrance */
   opacity: 0;
-  transform: translateY(18px);
+  transform: translateX(-32px);
   transition:
-    opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
-    border-color 0.55s ease;
+    opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+    grid-template-rows 440ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.ars-panel.in-view {
+.ars-strip:last-child {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.055);
+}
+
+.ars-strip.in-view {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateX(0);
 }
 
-.ars-panel.hidden {
-  opacity: 0 !important;
-  transform: scale(0.95) !important;
+/* ── Collapse — rows fold to 0 ── */
+.ars-strip.collapsed {
+  grid-template-rows: 0fr;
+  opacity: 0;
   pointer-events: none;
-  transition: opacity 220ms ease, transform 220ms ease !important;
+  transition:
+    grid-template-rows 380ms cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 260ms ease;
 }
 
-/* top accent edge — bleed of category color */
-.ars-panel::before {
+/* ── Inner wrapper — overflow:hidden required for grid collapse ── */
+.ars-strip-inner {
+  overflow: hidden;
+  position: relative;
+  padding: 28px 24px 26px 32px;
+  transition: padding 480ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Left accent bar */
+.ars-strip-inner::before {
   content: '';
   position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    var(--cat-color, #9b8cff) 40%,
-    var(--cat-color, #9b8cff) 60%,
-    transparent 100%
-  );
-  opacity: 0.55;
+  top: 0; bottom: 0; left: 0;
+  width: 3px;
+  background: var(--cat-color, #9b8cff);
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 2;
 }
 
-/* inner top glow */
-.ars-panel::after {
+.ars-strip:hover .ars-strip-inner::before {
+  transform: scaleY(1);
+}
+
+/* Hover background wash */
+.ars-strip-inner::after {
   content: '';
   position: absolute;
-  top: -30px; left: 50%;
-  transform: translateX(-50%);
-  width: 65%;
-  height: 70px;
-  background: radial-gradient(ellipse, var(--cat-color, #9b8cff), transparent 72%);
-  opacity: 0.06;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(var(--cat-rgb, 155,140,255), 0.055) 0%, transparent 55%);
+  opacity: 0;
   pointer-events: none;
-  transition: opacity 300ms ease;
+  transition: opacity 360ms ease;
 }
 
-.ars-panel:hover::after {
-  opacity: 0.12;
+.ars-strip:hover .ars-strip-inner::after {
+  opacity: 1;
 }
 
-/* span 2 columns for bigger groups */
-.ars-panel.span2 {
-  grid-column: span 2;
+/* ── Featured spotlight state ── */
+.ars-strip.featured .ars-strip-inner {
+  padding: 54px 32px 54px 36px;
+  background: rgba(var(--cat-rgb, 155,140,255), 0.045);
 }
 
-@media (max-width: 900px) {
-  .ars-panel.span2 {
-    grid-column: span 1;
-  }
+/* Always-on accent bar */
+.ars-strip.featured .ars-strip-inner::before {
+  transform: scaleY(1);
+  box-shadow: 0 0 20px var(--cat-color, #9b8cff);
 }
 
-/* ── Panel header ── */
-.ars-panel-head {
+/* Kill hover wash — replaced by persistent bloom */
+.ars-strip.featured .ars-strip-inner::after {
+  opacity: 1;
+  background: linear-gradient(90deg, rgba(var(--cat-rgb, 155,140,255), 0.09) 0%, transparent 65%);
+}
+
+/* Shimmer sweep */
+.ars-strip.featured .ars-chips::before {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 55%;
+  background: linear-gradient(90deg, transparent, rgba(var(--cat-rgb,155,140,255), 0.07), transparent);
+  animation: arsShimmer 2.8s ease 0.2s infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.ars-strip.featured .ars-chips {
+  position: relative;
+  gap: 10px;
+}
+
+/* ── Ghost label ── */
+.ars-strip-ghost {
+  position: absolute;
+  right: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: clamp(52px, 7.5vw, 92px);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.06);
+  user-select: none;
+  pointer-events: none;
+  line-height: 1;
+  animation: arsGhostFloat 7s ease-in-out infinite;
+  transition:
+    -webkit-text-stroke-color 380ms ease,
+    font-size 480ms cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 380ms ease;
+}
+
+.ars-strip:hover .ars-strip-ghost {
+  -webkit-text-stroke-color: var(--cat-color);
+  opacity: 0.25;
+}
+
+/* Featured ghost — blooms large */
+.ars-strip.featured .ars-strip-ghost {
+  font-size: clamp(110px, 18vw, 220px);
+  opacity: 1;
+  -webkit-text-stroke-color: var(--cat-color);
+  animation: arsGhostBloom 0.6s cubic-bezier(0.22, 1, 0.36, 1) both, arsGhostFloat 7s ease-in-out 0.7s infinite;
+}
+
+/* ── Strip header ── */
+.ars-strip-head {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   margin-bottom: 16px;
+  position: relative;
+  z-index: 1;
+}
+
+.ars-strip.featured .ars-strip-head {
+  margin-bottom: 22px;
 }
 
 .ars-cat-dot {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background: var(--cat-color, #9b8cff);
-  box-shadow: 0 0 6px var(--cat-color, #9b8cff);
+  box-shadow: 0 0 8px var(--cat-color, #9b8cff);
   flex-shrink: 0;
+  transition: box-shadow 400ms ease, width 400ms ease, height 400ms ease;
+}
+
+.ars-strip.featured .ars-cat-dot {
+  width: 9px;
+  height: 9px;
+  box-shadow: 0 0 16px var(--cat-color, #9b8cff), 0 0 32px var(--cat-color, #9b8cff);
 }
 
 .ars-cat-name {
   font-size: 10.5px;
   font-weight: 700;
-  letter-spacing: 0.20em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--cat-color, #9b8cff);
-  opacity: 0.88;
+  opacity: 0.9;
   flex: 1;
+  transition: font-size 400ms ease, letter-spacing 400ms ease;
+}
+
+.ars-strip.featured .ars-cat-name {
+  font-size: 12px;
+  letter-spacing: 0.28em;
 }
 
 .ars-cat-count {
@@ -8324,26 +8418,35 @@ body[data-theme="light"] .abtTag:hover {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 999px;
-  color: rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.30);
   letter-spacing: 0.05em;
   font-variant-numeric: tabular-nums;
+  transition: background 400ms ease, border-color 400ms ease, color 400ms ease;
+}
+
+.ars-strip.featured .ars-cat-count {
+  background: rgba(var(--cat-rgb, 155,140,255), 0.12);
+  border-color: rgba(var(--cat-rgb, 155,140,255), 0.35);
+  color: var(--cat-color, #9b8cff);
 }
 
 /* ── Tech chips ── */
 .ars-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 7px;
+  gap: 8px;
+  position: relative;
+  z-index: 1;
 }
 
 .ars-chip {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  padding: 6px 12px 6px 8px;
-  background: rgba(255, 255, 255, 0.038);
-  border: 1px solid rgba(255, 255, 255, 0.072);
-  border-radius: 9px;
+  padding: 7px 13px 7px 9px;
+  background: rgba(255, 255, 255, 0.036);
+  border: 1px solid rgba(255, 255, 255, 0.068);
+  border-radius: 10px;
   text-decoration: none;
   color: rgba(255, 255, 255, 0.68);
   font-size: 12.5px;
@@ -8354,16 +8457,29 @@ body[data-theme="light"] .abtTag:hover {
     border-color 200ms ease,
     color 200ms ease,
     transform 200ms ease,
-    box-shadow 200ms ease;
+    box-shadow 200ms ease,
+    padding 400ms ease,
+    font-size 400ms ease;
   cursor: pointer;
 }
 
+/* Chip pop-in when strip enters featured */
+.ars-strip.featured .ars-chip {
+  animation: arsChipPop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1)
+             calc(60ms + var(--chip-i, 0) * 40ms) both;
+}
+
+.ars-strip.featured .ars-chip {
+  padding: 9px 16px 9px 11px;
+  font-size: 13.5px;
+}
+
 .ars-chip:hover {
-  background: rgba(var(--cat-rgb, 155, 140, 255), 0.1);
+  background: rgba(var(--cat-rgb, 155, 140, 255), 0.10);
   border-color: rgba(var(--cat-rgb, 155, 140, 255), 0.32);
   color: #fff;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.30);
 }
 
 .ars-chip:focus-visible {
@@ -8387,7 +8503,7 @@ body[data-theme="light"] .abtTag:hover {
   line-height: 1;
   display: block;
   opacity: 0.65;
-  filter: grayscale(0.45) brightness(1.1);
+  filter: grayscale(0.4) brightness(1.1);
   transition: opacity 200ms ease, filter 200ms ease;
 }
 
@@ -8397,43 +8513,31 @@ body[data-theme="light"] .abtTag:hover {
   filter: none;
 }
 
-/* ── Light theme overrides ── */
-[data-theme="light"] .ars-panel {
-  background: rgba(0, 0, 0, 0.025);
-  border-color: rgba(0, 0, 0, 0.07);
+.ars-strip.featured .ars-chip-icon svg,
+.ars-strip.featured .ars-chip-icon i {
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
+  opacity: 0.75;
 }
 
-[data-theme="light"] .ars-tab {
-  color: rgba(0, 0, 0, 0.45);
-  background: rgba(0, 0, 0, 0.04);
-  border-color: rgba(0, 0, 0, 0.08);
+/* ── Light theme — strips live inside dark island ── */
+[data-theme="light"] .ars-strip {
+  border-top-color: rgba(255, 255, 255, 0.07);
 }
 
-[data-theme="light"] .ars-tab:hover {
-  color: rgba(0, 0, 0, 0.75);
-  background: rgba(0, 0, 0, 0.07);
+[data-theme="light"] .ars-strip:last-child {
+  border-bottom-color: rgba(255, 255, 255, 0.07);
 }
 
-[data-theme="light"] .ars-tab.active {
-  color: #2a1f6e;
-  background: rgba(100, 80, 220, 0.12);
-  border-color: rgba(100, 80, 220, 0.38);
-}
-
-[data-theme="light"] .ars-chip {
-  background: rgba(0, 0, 0, 0.032);
-  border-color: rgba(0, 0, 0, 0.07);
-  color: rgba(0, 0, 0, 0.65);
-}
-
-[data-theme="light"] .ars-chip:hover {
-  color: #000;
+[data-theme="light"] .ars-strip-ghost {
+  -webkit-text-stroke-color: rgba(255, 255, 255, 0.05);
 }
 
 [data-theme="light"] .ars-cat-count {
-  color: rgba(0, 0, 0, 0.35);
-  background: rgba(0, 0, 0, 0.04);
-  border-color: rgba(0, 0, 0, 0.07);
+  color: rgba(255, 255, 255, 0.32);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 /* ============================================================
