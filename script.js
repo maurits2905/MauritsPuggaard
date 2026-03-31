@@ -1682,6 +1682,8 @@ function renderCareer() {
   const fill    = document.getElementById("cSpineFill");
   const section = document.getElementById("career");
   const canvas  = document.getElementById("cometCanvas");
+  const scene   = document.getElementById("careerScene");
+  const pin     = document.getElementById("careerPin");
 
   careerData.forEach((item, i) => {
     const color = CAREER_COLORS[i] || "#9b8cff";
@@ -1705,243 +1707,277 @@ function renderCareer() {
 
   const entries = Array.from(track.querySelectorAll(".cEntry"));
 
-  // ── Canvas comet sequence ────────────────────────────────────
-  let cometFired = false;
-
-  function fireCometSequence() {
-    if (cometFired) return;
-    cometFired = true;
-
-    // Reduced motion: skip straight to reveal
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      section.classList.add("comet-fired");
-      entries.forEach((e) => e.classList.add("cVisible"));
-      startScrollLogic();
-      return;
-    }
-
-    if (!canvas) {
-      section.classList.add("comet-fired");
-      entries.forEach((e, i) => setTimeout(() => e.classList.add("cVisible"), i * 180));
-      setTimeout(startScrollLogic, entries.length * 180 + 400);
-      return;
-    }
-
-    // Size canvas to full viewport
-    const DPR = Math.min(window.devicePixelRatio || 1, 2);
-    const VW  = window.innerWidth;
-    const VH  = window.innerHeight;
-    canvas.width  = VW * DPR;
-    canvas.height = VH * DPR;
-    canvas.style.width  = VW + "px";
-    canvas.style.height = VH + "px";
-    canvas.style.display = "block";
-
-    const ctx = canvas.getContext("2d");
-    ctx.scale(DPR, DPR);
-
-    // Impact target: center of the first spine dot on screen
-    const firstDot = track.querySelector(".cDot");
-    const dotRect  = firstDot ? firstDot.getBoundingClientRect()
-                              : track.getBoundingClientRect();
-    const targetX  = firstDot ? dotRect.left + dotRect.width  / 2 : VW * 0.38;
-    const targetY  = firstDot ? dotRect.top  + dotRect.height / 2 : VH * 0.42;
-
-    // Comet starts as a tiny distant speck — near top of screen, slightly right of center
-    const startX = VW * 0.60;
-    const startY = VH * 0.04;
-
-    const FLIGHT_MS  = 2000; // total flight duration
-    const HOLD_MS    = 320;  // pause at center before impact
-    const CENTER_X   = VW * 0.50; // center-screen waypoint
-    const CENTER_Y   = VH * 0.44;
-
-    const trailPts = [];
-    const MAX_TRAIL = 80;
-    let impactDone  = false;
-    let flashAlpha  = 0;
-    let flashRings  = []; // { r, alpha, color }
-    let sparks      = []; // { x, y, vx, vy, life, maxLife, color }
-    const startTime = performance.now();
-
-    function easeIn(t)    { return t * t * t; }
-    function easeOut(t)   { return 1 - Math.pow(1 - t, 3); }
-    function lerp(a, b, t){ return a + (b - a) * t; }
-
-    // Two-phase path: 0→0.5 fly from start→center (grows), 0.5→1 center→target
-    function getPos(raw) {
-      if (raw < 0.5) {
-        const t = easeIn(raw / 0.5);
-        return { x: lerp(startX, CENTER_X, t), y: lerp(startY, CENTER_Y, t) };
-      } else {
-        const t = easeOut((raw - 0.5) / 0.5);
-        return { x: lerp(CENTER_X, targetX, t), y: lerp(CENTER_Y, targetY, t) };
-      }
-    }
-
-    // Head radius: tiny speck → large sphere at center → shrinks to spine dot
-    function getRadius(raw) {
-      if (raw < 0.5) return lerp(0.6, 18, Math.pow(raw / 0.5, 0.5));
-      return lerp(18, 9, Math.pow((raw - 0.5) / 0.5, 0.5));
-    }
-
-    function spawnBurst(x, y) {
-      // Two expanding rings
-      flashRings = [
-        { r: 2, maxR: 90, alpha: 1, color: "155,140,255" },
-        { r: 2, maxR: 130, alpha: 0.7, color: "68,240,177", delay: 80 },
-      ];
-      // Sparks radiate outward
-      for (let i = 0; i < 16; i++) {
-        const angle = (i / 16) * Math.PI * 2;
-        const speed = 2.2 + Math.random() * 3.5;
-        const colors = ["255,255,255", "155,140,255", "68,240,177", "224,96,255"];
-        sparks.push({
-          x, y,
-          vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed,
-          life: 1, maxLife: 55 + Math.random() * 40,
-          color: colors[Math.floor(Math.random() * colors.length)],
-        });
-      }
-      flashAlpha = 1;
-    }
-
-    function frame(now) {
-      const elapsed = now - startTime;
-      // Phase 1: flight (0 → FLIGHT_MS), Phase 2: hold at center (FLIGHT_MS → FLIGHT_MS+HOLD_MS)
-      const flightRaw = Math.min(elapsed / FLIGHT_MS, 1);
-      // After hold, impact
-      const postHold = elapsed - FLIGHT_MS - HOLD_MS;
-
-      ctx.clearRect(0, 0, VW, VH);
-
-      const pos = getPos(flightRaw);
-      const headR = getRadius(flightRaw);
-
-      // Store trail
-      if (flightRaw < 1) {
-        trailPts.unshift({ x: pos.x, y: pos.y, r: headR });
-        if (trailPts.length > MAX_TRAIL) trailPts.pop();
-      }
-
-      // Draw trail
-      trailPts.forEach((p, i) => {
-        const frac  = 1 - i / trailPts.length;
-        const alpha = frac * frac * 0.7;
-        const r     = Math.max(p.r * frac * 1.2, 0.5);
-        const g     = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r * 4);
-        g.addColorStop(0,   `rgba(210,200,255,${alpha.toFixed(2)})`);
-        g.addColorStop(0.4, `rgba(155,140,255,${(alpha * 0.5).toFixed(2)})`);
-        g.addColorStop(1,   "rgba(100,70,220,0)");
-        ctx.fillStyle = g;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, r * 4, 0, Math.PI * 2);
-        ctx.fill();
-      });
-
-      // Draw comet head (during flight + brief hold)
-      if (postHold < 100) {
-        const holdAlpha = postHold > 0 ? Math.max(0, 1 - postHold / 100) : 1;
-        const outerR = headR * 4;
-        const glow = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, outerR);
-        glow.addColorStop(0,    `rgba(255,255,255,${holdAlpha.toFixed(2)})`);
-        glow.addColorStop(0.15, `rgba(210,200,255,${(holdAlpha * 0.9).toFixed(2)})`);
-        glow.addColorStop(0.45, `rgba(155,140,255,${(holdAlpha * 0.55).toFixed(2)})`);
-        glow.addColorStop(1,    "rgba(100,60,220,0)");
-        ctx.fillStyle = glow;
-        ctx.beginPath();
-        ctx.arc(pos.x, pos.y, outerR, 0, Math.PI * 2);
-        ctx.fill();
-        // Bright core
-        ctx.fillStyle = `rgba(255,255,255,${holdAlpha.toFixed(2)})`;
-        ctx.beginPath();
-        ctx.arc(pos.x, pos.y, Math.max(headR * 0.4, 1.5), 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      // Impact: trigger once postHold crosses 0
-      if (postHold >= 0 && !impactDone) {
-        impactDone = true;
-        spawnBurst(targetX, targetY);
-        section.classList.add("comet-fired");
-        // Cascade entries
-        entries.forEach((e, i) => setTimeout(() => e.classList.add("cVisible"), 120 + i * 180));
-        setTimeout(startScrollLogic, 120 + entries.length * 180 + 400);
-      }
-
-      // Flash
-      if (flashAlpha > 0) {
-        ctx.fillStyle = `rgba(200,190,255,${(flashAlpha * 0.35).toFixed(2)})`;
-        ctx.fillRect(0, 0, VW, VH);
-        flashAlpha = Math.max(0, flashAlpha - 0.06);
-      }
-
-      // Burst rings
-      flashRings = flashRings.filter((ring) => ring.alpha > 0.01);
-      flashRings.forEach((ring) => {
-        ring.r += (ring.maxR - ring.r) * 0.09;
-        ring.alpha *= 0.88;
-        ctx.strokeStyle = `rgba(${ring.color},${ring.alpha.toFixed(2)})`;
-        ctx.lineWidth = 1.5;
-        ctx.shadowColor = `rgba(${ring.color},0.6)`;
-        ctx.shadowBlur = 8;
-        ctx.beginPath();
-        ctx.arc(targetX, targetY, ring.r, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.shadowBlur = 0;
-      });
-
-      // Sparks
-      sparks = sparks.filter((s) => s.life > 0);
-      sparks.forEach((s) => {
-        s.x  += s.vx;
-        s.y  += s.vy;
-        s.vx *= 0.96;
-        s.vy *= 0.96;
-        s.life = Math.max(0, s.life - 1 / s.maxLife);
-        const a = s.life * s.life;
-        ctx.fillStyle = `rgba(${s.color},${a.toFixed(2)})`;
-        ctx.shadowColor = `rgba(${s.color},${(a * 0.7).toFixed(2)})`;
-        ctx.shadowBlur = 4;
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, 2, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.shadowBlur = 0;
-      });
-
-      const done = flightRaw >= 1 && postHold > 400 && flashRings.length === 0 && sparks.length === 0;
-      if (!done) {
-        requestAnimationFrame(frame);
-      } else {
-        canvas.style.transition = "opacity 0.5s ease";
-        canvas.style.opacity    = "0";
-        setTimeout(() => { canvas.style.display = "none"; canvas.style.opacity = "1"; }, 550);
-      }
-    }
-
-    requestAnimationFrame(frame);
+  // ── Scroll-driven comet scene ─────────────────────────────────
+  // Skip entirely for reduced-motion
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (scene) { scene.classList.add("scene-done"); scene.style.height = "auto"; }
+    section.classList.add("comet-fired");
+    entries.forEach((e) => e.classList.add("cVisible"));
+    startScrollLogic();
+    return;
   }
 
-  // Observe: fire when section enters viewport
-  const introIO = new IntersectionObserver(
-    (records) => {
-      if (records.some((r) => r.isIntersecting)) {
-        fireCometSequence();
-        introIO.disconnect();
-      }
-    },
-    { threshold: 0.15 }
-  );
-  introIO.observe(section);
+  // ── Setup canvas ──
+  const DPR = Math.min(window.devicePixelRatio || 1, 2);
+  const VW  = window.innerWidth;
+  const VH  = window.innerHeight;
 
-  requestAnimationFrame(() => {
-    const r = section.getBoundingClientRect();
-    if (r.top < window.innerHeight * 0.85) {
-      fireCometSequence();
-      introIO.disconnect();
+  if (scene) scene.style.height = (VH * 3) + "px";
+
+  canvas.width  = VW * DPR;
+  canvas.height = VH * DPR;
+  const ctx = canvas.getContext("2d");
+  ctx.scale(DPR, DPR);
+
+  // ── Path & sizing helpers ──
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  const ease  = (t) => t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2;
+
+  // Start: slightly right of center, near top
+  const SX = VW * 0.62, SY = VH * 0.04;
+  // Center stage: dead center
+  const CX = VW * 0.50, CY = VH * 0.50;
+  // End: top of timeline spine (approximated — will refine once entries exist)
+  let EX = VW * 0.38, EY = VH * 0.72;
+
+  // Trail history
+  const trail = [];
+  const MAX_TRAIL = 120;
+
+  // Burst state (populated at impact)
+  let bursting = false;
+  let burstAge = 0;
+  let rings = [], sparks = [];
+
+  function spawnBurst(x, y) {
+    bursting = true;
+    burstAge = 0;
+    rings = [
+      { r: 3, maxR: 100, a: 1.0, col: "155,140,255" },
+      { r: 3, maxR: 145, a: 0.75, col: "68,240,177"  },
+      { r: 3, maxR: 80,  a: 0.6,  col: "224,96,255"  },
+    ];
+    for (let i = 0; i < 20; i++) {
+      const ang = (i / 20) * Math.PI * 2 + Math.random() * 0.3;
+      const spd = 1.8 + Math.random() * 3.8;
+      const cols = ["255,255,255","155,140,255","68,240,177","224,96,255","126,180,255"];
+      sparks.push({
+        x, y,
+        vx: Math.cos(ang) * spd, vy: Math.sin(ang) * spd,
+        life: 1, decay: 0.012 + Math.random() * 0.012,
+        size: 1.2 + Math.random() * 2.2,
+        col: cols[Math.floor(Math.random() * cols.length)],
+      });
     }
-  });
+  }
+
+  // ── Draw a beautiful star at (x,y) with given radius and alpha ──
+  function drawStar(x, y, r, alpha) {
+    if (r < 0.2 || alpha < 0.01) return;
+
+    // 1. Outer nebula haze
+    const hazeR = r * 9;
+    const haze = ctx.createRadialGradient(x, y, 0, x, y, hazeR);
+    haze.addColorStop(0,   `rgba(180,165,255,${(alpha * 0.22).toFixed(3)})`);
+    haze.addColorStop(0.4, `rgba(120,100,220,${(alpha * 0.10).toFixed(3)})`);
+    haze.addColorStop(1,   "rgba(80,50,180,0)");
+    ctx.fillStyle = haze;
+    ctx.beginPath(); ctx.arc(x, y, hazeR, 0, Math.PI * 2); ctx.fill();
+
+    // 2. Inner glow corona
+    const coronaR = r * 4;
+    const corona = ctx.createRadialGradient(x, y, 0, x, y, coronaR);
+    corona.addColorStop(0,   `rgba(255,252,255,${alpha.toFixed(3)})`);
+    corona.addColorStop(0.2, `rgba(210,200,255,${(alpha * 0.85).toFixed(3)})`);
+    corona.addColorStop(0.5, `rgba(155,140,255,${(alpha * 0.50).toFixed(3)})`);
+    corona.addColorStop(1,   "rgba(100,60,200,0)");
+    ctx.fillStyle = corona;
+    ctx.beginPath(); ctx.arc(x, y, coronaR, 0, Math.PI * 2); ctx.fill();
+
+    // 3. Bright hard core
+    const coreR = r * 0.45;
+    const core = ctx.createRadialGradient(x, y, 0, x, y, coreR);
+    core.addColorStop(0, `rgba(255,255,255,${alpha.toFixed(3)})`);
+    core.addColorStop(1, `rgba(220,215,255,${(alpha * 0.4).toFixed(3)})`);
+    ctx.fillStyle = core;
+    ctx.beginPath(); ctx.arc(x, y, coreR, 0, Math.PI * 2); ctx.fill();
+
+    // 4. Four-point star flare (diffraction spikes)
+    const spikeLen = r * 14;
+    [[0, 1], [Math.PI/2, 0.6], [Math.PI, 1], [Math.PI*1.5, 0.6]].forEach(([ang, str]) => {
+      const ex = x + Math.cos(ang) * spikeLen * str;
+      const ey = y + Math.sin(ang) * spikeLen * str;
+      const spike = ctx.createLinearGradient(x, y, ex, ey);
+      spike.addColorStop(0,   `rgba(255,255,255,${(alpha * 0.75).toFixed(3)})`);
+      spike.addColorStop(0.2, `rgba(180,170,255,${(alpha * 0.35).toFixed(3)})`);
+      spike.addColorStop(1,   "rgba(100,60,200,0)");
+      ctx.strokeStyle = spike;
+      ctx.lineWidth = Math.max(r * 0.18, 0.8);
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(ex, ey); ctx.stroke();
+    });
+
+    // 5. Diagonal 45° secondary spikes (thinner)
+    const dLen = spikeLen * 0.55;
+    [Math.PI/4, Math.PI*3/4, Math.PI*5/4, Math.PI*7/4].forEach((ang) => {
+      const ex2 = x + Math.cos(ang) * dLen;
+      const ey2 = y + Math.sin(ang) * dLen;
+      const sp2 = ctx.createLinearGradient(x, y, ex2, ey2);
+      sp2.addColorStop(0, `rgba(200,190,255,${(alpha * 0.45).toFixed(3)})`);
+      sp2.addColorStop(1, "rgba(100,60,200,0)");
+      ctx.strokeStyle = sp2;
+      ctx.lineWidth = Math.max(r * 0.10, 0.5);
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(ex2, ey2); ctx.stroke();
+    });
+  }
+
+  // ── Draw glowing tail segment between two points ──
+  function drawTailSegment(x1, y1, x2, y2, w, alpha) {
+    if (alpha < 0.01) return;
+    const grd = ctx.createLinearGradient(x1, y1, x2, y2);
+    grd.addColorStop(0, `rgba(155,140,255,${(alpha * 0.0).toFixed(3)})`);
+    grd.addColorStop(1, `rgba(210,200,255,${(alpha * 0.6).toFixed(3)})`);
+    ctx.strokeStyle = grd;
+    ctx.lineWidth = w;
+    ctx.lineCap = "round";
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+  }
+
+  // ── Scroll progress → animation progress ──
+  // Phases: 0-0.55 = comet flies in; 0.55-0.70 = comet centered (hovering); 0.70-0.85 = dives to spine; 0.85-1.0 = burst + reveal
+  let impactDone = false;
+  let revealProgress = 0; // 0→1 after impact, drives card cascade
+
+  function getScrollProgress() {
+    if (!scene) return 0;
+    const rect = scene.getBoundingClientRect();
+    const scrollable = scene.offsetHeight - VH;
+    return clamp(-rect.top / scrollable, 0, 1);
+  }
+
+  function getCometState(p) {
+    // pos, radius, alpha, tailAlpha
+    if (p <= 0.55) {
+      // Approaching: start tiny top-right → large center
+      const t = ease(p / 0.55);
+      const x = lerp(SX, CX, t);
+      const y = lerp(SY, CY, t);
+      const r = lerp(1.2, 22, Math.pow(p / 0.55, 0.45));
+      return { x, y, r, alpha: clamp(p / 0.08, 0, 1), tailA: clamp(p / 0.15, 0, 0.85) };
+    } else if (p <= 0.72) {
+      // Centered and hovering — slow subtle drift
+      const t = (p - 0.55) / 0.17;
+      const drift = Math.sin(t * Math.PI) * 8;
+      return { x: CX + drift, y: CY - drift * 0.4, r: lerp(22, 14, ease(t)), alpha: 1, tailA: 0.7 };
+    } else if (p <= 0.87) {
+      // Diving to spine
+      const t = ease((p - 0.72) / 0.15);
+      const x = lerp(CX, EX, t);
+      const y = lerp(CY, EY, t);
+      const r = lerp(14, 7, t);
+      return { x, y, r, alpha: 1, tailA: lerp(0.7, 0.4, t) };
+    } else {
+      // Post-impact
+      return { x: EX, y: EY, r: 0, alpha: 0, tailA: 0 };
+    }
+  }
+
+  function drawFrame() {
+    const p = getScrollProgress();
+    const state = getCometState(p);
+
+    ctx.clearRect(0, 0, VW, VH);
+
+    // Record trail
+    if (p < 0.87) {
+      trail.unshift({ x: state.x, y: state.y, r: state.r });
+      if (trail.length > MAX_TRAIL) trail.pop();
+    } else {
+      // Clear trail on impact
+      trail.length = 0;
+    }
+
+    // Draw tail
+    trail.forEach((pt, i) => {
+      const frac = 1 - i / trail.length;
+      const segAlpha = frac * frac * state.tailA;
+      const segW = Math.max(pt.r * frac * 0.35, 0.5);
+      if (i < trail.length - 1) {
+        const next = trail[i + 1];
+        drawTailSegment(pt.x, pt.y, next.x, next.y, segW, segAlpha);
+      }
+    });
+
+    // Draw comet/star head
+    if (state.r > 0.2 && state.alpha > 0.01) {
+      drawStar(state.x, state.y, state.r, state.alpha);
+    }
+
+    // Impact trigger
+    if (p >= 0.87 && !impactDone) {
+      impactDone = true;
+      // Refine EX/EY to actual first dot position
+      const firstDot = track.querySelector(".cDot");
+      if (firstDot) {
+        const pinRect = pin.getBoundingClientRect();
+        const dr = firstDot.getBoundingClientRect();
+        EX = dr.left + dr.width  / 2 - pinRect.left;
+        EY = dr.top  + dr.height / 2 - pinRect.top;
+      }
+      spawnBurst(EX, EY);
+      section.classList.add("comet-fired");
+      entries.forEach((e, i) => setTimeout(() => e.classList.add("cVisible"), i * 160));
+      setTimeout(startScrollLogic, entries.length * 160 + 300);
+    }
+
+    // Draw burst rings
+    if (bursting) {
+      burstAge++;
+      rings = rings.filter(r => r.a > 0.01);
+      rings.forEach((ring) => {
+        ring.r += (ring.maxR - ring.r) * 0.085;
+        ring.a *= 0.90;
+        ctx.shadowColor = `rgba(${ring.col},0.5)`;
+        ctx.shadowBlur = 12;
+        ctx.strokeStyle = `rgba(${ring.col},${ring.a.toFixed(3)})`;
+        ctx.lineWidth = 1.8;
+        ctx.beginPath(); ctx.arc(EX, EY, ring.r, 0, Math.PI * 2); ctx.stroke();
+        ctx.shadowBlur = 0;
+      });
+
+      sparks = sparks.filter(s => s.life > 0);
+      sparks.forEach((s) => {
+        s.x += s.vx; s.y += s.vy;
+        s.vx *= 0.955; s.vy *= 0.955;
+        s.life = Math.max(0, s.life - s.decay);
+        const a = s.life * s.life;
+        ctx.shadowColor = `rgba(${s.col},${(a*0.6).toFixed(3)})`;
+        ctx.shadowBlur = 6;
+        ctx.fillStyle = `rgba(${s.col},${a.toFixed(3)})`;
+        ctx.beginPath(); ctx.arc(s.x, s.y, s.size * s.life, 0, Math.PI * 2); ctx.fill();
+        ctx.shadowBlur = 0;
+      });
+
+      if (rings.length === 0 && sparks.length === 0) bursting = false;
+    }
+
+    // Draw remaining star glow at EX/EY while burst fades
+    if (impactDone && bursting) {
+      drawStar(EX, EY, lerp(9, 3, Math.min(burstAge / 60, 1)), lerp(0.9, 0, Math.min(burstAge / 60, 1)));
+    }
+
+    // Mark scene done once fully scrolled past + burst settles
+    if (p >= 1 && !bursting && scene && !scene.classList.contains("scene-done")) {
+      scene.classList.add("scene-done");
+    }
+
+    requestAnimationFrame(drawFrame);
+  }
+
+  requestAnimationFrame(drawFrame);
+
+  // Scroll listener to force redraws
+  window.addEventListener("scroll", () => requestAnimationFrame(drawFrame), { passive: true });
 
   // ── Scroll-driven active highlight ───────────────────────────
   let currentActive = -1;
