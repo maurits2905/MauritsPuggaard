@@ -3304,6 +3304,8 @@ html.noReveal .r,
 
 #career {
   padding-bottom: 80px;
+  position: relative;
+  /* overflow visible so comet can fly in from outside section bounds */
 }
 
 .careerX {
@@ -8563,6 +8565,215 @@ body[data-theme="light"] .abtTag:hover {
   color: rgba(255, 255, 255, 0.32);
   background: rgba(255, 255, 255, 0.05);
   border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* ============================================================
+   COMET → TIMELINE INTRO SEQUENCE
+   ============================================================ */
+
+/* ── Stage: absolutely covers the #career section, overflow visible so comet enters from outside ── */
+.comet-stage {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+  overflow: visible;
+}
+
+/* ── Comet wrapper — motion-path-animated ── */
+.comet {
+  position: absolute;
+  top: 0; left: 0;
+  width: 0; height: 0;
+  /* JS sets --cx, --cy (impact point) and runs the animation */
+  opacity: 0;
+}
+
+.comet.fly {
+  animation: cometFly var(--comet-dur, 1.1s) cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+/* Tail — trails behind the head, rotated to match direction of travel */
+.comet-tail {
+  position: absolute;
+  /* starts from the head center and extends backwards */
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 160px;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(155, 140, 255, 0.12) 30%,
+    rgba(155, 140, 255, 0.55) 70%,
+    rgba(255, 255, 255, 0.95) 100%
+  );
+  filter: blur(0.8px);
+  border-radius: 999px;
+  transform-origin: right center;
+}
+
+/* Optional wide glow behind the tail */
+.comet-tail::after {
+  content: '';
+  position: absolute;
+  inset: -3px 0;
+  background: inherit;
+  filter: blur(5px);
+  opacity: 0.4;
+}
+
+/* Head — bright sphere */
+.comet-head {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fff 0%, #b8a8ff 45%, #7b68ee 100%);
+  box-shadow:
+    0 0 6px 2px rgba(255,255,255,0.9),
+    0 0 18px 6px rgba(155,140,255,0.7),
+    0 0 40px 12px rgba(155,140,255,0.3);
+  top: -6px; left: -6px;
+}
+
+/* ── Keyframe: comet flies from off-screen top-right to impact point ── */
+/* Comet element is at top:0;left:0 of the section; translate drives it */
+@keyframes cometFly {
+  0% {
+    opacity: 1;
+    /* Start: far top-right — beyond viewport right edge, well above section */
+    transform: translate(
+      calc(var(--cx, 200px) + 110vw),
+      calc(var(--cy, 200px) - 38vh)
+    ) rotate(-38deg);
+  }
+  /* Decelerate just before impact */
+  82% {
+    opacity: 1;
+    transform: translate(
+      calc(var(--cx, 200px) + 3px),
+      calc(var(--cy, 200px) - 5px)
+    ) rotate(-38deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(
+      var(--cx, 200px),
+      var(--cy, 200px)
+    ) rotate(-38deg) scale(0.4);
+  }
+}
+
+/* ── Burst: appears at impact point, controlled by JS class ── */
+.comet-burst {
+  position: absolute;
+  top: 0; left: 0;
+  pointer-events: none;
+  /* JS sets transform: translate(--cx, --cy) */
+}
+
+/* Expanding ring */
+.comet-ring {
+  position: absolute;
+  width: 12px; height: 12px;
+  margin: -6px 0 0 -6px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(155, 140, 255, 0.9);
+  box-shadow: 0 0 8px rgba(155, 140, 255, 0.6);
+  opacity: 0;
+}
+
+.comet-burst.pop .comet-ring {
+  animation: ringExpand 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.comet-burst.pop .comet-ring--2 {
+  animation: ringExpand 0.65s cubic-bezier(0.22, 1, 0.36, 1) 0.12s forwards;
+  border-color: rgba(68, 240, 177, 0.7);
+}
+
+@keyframes ringExpand {
+  0%   { opacity: 1;    transform: scale(1);  }
+  100% { opacity: 0;    transform: scale(5.5); }
+}
+
+/* Sparks — 8 directions */
+.comet-spark {
+  position: absolute;
+  width: 2px; height: 2px;
+  margin: -1px 0 0 -1px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 4px 2px rgba(155, 140, 255, 0.8);
+  opacity: 0;
+}
+
+.comet-burst.pop .comet-spark {
+  animation: sparkFly 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: calc(var(--spark-i, 0) * 20ms);
+}
+
+@keyframes sparkFly {
+  0%   { opacity: 1; transform: rotate(var(--a)) translateX(0px) scale(1.5); }
+  60%  { opacity: 1; }
+  100% { opacity: 0; transform: rotate(var(--a)) translateX(38px) scale(0.3); }
+}
+
+/* Give each spark its delay offset */
+.comet-spark:nth-child(3) { --spark-i: 0; }
+.comet-spark:nth-child(4) { --spark-i: 1; }
+.comet-spark:nth-child(5) { --spark-i: 2; }
+.comet-spark:nth-child(6) { --spark-i: 3; }
+.comet-spark:nth-child(7) { --spark-i: 4; }
+.comet-spark:nth-child(8) { --spark-i: 5; }
+.comet-spark:nth-child(9) { --spark-i: 6; }
+.comet-spark:nth-child(10){ --spark-i: 7; }
+
+/* ── Spine: locked until comet hits, then ignites ── */
+.cTimeline::before {
+  transition: opacity 0.4s ease;
+}
+
+/* Hide base spine & fill until triggered */
+#career:not(.comet-fired) .cTimeline::before {
+  opacity: 0;
+}
+
+#career:not(.comet-fired) .cSpineFill {
+  opacity: 0;
+}
+
+#career:not(.comet-fired) .cEntry {
+  opacity: 0 !important;
+  transform: translateX(28px) !important;
+}
+
+/* Flash: brief white flare at impact */
+@keyframes spineFlash {
+  0%  { opacity: 1; filter: brightness(8); }
+  100%{ opacity: 1; filter: brightness(1); }
+}
+
+/* Glow pulse: travels down the spine over ~1.5s */
+@keyframes spineIgnite {
+  0%   { height: 0%; }
+  100% { height: 100%; }
+}
+
+/* ── Spine ignition class added by JS ── */
+#career.comet-fired .cSpineFill {
+  opacity: 1;
+  animation: spineIgnite 1.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  .comet, .comet-burst, .comet-ring, .comet-spark { display: none; }
+  #career:not(.comet-fired) .cTimeline::before { opacity: 1; }
+  #career:not(.comet-fired) .cSpineFill        { opacity: 1; }
+  #career:not(.comet-fired) .cEntry            { opacity: 1 !important; transform: none !important; }
 }
 
 /* ============================================================

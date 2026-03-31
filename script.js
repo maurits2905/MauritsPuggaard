@@ -1679,7 +1679,10 @@ function renderCareer() {
   const track = document.getElementById("cTimeline");
   if (!track) return;
 
-  const fill = document.getElementById("cSpineFill");
+  const fill        = document.getElementById("cSpineFill");
+  const section     = document.getElementById("career");
+  const cometEl     = document.getElementById("comet");
+  const burstEl     = document.getElementById("cometBurst");
 
   careerData.forEach((item, i) => {
     const color = CAREER_COLORS[i] || "#9b8cff";
@@ -1687,7 +1690,6 @@ function renderCareer() {
     entry.className = "cEntry";
     entry.dataset.index = String(i);
     entry.style.setProperty("--ce-color", color);
-    entry.style.transitionDelay = i * 55 + "ms";
 
     entry.innerHTML =
       '<div class="cYear" aria-hidden="true">' + escapeHtml(item.year) + "</div>" +
@@ -1706,19 +1708,86 @@ function renderCareer() {
 
   const entries = Array.from(track.querySelectorAll(".cEntry"));
 
-  const revealIO = new IntersectionObserver(
-    (records) => {
-      records.forEach((rec) => {
-        if (rec.isIntersecting) {
-          rec.target.classList.add("cVisible");
-          revealIO.unobserve(rec.target);
-        }
-      });
-    },
-    { rootMargin: "0px 0px -12% 0px", threshold: 0.05 }
-  );
-  entries.forEach((e) => revealIO.observe(e));
+  // ── Comet intro sequence ──────────────────────────────────────
+  let cometFired = false;
 
+  function fireCometSequence() {
+    if (cometFired || !cometEl || !burstEl) return;
+    cometFired = true;
+
+    // Find the top of the spine in section-local coords
+    const sectionRect = section.getBoundingClientRect();
+    const trackRect   = track.getBoundingClientRect();
+    // The spine is at left: 20px + var(--ce-spine-x) inside track
+    // Approximate: read the computed position of the first dot
+    const firstDot = track.querySelector(".cDot");
+    let impactX, impactY;
+    if (firstDot) {
+      const dotRect = firstDot.getBoundingClientRect();
+      impactX = dotRect.left + dotRect.width / 2 - sectionRect.left;
+      impactY = dotRect.top  + dotRect.height / 2 - sectionRect.top;
+    } else {
+      // Fallback: use spine position
+      impactX = trackRect.left - sectionRect.left + 20;
+      impactY = trackRect.top  - sectionRect.top;
+    }
+
+    // Set CSS vars so keyframe can target impact point
+    cometEl.style.setProperty("--cx", impactX + "px");
+    cometEl.style.setProperty("--cy", impactY + "px");
+    cometEl.style.setProperty("--comet-dur", "1.05s");
+
+    // Position burst at impact point
+    burstEl.style.transform = `translate(${impactX}px, ${impactY}px)`;
+
+    // 1. Launch comet
+    cometEl.style.opacity = "1";
+    cometEl.classList.add("fly");
+
+    // 2. Impact: burst + spine ignite
+    setTimeout(() => {
+      burstEl.classList.add("pop");
+
+      // 2a. Ignite spine
+      section.classList.add("comet-fired");
+
+      // 2b. Stagger-reveal entries as spine "pulse" reaches them
+      entries.forEach((entry, i) => {
+        // Spine takes ~1.6s to fill; distribute entries across that window
+        const delay = 180 + i * 200;
+        setTimeout(() => {
+          entry.classList.add("cVisible");
+        }, delay);
+      });
+
+      // 2c. Start scroll-driven active logic after entries are visible
+      setTimeout(startScrollLogic, 180 + entries.length * 200 + 300);
+
+    }, 980); // just before comet opacity hits 0
+  }
+
+  // Trigger when career section enters viewport
+  const introIO = new IntersectionObserver(
+    (records) => {
+      if (records.some((r) => r.isIntersecting)) {
+        fireCometSequence();
+        introIO.disconnect();
+      }
+    },
+    { threshold: 0.18 }
+  );
+  introIO.observe(section);
+
+  // Also fire if already in view on load
+  requestAnimationFrame(() => {
+    const r = section.getBoundingClientRect();
+    if (r.top < window.innerHeight * 0.82) {
+      fireCometSequence();
+      introIO.disconnect();
+    }
+  });
+
+  // ── Scroll-driven active highlight ───────────────────────────
   let currentActive = -1;
   let raf = 0;
 
@@ -1732,7 +1801,10 @@ function renderCareer() {
       1,
       Math.max(0, (vh * 0.5 - trackRect.top) / Math.max(1, trackRect.height))
     );
-    if (fill) fill.style.height = progress * trackRect.height + "px";
+    // Only drive height when comet sequence is done
+    if (section.classList.contains("comet-fired") && fill) {
+      fill.style.height = progress * trackRect.height + "px";
+    }
 
     const viewCenter = vh * 0.5;
     let bestIdx = 0;
@@ -1750,13 +1822,14 @@ function renderCareer() {
     }
   }
 
-  function onScroll() {
-    if (!raf) raf = requestAnimationFrame(updateScroll);
+  function startScrollLogic() {
+    function onScroll() {
+      if (!raf) raf = requestAnimationFrame(updateScroll);
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", updateScroll);
+    requestAnimationFrame(updateScroll);
   }
-
-  window.addEventListener("scroll", onScroll, { passive: true });
-  window.addEventListener("resize", updateScroll);
-  requestAnimationFrame(updateScroll);
 }
 
 // Always start at top on refresh (prevents browser restoring old scroll position)
