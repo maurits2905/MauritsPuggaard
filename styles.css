@@ -8219,23 +8219,21 @@ body[data-theme="light"] .abtTag:hover {
   50%       { transform: translateY(calc(-50% - 7px)); }
 }
 
-/* ── Strip layout — grid-row trick for smooth collapse ── */
+/* ── Strip layout ── */
 .ars-strips {
   display: flex;
   flex-direction: column;
 }
 
 .ars-strip {
-  display: grid;
-  grid-template-rows: 1fr;
   border-top: 1px solid rgba(255, 255, 255, 0.055);
   /* entrance */
   opacity: 0;
   transform: translateX(-32px);
   transition:
     opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.65s cubic-bezier(0.22, 1, 0.36, 1),
-    grid-template-rows 440ms cubic-bezier(0.4, 0, 0.2, 1);
+    transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+  cursor: default;
 }
 
 .ars-strip:last-child {
@@ -8247,22 +8245,28 @@ body[data-theme="light"] .abtTag:hover {
   transform: translateX(0);
 }
 
-/* ── Collapse — rows fold to 0 ── */
+/* ── Collapsed — slim label bar, chips hidden ── */
 .ars-strip.collapsed {
-  grid-template-rows: 0fr;
-  opacity: 0;
-  pointer-events: none;
+  opacity: 0.38;
+  cursor: pointer;
   transition:
-    grid-template-rows 380ms cubic-bezier(0.4, 0, 0.2, 1),
-    opacity 260ms ease;
+    opacity 320ms ease;
 }
 
-/* ── Inner wrapper — overflow:hidden required for grid collapse ── */
+.ars-strip.collapsed:hover {
+  opacity: 0.65;
+}
+
+/* ── Inner wrapper ── */
 .ars-strip-inner {
   overflow: hidden;
   position: relative;
   padding: 28px 24px 26px 32px;
-  transition: padding 480ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition: padding 440ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ars-strip.collapsed .ars-strip-inner {
+  padding: 13px 24px 13px 32px;
 }
 
 /* Left accent bar */
@@ -8358,6 +8362,10 @@ body[data-theme="light"] .abtTag:hover {
   opacity: 0.25;
 }
 
+.ars-strip.collapsed .ars-strip-ghost {
+  opacity: 0 !important;
+}
+
 /* Featured ghost — blooms large */
 .ars-strip.featured .ars-strip-ghost {
   font-size: clamp(110px, 18vw, 220px);
@@ -8374,6 +8382,11 @@ body[data-theme="light"] .abtTag:hover {
   margin-bottom: 16px;
   position: relative;
   z-index: 1;
+  transition: margin-bottom 440ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ars-strip.collapsed .ars-strip-head {
+  margin-bottom: 0;
 }
 
 .ars-strip.featured .ars-strip-head {
@@ -8437,6 +8450,18 @@ body[data-theme="light"] .abtTag:hover {
   gap: 8px;
   position: relative;
   z-index: 1;
+  max-height: 300px;
+  overflow: hidden;
+  transition:
+    max-height 440ms cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 300ms ease,
+    margin-top 440ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ars-strip.collapsed .ars-chips {
+  max-height: 0;
+  opacity: 0;
+  margin-top: 0;
 }
 
 .ars-chip {

@@ -3368,36 +3368,47 @@ async function renderTechStack() {
     }
   });
 
-  // ── Filter tabs — collapse/expand with featured spotlight ──
+  // ── Filter tabs + collapsed strip clicks ──
   const tabs = [...mount.querySelectorAll(".ars-tab")];
-  tabs.forEach((tab) => {
-    tab.addEventListener("click", () => {
-      const cat = tab.dataset.cat;
-      tabs.forEach((t) => { t.classList.remove("active"); t.setAttribute("aria-pressed", "false"); });
-      tab.classList.add("active");
-      tab.setAttribute("aria-pressed", "true");
 
-      if (cat === "all") {
-        strips.forEach((s) => s.classList.remove("featured", "collapsed"));
-        return;
+  function activateCat(cat) {
+    tabs.forEach((t) => { t.classList.remove("active"); t.setAttribute("aria-pressed", "false"); });
+    const matchTab = mount.querySelector(`.ars-tab[data-cat="${cat}"]`);
+    if (matchTab) { matchTab.classList.add("active"); matchTab.setAttribute("aria-pressed", "true"); }
+
+    if (cat === "all") {
+      strips.forEach((s) => s.classList.remove("featured", "collapsed"));
+      return;
+    }
+
+    strips.forEach((s) => {
+      const match = s.dataset.cat === cat;
+      if (match) {
+        s.classList.remove("collapsed");
+        s.classList.add("featured");
+        // Retrigger chip pop animations
+        s.querySelectorAll(".ars-chip").forEach((chip) => {
+          chip.style.animationName = "none";
+          chip.offsetHeight; // reflow
+          chip.style.animationName = "";
+        });
+      } else {
+        s.classList.remove("featured");
+        s.classList.add("collapsed");
       }
+    });
+  }
 
-      strips.forEach((s) => {
-        const match = s.dataset.cat === cat;
-        if (match) {
-          s.classList.remove("collapsed");
-          s.classList.add("featured");
-          // Retrigger chip pop animations
-          s.querySelectorAll(".ars-chip").forEach((chip) => {
-            chip.style.animationName = "none";
-            chip.offsetHeight; // reflow
-            chip.style.animationName = "";
-          });
-        } else {
-          s.classList.remove("featured");
-          s.classList.add("collapsed");
-        }
-      });
+  tabs.forEach((tab) => {
+    tab.addEventListener("click", () => activateCat(tab.dataset.cat));
+  });
+
+  // Clicking a collapsed strip expands it
+  strips.forEach((strip) => {
+    strip.addEventListener("click", () => {
+      if (strip.classList.contains("collapsed")) {
+        activateCat(strip.dataset.cat);
+      }
     });
   });
 }
