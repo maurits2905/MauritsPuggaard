@@ -744,25 +744,8 @@ body[data-theme="light"] .abtTag:hover {
       </div>
 
       <section id="career" class="section careerX">
-        <!-- Comet overlay — spans the full section for the fly-in animation -->
-        <div class="comet-stage" id="cometStage" aria-hidden="true">
-          <div class="comet" id="comet">
-            <div class="comet-tail"></div>
-            <div class="comet-head"></div>
-          </div>
-          <div class="comet-burst" id="cometBurst">
-            <div class="comet-ring"></div>
-            <div class="comet-ring comet-ring--2"></div>
-            <span class="comet-spark" style="--a:0deg"></span>
-            <span class="comet-spark" style="--a:45deg"></span>
-            <span class="comet-spark" style="--a:90deg"></span>
-            <span class="comet-spark" style="--a:135deg"></span>
-            <span class="comet-spark" style="--a:180deg"></span>
-            <span class="comet-spark" style="--a:225deg"></span>
-            <span class="comet-spark" style="--a:270deg"></span>
-            <span class="comet-spark" style="--a:315deg"></span>
-          </div>
-        </div>
+        <!-- Comet canvas — fixed-position full-viewport overlay during animation -->
+        <canvas id="cometCanvas" aria-hidden="true"></canvas>
 
         <div class="careerHead r">
           <div class="secLabel">
