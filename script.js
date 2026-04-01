@@ -3051,6 +3051,7 @@ async function init() {
   initAboutReveal();
   initAboutStats();
   initStory();
+  initChapterRail();
 
   // Career
   renderCareer();
@@ -3273,6 +3274,52 @@ init().catch((e) => {
     window.setTimeout(() => el.remove(), 650);
   }
 });
+
+/* ─────────────────────────────────────────────────────────────────
+   Chapter Rail — scroll-driven narrative progress indicator
+   Maps 8 narrative stages (Field → Contact) to their section IDs
+   and highlights the current stage as the user scrolls.
+───────────────────────────────────────────────────────────────── */
+function initChapterRail() {
+  const rail = document.getElementById("crRail");
+  if (!rail) return;
+
+  const STOPS = ["hero", "showcase", "about", "career", "work", "tech", "ask", "contact"];
+
+  const items      = Array.from(rail.querySelectorAll(".crItem"));
+  const sectionEls = STOPS.map((id) => document.getElementById(id));
+
+  let activeIdx = -1;
+  let raf = 0;
+
+  function setActive(idx) {
+    if (idx === activeIdx) return;
+    activeIdx = idx;
+    items.forEach((el, i) => el.classList.toggle("cr-active", i === idx));
+  }
+
+  function update() {
+    raf = 0;
+    // Section becomes active when its top crosses 40% from viewport top.
+    // Walk forward — last section whose top ≤ threshold wins.
+    const threshold = window.innerHeight * 0.40;
+    let best = 0;
+    sectionEls.forEach((el, i) => {
+      if (el && el.getBoundingClientRect().top <= threshold) best = i;
+    });
+    setActive(best);
+  }
+
+  window.addEventListener("scroll", () => {
+    if (!raf) raf = requestAnimationFrame(update);
+  }, { passive: true });
+
+  window.addEventListener("resize", () => {
+    if (!raf) raf = requestAnimationFrame(update);
+  }, { passive: true });
+
+  update(); // set initial active state
+}
 
 /* ---------------------------
    Tech Stack tiles (grouped)

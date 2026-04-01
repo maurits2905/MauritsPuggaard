@@ -8608,6 +8608,126 @@ body[data-theme="light"] .abtTag:hover {
 }
 
 /* ============================================================
+   CHAPTER RAIL — persistent narrative progress indicator
+   ============================================================ */
+
+.crRail {
+  position: fixed;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 9000;
+  pointer-events: none;
+  /* Only render in a viewport wide enough to have a gutter */
+  display: none;
+}
+
+@media (min-width: 1100px) {
+  .crRail { display: block; }
+}
+
+.crTrack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  position: relative;
+  padding: 4px 0;
+}
+
+/* Spine connecting the dots */
+.crTrack::before {
+  content: '';
+  position: absolute;
+  right: 3px;            /* centres on the 5–7 px dot */
+  top: 12px;
+  bottom: 12px;
+  width: 1px;
+  background: rgba(155, 140, 255, 0.09);
+  pointer-events: none;
+}
+
+.crItem {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 0;
+  text-decoration: none;
+  pointer-events: all;
+  cursor: pointer;
+  position: relative;
+}
+
+.crDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(155, 140, 255, 0.20);
+  transition:
+    background  0.32s ease,
+    box-shadow  0.32s ease,
+    width       0.32s ease,
+    height      0.32s ease;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.crLabel {
+  font-family: ui-monospace, 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  font-size: 8px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0);
+  transition: color 0.28s ease;
+  white-space: nowrap;
+  user-select: none;
+  line-height: 1;
+}
+
+/* — Active — */
+.crItem.cr-active .crDot {
+  width: 7px;
+  height: 7px;
+  background: #9b8cff;
+  box-shadow: 0 0 10px rgba(155, 140, 255, 0.55);
+}
+
+.crItem.cr-active .crLabel {
+  color: rgba(155, 140, 255, 0.85);
+}
+
+/* — Hover (any item) — */
+.crItem:hover .crDot {
+  background: rgba(155, 140, 255, 0.52);
+}
+
+.crItem:hover .crLabel {
+  color: rgba(255, 255, 255, 0.38);
+}
+
+/* ── Light mode overrides ── */
+[data-theme="light"] .crTrack::before {
+  background: rgba(80, 60, 180, 0.12);
+}
+
+[data-theme="light"] .crDot {
+  background: rgba(80, 60, 180, 0.22);
+}
+
+[data-theme="light"] .crItem.cr-active .crDot {
+  background: #6a50e8;
+  box-shadow: 0 0 10px rgba(100, 80, 220, 0.38);
+}
+
+[data-theme="light"] .crItem.cr-active .crLabel {
+  color: rgba(80, 60, 180, 0.88);
+}
+
+[data-theme="light"] .crItem:hover .crLabel {
+  color: rgba(0, 0, 0, 0.35);
+}
+
+/* ============================================================
    LIGHT MODE COMPREHENSIVE FIXES
    ============================================================ */
 
