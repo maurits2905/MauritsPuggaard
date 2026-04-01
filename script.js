@@ -1858,37 +1858,33 @@ function renderCareer() {
 
     // Dynamic endpoints read fresh each frame so they're accurate
     const SX = VW * 0.88, SY = VH * 0.06;  // upper-right start
-    const CX = VW * 0.50, CY = VH * 0.38;  // center hover
+    // Arc apex — upper-center, creates a natural curve through the screen
+    const AX = VW * 0.52, AY = VH * 0.28;
     const dot = getFirstDotPos();
     const EX = dot.x, EY = dot.y;
 
     let x, y, r, alpha, tailA;
 
-    if (t <= 0.44) {
-      // Phase 1 — fly from upper-right toward center, growing
-      const p = ease(t / 0.44);
-      x = lerp(SX, CX, p);
-      y = lerp(SY, CY, p);
-      r = lerp(1.5, 19, Math.pow(t / 0.44, 0.55));
-      alpha = clamp(t / 0.05, 0, 1);
-      tailA  = clamp(t / 0.10, 0, 0.9);
-    } else if (t <= 0.63) {
-      // Phase 2 — hover at center, gentle drift and pulse
-      const p = (t - 0.44) / 0.19;
-      x = CX + Math.sin(p * Math.PI) * 8;
-      y = CY - Math.sin(p * Math.PI) * 4;
-      r = 19 + Math.sin(p * Math.PI * 4) * 2;
-      alpha = 1;
-      tailA  = 0.55;
-    } else {
-      // Phase 3 — dive to first dot, shrink to dot radius (5.5 px)
-      const p = ease((t - 0.63) / 0.37);
-      x = lerp(CX, EX, p);
-      y = lerp(CY, EY, p);
-      r = lerp(19, 5.5, p);
-      alpha = 1;
-      tailA  = lerp(0.55, 0.12, p);
-    }
+    // Single continuous arc: upper-right → apex → first dot
+    // Quadratic bezier gives a smooth natural arc with no stop
+    const bx = lerp(lerp(SX, AX, t), lerp(AX, EX, t), t);
+    const by = lerp(lerp(SY, AY, t), lerp(AY, EY, t), t);
+
+    // Apply ease to time for smoother feel — faster mid-flight, eases in/out
+    const te = ease(t);
+    x = lerp(lerp(SX, AX, te), lerp(AX, EX, te), te);
+    y = lerp(lerp(SY, AY, te), lerp(AY, EY, te), te);
+
+    // Size: grows to peak at apex (t=0.5) then shrinks to dot size
+    const peakR = 18;
+    r = t < 0.5
+      ? lerp(1.5, peakR, Math.pow(t * 2, 0.55))
+      : lerp(peakR, 5.5, ease((t - 0.5) * 2));
+
+    alpha = clamp(t / 0.04, 0, 1);
+    tailA  = t < 0.5
+      ? clamp(t / 0.08, 0, 0.9)
+      : lerp(0.9, 0.12, ease((t - 0.5) * 2));
 
     // Record trail
     if (t < 0.99) {
@@ -1921,6 +1917,7 @@ function renderCareer() {
       entries.forEach((e, i) => setTimeout(() => e.classList.add("cVisible"), i * 130));
       setTimeout(() => {
         canvas.style.display = "none";
+        unlockScroll();
         startScrollLogic();
       }, entries.length * 130 + 500);
     }
@@ -1965,6 +1962,30 @@ function renderCareer() {
     }
   }
 
+  // ── Scroll lock — prevent scrolling past the animation ──────────
+  let scrollLocked = false;
+  let savedScrollY = 0;
+
+  function lockScroll() {
+    if (scrollLocked) return;
+    scrollLocked = true;
+    savedScrollY = window.scrollY;
+    document.body.style.position  = "fixed";
+    document.body.style.top       = `-${savedScrollY}px`;
+    document.body.style.width     = "100%";
+    document.body.style.overflowY = "scroll"; // keep scrollbar width to avoid layout shift
+  }
+
+  function unlockScroll() {
+    if (!scrollLocked) return;
+    scrollLocked = false;
+    document.body.style.position  = "";
+    document.body.style.top       = "";
+    document.body.style.width     = "";
+    document.body.style.overflowY = "";
+    window.scrollTo(0, savedScrollY);
+  }
+
   // ── Scroll trigger: fire once when first entry enters viewport ─
   let triggered = false;
   function checkTrigger() {
@@ -1973,6 +1994,7 @@ function renderCareer() {
     if (r.top < window.innerHeight * 0.70) {
       triggered = true;
       animating  = true;
+      lockScroll();
       canvas.style.display = "block";
       requestAnimationFrame(drawFrame);
     }
