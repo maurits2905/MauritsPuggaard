@@ -1682,9 +1682,8 @@ function renderCareer() {
   const fill    = document.getElementById("cSpineFill");
   const section = document.getElementById("career");
   const canvas  = document.getElementById("cometCanvas");
-  const scene   = document.getElementById("careerScene");
-  const pin     = document.getElementById("careerPin");
 
+  // ── Build DOM entries ─────────────────────────────────────────
   careerData.forEach((item, i) => {
     const color = CAREER_COLORS[i] || "#9b8cff";
     const entry = document.createElement("div");
@@ -1707,59 +1706,51 @@ function renderCareer() {
 
   const entries = Array.from(track.querySelectorAll(".cEntry"));
 
-  // ── Scroll-driven comet scene ─────────────────────────────────
-  // Skip entirely for reduced-motion
+  // ── Helpers ───────────────────────────────────────────────────
+  const lerp  = (a, b, t) => a + (b - a) * t;
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  const ease  = (t) => t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3) / 2;
+
+  // ── Reduced motion: skip straight to content ──────────────────
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    if (scene) { scene.classList.add("scene-done"); scene.style.height = "auto"; }
     section.classList.add("comet-fired");
     entries.forEach((e) => e.classList.add("cVisible"));
     startScrollLogic();
     return;
   }
 
-  // ── Setup canvas ──
+  // ── Canvas setup ──────────────────────────────────────────────
   const DPR = Math.min(window.devicePixelRatio || 1, 2);
-  const VW  = window.innerWidth;
-  const VH  = window.innerHeight;
-
-  if (scene) scene.style.height = (VH * 3) + "px";
-
-  canvas.width  = VW * DPR;
-  canvas.height = VH * DPR;
+  function resizeCanvas() {
+    const W = window.innerWidth, H = window.innerHeight;
+    canvas.width  = W * DPR;
+    canvas.height = H * DPR;
+    canvas.style.width  = W + "px";
+    canvas.style.height = H + "px";
+  }
+  resizeCanvas();
   const ctx = canvas.getContext("2d");
   ctx.scale(DPR, DPR);
 
-  // ── Path & sizing helpers ──
-  const lerp = (a, b, t) => a + (b - a) * t;
-  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
-  const ease  = (t) => t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2;
-
-  // Start: slightly right of center, near top
-  const SX = VW * 0.62, SY = VH * 0.04;
-  // Center stage: dead center
-  const CX = VW * 0.50, CY = VH * 0.50;
-  // End: top of timeline spine (approximated — will refine once entries exist)
-  let EX = VW * 0.38, EY = VH * 0.72;
-
-  // Trail history
+  // ── Trail ─────────────────────────────────────────────────────
   const trail = [];
-  const MAX_TRAIL = 120;
+  const MAX_TRAIL = 90;
 
-  // Burst state (populated at impact)
-  let bursting = false;
-  let burstAge = 0;
+  // ── Burst ─────────────────────────────────────────────────────
+  let bursting = false, burstAge = 0;
   let rings = [], sparks = [];
+  let impactX = 0, impactY = 0;
 
   function spawnBurst(x, y) {
-    bursting = true;
-    burstAge = 0;
+    impactX = x; impactY = y;
+    bursting = true; burstAge = 0;
     rings = [
-      { r: 3, maxR: 100, a: 1.0, col: "155,140,255" },
+      { r: 3, maxR: 100, a: 1.0,  col: "155,140,255" },
       { r: 3, maxR: 145, a: 0.75, col: "68,240,177"  },
       { r: 3, maxR: 80,  a: 0.6,  col: "224,96,255"  },
     ];
-    for (let i = 0; i < 20; i++) {
-      const ang = (i / 20) * Math.PI * 2 + Math.random() * 0.3;
+    for (let i = 0; i < 22; i++) {
+      const ang = (i / 22) * Math.PI * 2 + Math.random() * 0.3;
       const spd = 1.8 + Math.random() * 3.8;
       const cols = ["255,255,255","155,140,255","68,240,177","224,96,255","126,180,255"];
       sparks.push({
@@ -1803,7 +1794,7 @@ function renderCareer() {
     ctx.fillStyle = core;
     ctx.beginPath(); ctx.arc(x, y, coreR, 0, Math.PI * 2); ctx.fill();
 
-    // 4. Four-point star flare (diffraction spikes)
+    // 4. Four-point diffraction spikes
     const spikeLen = r * 14;
     [[0, 1], [Math.PI/2, 0.6], [Math.PI, 1], [Math.PI*1.5, 0.6]].forEach(([ang, str]) => {
       const ex = x + Math.cos(ang) * spikeLen * str;
@@ -1817,7 +1808,7 @@ function renderCareer() {
       ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(ex, ey); ctx.stroke();
     });
 
-    // 5. Diagonal 45° secondary spikes (thinner)
+    // 5. Diagonal secondary spikes (thinner)
     const dLen = spikeLen * 0.55;
     [Math.PI/4, Math.PI*3/4, Math.PI*5/4, Math.PI*7/4].forEach((ang) => {
       const ex2 = x + Math.cos(ang) * dLen;
@@ -1831,11 +1822,11 @@ function renderCareer() {
     });
   }
 
-  // ── Draw glowing tail segment between two points ──
+  // ── Draw glowing tail segment ──────────────────────────────────
   function drawTailSegment(x1, y1, x2, y2, w, alpha) {
     if (alpha < 0.01) return;
     const grd = ctx.createLinearGradient(x1, y1, x2, y2);
-    grd.addColorStop(0, `rgba(155,140,255,${(alpha * 0.0).toFixed(3)})`);
+    grd.addColorStop(0, `rgba(155,140,255,0)`);
     grd.addColorStop(1, `rgba(210,200,255,${(alpha * 0.6).toFixed(3)})`);
     ctx.strokeStyle = grd;
     ctx.lineWidth = w;
@@ -1843,161 +1834,172 @@ function renderCareer() {
     ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
   }
 
-  // ── Scroll progress → animation progress ──
-  // Phases: 0-0.55 = comet flies in; 0.55-0.70 = comet centered (hovering); 0.70-0.85 = dives to spine; 0.85-1.0 = burst + reveal
+  // ── Get first dot's current screen position ───────────────────
+  function getFirstDotPos() {
+    const dot = entries[0] && entries[0].querySelector(".cDot");
+    if (!dot) return { x: window.innerWidth * 0.42, y: window.innerHeight * 0.62 };
+    const r = dot.getBoundingClientRect();
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+  }
+
+  // ── Time-based animation (triggers once on scroll) ────────────
+  let animating  = false;
+  let animStart  = null;
   let impactDone = false;
-  let revealProgress = 0; // 0→1 after impact, drives card cascade
+  const ANIM_DURATION = 2600; // ms total
 
-  function getScrollProgress() {
-    if (!scene) return 0;
-    const rect = scene.getBoundingClientRect();
-    const scrollable = scene.offsetHeight - VH;
-    return clamp(-rect.top / scrollable, 0, 1);
-  }
+  function drawFrame(ts) {
+    if (!animStart) animStart = ts;
+    const elapsed = ts - animStart;
+    const t = clamp(elapsed / ANIM_DURATION, 0, 1);
 
-  function getCometState(p) {
-    // pos, radius, alpha, tailAlpha
-    if (p <= 0.55) {
-      // Approaching: start tiny top-right → large center
-      const t = ease(p / 0.55);
-      const x = lerp(SX, CX, t);
-      const y = lerp(SY, CY, t);
-      const r = lerp(1.2, 22, Math.pow(p / 0.55, 0.45));
-      return { x, y, r, alpha: clamp(p / 0.08, 0, 1), tailA: clamp(p / 0.15, 0, 0.85) };
-    } else if (p <= 0.72) {
-      // Centered and hovering — slow subtle drift
-      const t = (p - 0.55) / 0.17;
-      const drift = Math.sin(t * Math.PI) * 8;
-      return { x: CX + drift, y: CY - drift * 0.4, r: lerp(22, 14, ease(t)), alpha: 1, tailA: 0.7 };
-    } else if (p <= 0.87) {
-      // Diving to spine
-      const t = ease((p - 0.72) / 0.15);
-      const x = lerp(CX, EX, t);
-      const y = lerp(CY, EY, t);
-      const r = lerp(14, 7, t);
-      return { x, y, r, alpha: 1, tailA: lerp(0.7, 0.4, t) };
-    } else {
-      // Post-impact
-      return { x: EX, y: EY, r: 0, alpha: 0, tailA: 0 };
-    }
-  }
-
-  function drawFrame() {
-    const p = getScrollProgress();
-    const state = getCometState(p);
-
+    const VW = window.innerWidth, VH = window.innerHeight;
     ctx.clearRect(0, 0, VW, VH);
 
+    // Dynamic endpoints read fresh each frame so they're accurate
+    const SX = VW * 0.88, SY = VH * 0.06;  // upper-right start
+    const CX = VW * 0.50, CY = VH * 0.38;  // center hover
+    const dot = getFirstDotPos();
+    const EX = dot.x, EY = dot.y;
+
+    let x, y, r, alpha, tailA;
+
+    if (t <= 0.44) {
+      // Phase 1 — fly from upper-right toward center, growing
+      const p = ease(t / 0.44);
+      x = lerp(SX, CX, p);
+      y = lerp(SY, CY, p);
+      r = lerp(1.5, 19, Math.pow(t / 0.44, 0.55));
+      alpha = clamp(t / 0.05, 0, 1);
+      tailA  = clamp(t / 0.10, 0, 0.9);
+    } else if (t <= 0.63) {
+      // Phase 2 — hover at center, gentle drift and pulse
+      const p = (t - 0.44) / 0.19;
+      x = CX + Math.sin(p * Math.PI) * 8;
+      y = CY - Math.sin(p * Math.PI) * 4;
+      r = 19 + Math.sin(p * Math.PI * 4) * 2;
+      alpha = 1;
+      tailA  = 0.55;
+    } else {
+      // Phase 3 — dive to first dot, shrink to dot radius (5.5 px)
+      const p = ease((t - 0.63) / 0.37);
+      x = lerp(CX, EX, p);
+      y = lerp(CY, EY, p);
+      r = lerp(19, 5.5, p);
+      alpha = 1;
+      tailA  = lerp(0.55, 0.12, p);
+    }
+
     // Record trail
-    if (p < 0.87) {
-      trail.unshift({ x: state.x, y: state.y, r: state.r });
+    if (t < 0.99) {
+      trail.unshift({ x, y, r });
       if (trail.length > MAX_TRAIL) trail.pop();
     } else {
-      // Clear trail on impact
       trail.length = 0;
     }
 
     // Draw tail
     trail.forEach((pt, i) => {
+      if (i >= trail.length - 1) return;
       const frac = 1 - i / trail.length;
-      const segAlpha = frac * frac * state.tailA;
-      const segW = Math.max(pt.r * frac * 0.35, 0.5);
-      if (i < trail.length - 1) {
-        const next = trail[i + 1];
-        drawTailSegment(pt.x, pt.y, next.x, next.y, segW, segAlpha);
-      }
+      drawTailSegment(
+        pt.x, pt.y, trail[i + 1].x, trail[i + 1].y,
+        Math.max(pt.r * frac * 0.3, 0.5),
+        frac * frac * tailA
+      );
     });
 
-    // Draw comet/star head
-    if (state.r > 0.2 && state.alpha > 0.01) {
-      drawStar(state.x, state.y, state.r, state.alpha);
-    }
+    // Draw comet head
+    if (r > 0.2 && alpha > 0.01) drawStar(x, y, r, alpha);
 
-    // Impact trigger
-    if (p >= 0.87 && !impactDone) {
+    // Impact at animation end
+    if (t >= 0.99 && !impactDone) {
       impactDone = true;
-      // Refine EX/EY to actual first dot position
-      const firstDot = track.querySelector(".cDot");
-      if (firstDot) {
-        const pinRect = pin.getBoundingClientRect();
-        const dr = firstDot.getBoundingClientRect();
-        EX = dr.left + dr.width  / 2 - pinRect.left;
-        EY = dr.top  + dr.height / 2 - pinRect.top;
-      }
       spawnBurst(EX, EY);
       section.classList.add("comet-fired");
-      entries.forEach((e, i) => setTimeout(() => e.classList.add("cVisible"), i * 160));
-      setTimeout(startScrollLogic, entries.length * 160 + 300);
+      // Stagger reveal — quick cascade so it feels alive
+      entries.forEach((e, i) => setTimeout(() => e.classList.add("cVisible"), i * 130));
+      setTimeout(() => {
+        canvas.style.display = "none";
+        startScrollLogic();
+      }, entries.length * 130 + 500);
     }
 
-    // Draw burst rings
+    // Draw burst rings + sparks
     if (bursting) {
       burstAge++;
-      rings = rings.filter(r => r.a > 0.01);
-      rings.forEach((ring) => {
-        ring.r += (ring.maxR - ring.r) * 0.085;
-        ring.a *= 0.90;
-        ctx.shadowColor = `rgba(${ring.col},0.5)`;
-        ctx.shadowBlur = 12;
-        ctx.strokeStyle = `rgba(${ring.col},${ring.a.toFixed(3)})`;
-        ctx.lineWidth = 1.8;
-        ctx.beginPath(); ctx.arc(EX, EY, ring.r, 0, Math.PI * 2); ctx.stroke();
-        ctx.shadowBlur = 0;
+      rings = rings.filter((rg) => rg.a > 0.01);
+      rings.forEach((rg) => {
+        rg.r += (rg.maxR - rg.r) * 0.085;
+        rg.a *= 0.90;
+        ctx.shadowColor = `rgba(${rg.col},0.5)`;
+        ctx.shadowBlur  = 12;
+        ctx.strokeStyle = `rgba(${rg.col},${rg.a.toFixed(3)})`;
+        ctx.lineWidth   = 1.8;
+        ctx.beginPath(); ctx.arc(impactX, impactY, rg.r, 0, Math.PI * 2); ctx.stroke();
+        ctx.shadowBlur  = 0;
       });
-
-      sparks = sparks.filter(s => s.life > 0);
+      sparks = sparks.filter((s) => s.life > 0);
       sparks.forEach((s) => {
         s.x += s.vx; s.y += s.vy;
         s.vx *= 0.955; s.vy *= 0.955;
         s.life = Math.max(0, s.life - s.decay);
         const a = s.life * s.life;
-        ctx.shadowColor = `rgba(${s.col},${(a*0.6).toFixed(3)})`;
-        ctx.shadowBlur = 6;
-        ctx.fillStyle = `rgba(${s.col},${a.toFixed(3)})`;
+        ctx.shadowColor = `rgba(${s.col},${(a * 0.6).toFixed(3)})`;
+        ctx.shadowBlur  = 6;
+        ctx.fillStyle   = `rgba(${s.col},${a.toFixed(3)})`;
         ctx.beginPath(); ctx.arc(s.x, s.y, s.size * s.life, 0, Math.PI * 2); ctx.fill();
-        ctx.shadowBlur = 0;
+        ctx.shadowBlur  = 0;
       });
-
       if (rings.length === 0 && sparks.length === 0) bursting = false;
     }
 
-    // Draw remaining star glow at EX/EY while burst fades
+    // Fading star residue at impact point while burst plays
     if (impactDone && bursting) {
-      drawStar(EX, EY, lerp(9, 3, Math.min(burstAge / 60, 1)), lerp(0.9, 0, Math.min(burstAge / 60, 1)));
+      const fadeT = clamp(burstAge / 60, 0, 1);
+      drawStar(impactX, impactY, lerp(8, 2.5, fadeT), lerp(0.85, 0, fadeT));
     }
 
-    // Mark scene done once fully scrolled past + burst settles
-    if (p >= 1 && !bursting && scene && !scene.classList.contains("scene-done")) {
-      scene.classList.add("scene-done");
+    if (animating && (!impactDone || bursting)) {
+      requestAnimationFrame(drawFrame);
     }
-
-    requestAnimationFrame(drawFrame);
   }
 
-  requestAnimationFrame(drawFrame);
+  // ── Scroll trigger: fire once when first entry enters viewport ─
+  let triggered = false;
+  function checkTrigger() {
+    if (triggered || !entries[0]) return;
+    const r = entries[0].getBoundingClientRect();
+    if (r.top < window.innerHeight * 0.70) {
+      triggered = true;
+      animating  = true;
+      canvas.style.display = "block";
+      requestAnimationFrame(drawFrame);
+    }
+  }
+  window.addEventListener("scroll", checkTrigger, { passive: true });
+  checkTrigger(); // catch the case where section is already visible on load
 
-  // Scroll listener to force redraws
-  window.addEventListener("scroll", () => requestAnimationFrame(drawFrame), { passive: true });
-
-  // ── Scroll-driven active highlight ───────────────────────────
+  // ── Scroll-driven spine fill + active card highlight ──────────
   let currentActive = -1;
   let raf = 0;
 
   function updateScroll() {
     raf = 0;
     if (!entries.length) return;
-    const vh = window.innerHeight;
+    const vh        = window.innerHeight;
     const trackRect = track.getBoundingClientRect();
-    const progress = Math.min(1, Math.max(0,
-      (vh * 0.5 - trackRect.top) / Math.max(1, trackRect.height)
-    ));
+    const progress  = clamp(
+      (vh * 0.5 - trackRect.top) / Math.max(1, trackRect.height),
+      0, 1
+    );
     if (section.classList.contains("comet-fired") && fill) {
       fill.style.height = progress * trackRect.height + "px";
     }
     const viewCenter = vh * 0.5;
     let bestIdx = 0, bestDist = Infinity;
     entries.forEach((entry, i) => {
-      const r = entry.getBoundingClientRect();
+      const r    = entry.getBoundingClientRect();
       const dist = Math.abs(r.top + r.height * 0.5 - viewCenter);
       if (dist < bestDist) { bestDist = dist; bestIdx = i; }
     });

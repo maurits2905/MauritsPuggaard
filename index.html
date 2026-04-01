@@ -743,30 +743,24 @@ body[data-theme="light"] .abtTag:hover {
         <div class="sbLine sbLine--r"></div>
       </div>
 
-      <!-- Tall wrapper gives scroll room for the pinned comet scene -->
-      <div id="careerScene">
-        <div id="careerPin">
-          <!-- Canvas covers full viewport during pin phase -->
-          <canvas id="cometCanvas" aria-hidden="true"></canvas>
+      <!-- Fixed canvas for the comet — sits above everything during animation -->
+      <canvas id="cometCanvas" aria-hidden="true"></canvas>
 
-          <!-- Career content — hidden until comet fires -->
-          <section id="career" class="section careerX">
-            <div class="careerHead r">
-              <div class="secLabel">
-                <span class="secNum">01</span>
-                <span class="secLabelLine"></span>
-                <span class="secCategory">Timeline</span>
-              </div>
-              <h2 class="careerTitle sig-hidden" data-text="Experience">Experience</h2>
-            </div>
-
-            <div class="cTimeline" id="cTimeline">
-              <div class="cSpineFill" id="cSpineFill" aria-hidden="true"></div>
-              <!-- entries injected by JS -->
-            </div>
-          </section>
+      <section id="career" class="section careerX">
+        <div class="careerHead r">
+          <div class="secLabel">
+            <span class="secNum">01</span>
+            <span class="secLabelLine"></span>
+            <span class="secCategory">Timeline</span>
+          </div>
+          <h2 class="careerTitle sig-hidden" data-text="Experience">Experience</h2>
         </div>
-      </div>
+
+        <div class="cTimeline" id="cTimeline">
+          <div class="cSpineFill" id="cSpineFill" aria-hidden="true"></div>
+          <!-- entries injected by JS -->
+        </div>
+      </section>
 
       <!-- ── Signal bridge ── -->
       <div class="secBridge" data-num="04" data-label="PROJECTS">

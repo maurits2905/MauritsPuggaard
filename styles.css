@@ -8568,87 +8568,27 @@ body[data-theme="light"] .abtTag:hover {
 }
 
 /* ============================================================
-   COMET SCROLL SCENE
+   COMET INTRO ANIMATION
    ============================================================ */
 
-/* Tall wrapper — scroll room for the pinned animation */
-#careerScene {
-  /* Height set by JS based on device: 300vh for desktop */
-  position: relative;
-}
-
-/* Sticky pin — sticks to top while user scrolls through careerScene */
-#careerPin {
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  overflow: hidden;
-}
-
-/* Canvas covers the full pinned viewport */
+/* Fixed overlay — hidden until JS triggers the comet */
 #cometCanvas {
-  position: absolute;
+  position: fixed;
   inset: 0;
   width: 100%;
   height: 100%;
   pointer-events: none;
-  z-index: 2;
-}
-
-/* Career content sits behind canvas during animation */
-#career {
-  position: absolute;
-  inset: 0;
-  overflow-y: auto;
-  z-index: 1;
-  opacity: 0;
-  transition: opacity 0.6s ease;
-}
-
-#career.comet-fired {
-  opacity: 1;
-}
-
-/* Once JS marks scene done, unpin and let content flow naturally */
-#careerScene.scene-done {
-  height: auto !important;
-}
-
-#careerScene.scene-done #careerPin {
-  position: relative;
-  height: auto;
-  overflow: visible;
-}
-
-#careerScene.scene-done #career {
-  position: relative;
-  overflow: visible;
-}
-
-#careerScene.scene-done #cometCanvas {
+  z-index: 9999;
   display: none;
 }
 
 /* Hide spine & entries until comet fires */
-#career:not(.comet-fired) .cTimeline::before { opacity: 0; }
+#career:not(.comet-fired) .cTimeline::before { opacity: 0; transition: opacity 0.4s; }
 #career:not(.comet-fired) .cSpineFill        { opacity: 0; }
 #career:not(.comet-fired) .cEntry            { opacity: 0 !important; transform: translateX(28px) !important; }
 
-@keyframes spineIgnite {
-  0%   { height: 0; }
-  100% { height: 100%; }
-}
-
-#career.comet-fired .cSpineFill {
-  opacity: 1;
-  animation: spineIgnite 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-
 /* Reduce motion: skip straight to content */
 @media (prefers-reduced-motion: reduce) {
-  #careerScene { height: auto !important; }
-  #careerPin   { position: relative; height: auto; overflow: visible; }
-  #career      { position: relative; overflow: visible; opacity: 1 !important; }
   #cometCanvas { display: none !important; }
   #career:not(.comet-fired) .cTimeline::before { opacity: 1; }
   #career:not(.comet-fired) .cSpineFill        { opacity: 1; }
