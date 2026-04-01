@@ -603,15 +603,17 @@ body[data-theme="light"] .abtTag:hover {
       <section id="showcase" class="section showcaseSection">
         <div class="showcaseInner">
 
+          <!-- Canvas first: particles emerge directly from the hero's fading field -->
+          <div class="showcaseCanvasWrap">
+            <canvas id="showcaseCanvas" aria-hidden="true"></canvas>
+          </div>
+
+          <!-- Header floats below the particle field -->
           <header class="showcaseHeader">
             <p class="showcaseKicker">// ENGINEERED</p>
             <h2 class="showcaseTitle" id="showcaseTitle">Trusted to deliver</h2>
             <p class="showcaseDesc" id="showcaseDesc">Enterprise precision, modern instincts. The full picture unfolds below.</p>
           </header>
-
-          <div class="showcaseCanvasWrap">
-            <canvas id="showcaseCanvas" aria-hidden="true"></canvas>
-          </div>
 
           <nav class="showcasePills" aria-label="Expertise states">
             <button class="showcasePill is-active" data-idx="0" aria-pressed="true">Professional</button>

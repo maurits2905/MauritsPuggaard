@@ -658,14 +658,15 @@ input {
   bottom: -1px;
   left: 0;
   z-index: 2;
-  /* Fades the star canvas to the page background — targets --bg (#060711)
-     so the hero blends seamlessly into the showcase below. */
-  height: clamp(320px, 45vh, 560px);
+  /* Gentler fade — lets more particles breathe at the lower edge,
+     so the hero field flows into the showcase canvas rather than cutting hard. */
+  height: clamp(340px, 48vh, 580px);
   background: linear-gradient(
     to bottom,
     rgba(6, 7, 17, 0)    0%,
-    rgba(6, 7, 17, 0.30) 38%,
-    rgba(6, 7, 17, 0.82) 65%,
+    rgba(6, 7, 17, 0.12) 34%,
+    rgba(6, 7, 17, 0.46) 58%,
+    rgba(6, 7, 17, 0.82) 78%,
     #060711               100%
   );
   pointer-events: none;
@@ -7792,8 +7793,12 @@ body[data-theme="light"] .abtTag:hover {
 ═══════════════════════════════════════════════════════════════════════ */
 
 .showcaseSection {
-  padding-top: 80px;
+  /* Pull the section up so the particle canvas starts in the hero's fade zone —
+     the showcase canvas appears to grow from the same dark field as the hero. */
+  padding-top: 0;
+  margin-top: -56px;
   padding-bottom: 72px;
+  overflow: visible; /* allow ::before glow to extend above */
 }
 
 .showcaseInner {
@@ -7811,6 +7816,7 @@ body[data-theme="light"] .abtTag:hover {
 
 .showcaseHeader {
   text-align: center;
+  margin-top: 12px;
   margin-bottom: 0;
   padding-bottom: 20px;
 }
@@ -7864,6 +7870,22 @@ body[data-theme="light"] .abtTag:hover {
      already centers this oversized item correctly — no extra margin needed. */
   position: relative;
   width: 100vw;
+  /* Top fade: showcase particles emerge from the same darkness the hero
+     particles dissolved into — one continuous particle field across the boundary. */
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent       0%,
+    rgba(0,0,0, 0.35) 5%,
+    rgba(0,0,0, 0.72) 11%,
+    black             20%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent       0%,
+    rgba(0,0,0, 0.35) 5%,
+    rgba(0,0,0, 0.72) 11%,
+    black             20%
+  );
 }
 
 #showcaseCanvas {
@@ -7918,8 +7940,8 @@ body[data-theme="light"] .abtTag:hover {
 /* ── Responsive ── */
 
 @media (max-width: 760px) {
-  .showcaseSection { padding-top: 56px; padding-bottom: 48px; }
-  .showcaseHeader { padding-bottom: 12px; }
+  .showcaseSection { padding-top: 0; margin-top: -36px; padding-bottom: 48px; }
+  .showcaseHeader { padding-bottom: 12px; margin-top: 8px; }
   #showcaseCanvas { height: clamp(360px, 90vw, 520px); }
   .showcasePill { padding: 8px 18px; font-size: 11px; }
 }
@@ -8618,19 +8640,22 @@ body[data-theme="light"] .abtTag:hover {
      teal    rgba(68,240,177,…)  — proof / trajectory landing
    ============================================================ */
 
-/* Hero → Showcase: star-field energy settling into signal */
+/* Hero → Showcase: star-field energy settling into signal.
+   With the section pulled up –56px, this glow now bleeds 200px above
+   the natural section boundary — right into the hero's lower fade zone. */
 .showcaseSection::before {
   content: '';
   position: absolute;
-  top: -100px;
+  top: -200px;
   left: 50%;
   transform: translateX(-50%);
-  width: 80%;
-  max-width: 900px;
-  height: 280px;
+  width: 90%;
+  max-width: 1000px;
+  height: 420px;
   background: radial-gradient(ellipse at 50% 0%,
-    rgba(155, 140, 255, 0.08) 0%,
-    transparent 65%
+    rgba(155, 140, 255, 0.13) 0%,
+    rgba(126, 180, 255, 0.05) 40%,
+    transparent               72%
   );
   pointer-events: none;
   z-index: 0;
