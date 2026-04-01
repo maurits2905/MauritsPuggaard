@@ -8029,6 +8029,18 @@ body[data-theme="light"] .abtTag:hover {
   transform: translateY(0) scale(1);
 }
 
+/* ── Narrative tagline beneath each bridge ── */
+.sbCopy {
+  text-align: center;
+  font-size: 0.67rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.20);
+  margin: -10px 0 28px;
+  font-family: ui-monospace, 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  pointer-events: none;
+}
+
 /* ── Mobile: simpler, no animation ── */
 @media (max-width: 640px) {
   .secBridge {
@@ -8707,6 +8719,10 @@ body[data-theme="light"] .abtTag:hover {
 }
 
 /* ── Signal Bridge connectors ── */
+[data-theme="light"] .sbCopy {
+  color: rgba(0, 0, 0, 0.22);
+}
+
 [data-theme="light"] .sbLine--l {
   background: linear-gradient(to right,
     transparent 0%,

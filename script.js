@@ -833,7 +833,7 @@ function initShowcase() {
   /* ── State metadata ── */
   const STATES = [
     { title: 'Trusted to deliver',
-      desc:  'A consultant you can rely on. Sharp, structured, and practical.' },
+      desc:  'Enterprise precision, modern instincts. The full picture unfolds below.' },
     { title: 'Enterprise ready',
       desc:  'Deep expertise across S/4HANA, BTP, ABAP, and the full SAP stack.' },
     { title: 'Built end-to-end',
