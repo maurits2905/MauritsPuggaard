@@ -63,7 +63,7 @@ html {
 }
 
 section[id] {
-  scroll-margin-top: calc(var(--navH) + 12px);
+  scroll-margin-top: calc(var(--navH) + 24px);
 }
 
 body {
@@ -1434,7 +1434,7 @@ html[data-theme=”light”] body[data-bg=”stars”] .bgDeep {
 
 /* Make anchor jumps land below the fixed header */
 :where(section[id], main[id]) {
-  scroll-margin-top: calc(var(--navH) + 18px);
+  scroll-margin-top: calc(var(--navH) + 24px);
 }
 
 .pillActive {
@@ -1531,7 +1531,7 @@ html[data-theme=”light”] body[data-bg=”stars”] .bgDeep {
 .section,
 .story,
 .wrap > section {
-  scroll-margin-top: calc(var(--navH) + 22px);
+  scroll-margin-top: calc(var(--navH) + 24px);
 }
 
 /* give the page breathing room so the fixed header doesn't overlap the very top */

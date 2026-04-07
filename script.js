@@ -426,8 +426,14 @@ function initHeaderPillNav() {
     const el = document.getElementById(id);
     if (!el) return;
 
-    const y =
-      el.getBoundingClientRect().top + window.scrollY - getNavOffset() - 14;
+    // Target the first heading/content child so we land at visible content,
+    // not in the blank padding-top that precedes it.
+    const heading = el.querySelector(
+      'h1, h2, .workHead, .techHead, .askHead, .careerTitle, .abtInner, .heroContent'
+    );
+    const anchor = heading || el;
+
+    const y = anchor.getBoundingClientRect().top + window.scrollY - getNavOffset() - 24;
 
     window.scrollTo({
       top: Math.max(0, Math.round(y)),
@@ -485,11 +491,12 @@ function initHeaderPillNav() {
     const id = (location.hash || "").slice(1);
     if (id && document.getElementById(id)) {
       // Don’t “smooth” on initial load; just jump correctly once
-      const y =
-        document.getElementById(id).getBoundingClientRect().top +
-        window.scrollY -
-        getNavOffset() -
-        14;
+      const secEl = document.getElementById(id);
+      const secHeading = secEl.querySelector(
+        "h1, h2, .workHead, .techHead, .askHead, .careerTitle, .abtInner, .heroContent"
+      );
+      const secAnchor = secHeading || secEl;
+      const y = secAnchor.getBoundingClientRect().top + window.scrollY - getNavOffset() - 24;
       window.scrollTo(0, Math.max(0, Math.round(y)));
     }
     pickActiveFromScroll();
@@ -1976,7 +1983,8 @@ function initAskMe() {
     el.className = `askMsg ${who}`;
     el.textContent = text;
     chat.appendChild(el);
-    el.scrollIntoView({ behavior: "smooth", block: "end" });
+    // Scroll only the chat container — never the page
+    chat.scrollTop = chat.scrollHeight;
   };
 
   const setMeta = (text, show = true) => {
