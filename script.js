@@ -2050,6 +2050,14 @@ function initCustomScrollbar() {
 
   const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
 
+  // Match scrollbar height to chapter rail so they span the same range
+  const crRailEl = document.getElementById('crRail');
+  if (crRailEl) {
+    const syncHeight = () => { wrap.style.height = crRailEl.offsetHeight + 'px'; };
+    syncHeight();
+    new ResizeObserver(syncHeight).observe(crRailEl);
+  }
+
   function getDocHeight() {
     return Math.max(
       document.body.scrollHeight,
@@ -2062,20 +2070,19 @@ function initCustomScrollbar() {
   }
 
   function layoutThumb() {
-    // fixed cap size (matches CSS)
-    thumb.style.height = "28px";
+    thumb.style.height = "9px"; // circle dot
   }
 
   function syncThumb() {
     const maxScroll = getMaxScroll();
     const trackH = wrap.clientHeight;
-    const thumbH = thumb.offsetHeight || 28;
+    const thumbH = thumb.offsetHeight || 9;
 
     const fillEl = document.getElementById("cScrollFill");
 
     if (maxScroll <= 0) {
       if (fillEl) fillEl.style.height = "0%";
-      thumb.style.top = `0px`;
+      thumb.style.top = `${thumbH / 2}px`;
       return;
     }
 
@@ -2084,9 +2091,29 @@ function initCustomScrollbar() {
     // fill grows DOWN from top
     if (fillEl) fillEl.style.height = `${(progress * 100).toFixed(3)}%`;
 
-    // cap sits at the bottom of the fill
-    const y = progress * (trackH - thumbH);
+    // dot center tracks the fill end — clamped to stay within the track
+    const y = clamp(progress * trackH, thumbH / 2, trackH - thumbH / 2);
     thumb.style.top = `${y}px`;
+
+    // ── Water-tension merge: dots near the thumb swell toward it ──
+    const wrapTop = wrap.getBoundingClientRect().top;
+    const thumbCY = wrapTop + y;
+    const MERGE_R = 24; // px radius
+    document.querySelectorAll('.crDot').forEach(dot => {
+      const r = dot.getBoundingClientRect();
+      const dotCY = r.top + r.height / 2;
+      const dist = Math.abs(thumbCY - dotCY);
+      if (dist < MERGE_R) {
+        const t = 1 - dist / MERGE_R;           // 0 → 1 as thumb approaches
+        const scale = 1 + t * 1.8;              // swells up to 2.8×
+        const glow  = (0.55 + t * 0.4).toFixed(2);
+        dot.style.transform = `scale(${scale.toFixed(3)})`;
+        dot.style.boxShadow = `0 0 ${8 + t * 10}px rgba(155,140,255,${glow})`;
+      } else {
+        dot.style.transform = '';
+        dot.style.boxShadow = '';
+      }
+    });
   }
 
   function scrollToPosition(clientY) {

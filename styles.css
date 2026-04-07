@@ -534,10 +534,10 @@ body::-webkit-scrollbar {
 .cScroll {
   position: fixed;
   top: 50%;
-  right: 14px;
+  right: 12px;
   z-index: 999;
   width: var(--cscroll-hit);
-  height: 12.5vh;
+  height: 12.5vh; /* overridden by JS to match crRail height */
   user-select: none;
   touch-action: none;
   transform: translateY(-50%);
@@ -552,7 +552,7 @@ body::-webkit-scrollbar {
   left: 50%;
   width: var(--cscroll-rail);
   background: var(--cscroll-track);
-  opacity: 0.55;
+  opacity: 0; /* hidden — crTrack::before spine is the shared track */
   border-radius: 999px;
   transform: translateX(-50%);
 }
@@ -563,12 +563,12 @@ body::-webkit-scrollbar {
   position: absolute;
   top: 0;
   left: 50%;
-  width: var(--cscroll-rail);
+  width: 2px; /* slim — matches spine weight */
   height: 0%;
   background: var(--cscroll-fill);
-  opacity: 0.95;
+  opacity: 0.92;
   border-radius: 999px;
-  box-shadow: 0 0 14px var(--cscroll-glow);
+  box-shadow: 0 0 8px var(--cscroll-glow), 0 0 3px var(--cscroll-fill);
   transform: translateX(-50%);
 }
 
@@ -577,13 +577,14 @@ body::-webkit-scrollbar {
 .cScrollThumb {
   position: absolute;
   left: 50%;
-  width: calc(var(--cscroll-rail) + 1px);
-  height: 34px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
   background: var(--cscroll-fill);
   opacity: 0.98;
-  border-radius: 999px;
-  box-shadow: 0 0 12px var(--cscroll-glow);
-  transform: translateX(-50%);
+  box-shadow: 0 0 10px var(--cscroll-glow), 0 0 4px var(--cscroll-fill);
+  transform: translate(-50%, -50%); /* center the dot on its position */
+  transition: box-shadow 0.15s ease;
 }
 
 /* optional hover/drag emphasis */
@@ -8967,10 +8968,10 @@ body[data-theme="light"] .abtTag:hover {
   content: '';
   position: absolute;
   right: 3px;            /* centres on the 5–7 px dot */
-  top: 12px;
-  bottom: 12px;
+  top: 7px;
+  bottom: 7px;
   width: 1px;
-  background: rgba(155, 140, 255, 0.09);
+  background: rgba(155, 140, 255, 0.12);
   pointer-events: none;
 }
 
@@ -8991,13 +8992,14 @@ body[data-theme="light"] .abtTag:hover {
   border-radius: 50%;
   background: rgba(155, 140, 255, 0.20);
   transition:
-    background  0.32s ease,
-    box-shadow  0.32s ease,
-    width       0.32s ease,
-    height      0.32s ease;
+    background   0.32s ease,
+    box-shadow   0.32s ease,
+    width        0.32s ease,
+    height       0.32s ease,
+    transform    0.14s ease; /* water-tension merge */
   flex-shrink: 0;
   position: relative;
-  z-index: 1;
+  z-index: 2;
 }
 
 .crLabel {
