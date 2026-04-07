@@ -616,117 +616,6 @@ function initSecBridges() {
   bridges.forEach((b) => obs.observe(b));
 }
 
-/* ── Section Curtain Reveal v5 ───────────────────────────────────────────
-   Clean single-line wipe for every .section except #hero and #contact.
-
-   Elements created per section (all removed on completion):
-     .sReveal    — frosted curtain (blur + accent aurora)
-     .sScan      — 2 px accent-blue line with .sScanPill logo inside
-     .sSpark ×10 — small accent sparks that rise from the line
-   ─────────────────────────────────────────────────────────────────────── */
-function initSectionReveal() {
-  if (prefersReducedMotion()) return;
-  if (!window.gsap || !window.ScrollTrigger) return;
-
-  gsap.registerPlugin(ScrollTrigger);
-
-  const SWEEP = 1.10;
-  const START = 0.12;
-
-  document.querySelectorAll(".section:not(#hero):not(#contact)").forEach((section) => {
-    if (getComputedStyle(section).position === "static") section.style.position = "relative";
-    section.style.overflow = "hidden";
-
-    /* ── curtain ── */
-    const curtain = document.createElement("div");
-    curtain.className = "sReveal";
-    curtain.setAttribute("aria-hidden", "true");
-    section.appendChild(curtain);
-
-    /* ── scan line ── */
-    const scan = document.createElement("div");
-    scan.className = "sScan";
-    scan.setAttribute("aria-hidden", "true");
-
-    /* Logo pill travels with the line as a child */
-    const pill = document.createElement("div");
-    pill.className = "sScanPill";
-    pill.setAttribute("aria-hidden", "true");
-    const pillImg = document.createElement("img");
-    pillImg.src = "assets/MP-logo.png";
-    pillImg.alt = "";
-    pillImg.setAttribute("aria-hidden", "true");
-    pillImg.setAttribute("draggable", "false");
-    pill.appendChild(pillImg);
-    scan.appendChild(pill);
-
-    section.appendChild(scan);
-
-    /* ── sparks ── */
-    const sparkColors = ["#8899ff","#ffffff","#6b85ff","#ffffff","#8899ff"];
-    const sparks = Array.from({ length: 10 }, (_, i) => {
-      const sp = document.createElement("div");
-      sp.className = "sSpark";
-      sp.setAttribute("aria-hidden", "true");
-      sp.style.background = sparkColors[i % sparkColors.length];
-      section.appendChild(sp);
-      return sp;
-    });
-
-    /* ── initial states ── */
-    gsap.set(curtain, { scaleY: 1, transformOrigin: "bottom center" });
-    gsap.set(scan,    { top: "0%", yPercent: -50, opacity: 0 });
-    gsap.set(pill,    { scale: 0.75, opacity: 0 });
-    sparks.forEach(sp => gsap.set(sp, { opacity: 0 }));
-
-    /* ── timeline ── */
-    const tl = gsap.timeline({
-      scrollTrigger: {
-        trigger: section,
-        start: "top 88%",
-        once: true,
-        invalidateOnRefresh: true,   // recalculate when layout shifts after projects load
-      },
-      onComplete() {
-        section.style.overflow = "";
-        [curtain, scan, ...sparks].forEach(el => el.remove());
-      },
-    });
-
-    /* 1 — line appears; pill pops in */
-    tl.to(scan, { opacity: 1, duration: 0.10 }, 0.08);
-    tl.to(pill, { scale: 1, opacity: 1, duration: 0.22, ease: "back.out(2)" }, 0.08);
-
-    /* 2 — curtain wipes down; line descends with it */
-    tl.to(curtain,
-      { scaleY: 0, transformOrigin: "bottom center", duration: SWEEP, ease: "power3.inOut" },
-      START
-    );
-    tl.to(scan,
-      { top: "100%", duration: SWEEP, ease: "power3.inOut" },
-      START
-    );
-
-    /* 3 — sparks rise from the line as it sweeps */
-    sparks.forEach((sp, i) => {
-      const prog    = (i + 0.5) / sparks.length;
-      const beamPct = Math.pow(prog, 0.65) * 100;
-      const fireAt  = START + prog * SWEEP * 0.88;
-      const xPct    = 8 + Math.random() * 84;
-      const rise    = 28 + Math.random() * 48;
-      const dur     = 0.44 + Math.random() * 0.34;
-      gsap.set(sp, { left: `${xPct}%`, top: `${beamPct}%` });
-      tl.fromTo(sp,
-        { y: 0, opacity: 0.9, scale: 1 },
-        { y: -rise, opacity: 0, scale: 0.3, duration: dur, ease: "power2.out" },
-        fireAt
-      );
-    });
-
-    /* 4 — line fades as it exits */
-    tl.to(scan, { opacity: 0, duration: 0.16 }, START + SWEEP * 0.88);
-  });
-}
 
 function initReveals() {
   const isMobile = window.matchMedia("(max-width: 900px)").matches;
@@ -3065,7 +2954,6 @@ async function init() {
 
   initReveals();
   initSecBridges();
-  initSectionReveal();
   initAboutReveal();
   initAboutStats();
   initStory();
