@@ -1,5 +1,22 @@
 [
   {
+    "id": "SAP Navigator",
+    "name": "SAP Navigator",
+    "description": "Lightweight SAP helper for finding the right transaction, decoding common issues, and following structured troubleshooting flows. Built to make SAP navigation faster and more practical across technical and business scenarios.",
+    "tags": ["Tool", "SAP", "Productivity"],
+    "date": "2026-04-07",
+    "featured": true,
+    "imageUrl": "assets/projects/SAP_Navigator.png",
+    "highlights": [
+      "Find the right SAP transaction faster",
+      "Decode common issues into useful next steps",
+      "Browse practical troubleshooting flows"
+    ],
+    "demoUrl": "https://maurits2905.github.io/sap-navigator/",
+    "repoUrl": "https://github.com/maurits2905/sap-navigator"
+  },
+
+  {
     "id": "Excel Merger",
     "name": "Excel Merger",
     "description": "Client-side web tool for merging multiple Excel files into a single workbook with separate tabs. Designed for fast, safe workflows without uploads.",
