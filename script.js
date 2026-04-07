@@ -2394,7 +2394,7 @@ function initHeroThree() {
   }
 
   /* ── Build particle pool ── */
-  const MARGIN = 40 * DPR;
+  const MARGIN = isMob ? 8 * DPR : 40 * DPR; // tighter on mobile so stars reach the edges
   const particles = [];
 
   for (let i = 0; i < N; i++) {
