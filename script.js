@@ -3278,6 +3278,20 @@ async function init() {
     });
   }
 
+  /* ── Ask Me narrative bridge reveal ── */
+  const anbEl = document.querySelector('.askNarrBridge');
+  if (anbEl) {
+    const anbObs = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          anbEl.classList.add('anb-visible');
+          anbObs.disconnect();
+        }
+      });
+    }, { threshold: 0.5 });
+    anbObs.observe(anbEl);
+  }
+
   loadTo(100);
   if (loader) loader.done();
 }
