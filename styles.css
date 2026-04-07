@@ -3847,7 +3847,9 @@ html.noReveal .r,
 
 .section.tech {
   position: relative;
-  padding: clamp(64px, 8vw, 110px) 20px;
+  /* Top tightened so the section content arrives sooner after the bridge.
+     Bottom kept generous for the category strips. */
+  padding: clamp(40px, 5.5vw, 72px) 20px clamp(64px, 8vw, 110px);
 }
 
 .section-head {
@@ -4035,8 +4037,65 @@ html.noReveal .r,
 ========================= */
 
 .techHead {
-  margin-bottom: 26px;
+  margin-bottom: 16px;
   text-align: center;
+}
+
+/* ── Tag echo row ─────────────────────────────────────────────────────
+   Ghost pills in the same visual language as project filter tags.
+   The same technology names that labelled the work above reappear here
+   as faded markers — the project surface dissolving into the system below.
+   A top-to-bottom fade (emerging from the bridge space above) and a
+   bottom-to-top fade (merging into the category strips below) frame
+   this row as a transitional decode layer, not standalone content. */
+.techTagsEcho {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 10px;
+  max-width: 560px;
+  margin: 0 auto 28px;
+  /* Fade in from the top (from the bridge/Projects zone) and
+     fade out at the bottom (into the arsenal category strips). */
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent    0%,
+    black          22%,
+    black          68%,
+    transparent   100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent    0%,
+    black          22%,
+    black          68%,
+    transparent   100%
+  );
+}
+
+.tteTag {
+  display: inline-block;
+  padding: 4px 13px;
+  font-family: ui-monospace, 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(155, 140, 255, 0.50);
+  background: rgba(155, 140, 255, 0.04);
+  border: 1px solid rgba(155, 140, 255, 0.16);
+  border-radius: 999px;
+  pointer-events: none;
+  /* Subtle staggered vertical offset via nth-child so tags feel scattered,
+     not rigidly grid-aligned — more like floating signal than a table. */
+  transform: translateY(0px);
+}
+
+.tteTag:nth-child(odd)  { transform: translateY(-3px); }
+.tteTag:nth-child(even) { transform: translateY(3px);  }
+
+@media (max-width: 600px) {
+  .techTagsEcho { display: none; }
 }
 
 .techKicker {
@@ -8858,19 +8917,22 @@ body[data-theme="light"] .abtTag:hover {
   z-index: 0;
 }
 
-/* Projects → Skills: proof pointing to underlying systems */
+/* Projects → Skills: proof decomposing into underlying system.
+   Purple-teal carried from the project tag pill colors so the glow
+   feels like the same palette arriving in a new layer. */
 #tech::before {
   content: '';
   position: absolute;
-  top: -80px;
+  top: -100px;
   left: 50%;
   transform: translateX(-50%);
-  width: 70%;
-  max-width: 840px;
-  height: 230px;
+  width: 82%;
+  max-width: 920px;
+  height: 320px;
   background: radial-gradient(ellipse at 50% 0%,
-    rgba(155, 140, 255, 0.055) 0%,
-    transparent 65%
+    rgba(155, 140, 255, 0.11) 0%,
+    rgba(68,  240, 177, 0.04) 44%,
+    transparent               70%
   );
   pointer-events: none;
   z-index: 0;
