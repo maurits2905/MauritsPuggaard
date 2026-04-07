@@ -6519,7 +6519,9 @@ html.noReveal .r,
 
 .abtSection {
   scroll-margin-top: 90px;
-  padding-top: clamp(56px, 8vh, 96px);
+  /* Tightened from clamp(56px,8vh,96px) — closing the dead space between
+     the showcase's dissolving particles and the About content appearing. */
+  padding-top: clamp(28px, 4vh, 52px);
   padding-bottom: clamp(56px, 8vh, 96px);
 }
 
@@ -6674,6 +6676,12 @@ html.noReveal .r,
   font-size: 12px;
   letter-spacing: 0.18em;
   color: rgba(122,107,255,0.7);
+  transition: opacity 200ms ease, color 200ms ease;
+}
+
+/* Blink-in when the lens echo updates */
+.abtEye.abt-eye-flash {
+  opacity: 0;
 }
 
 .abtName {
@@ -7870,21 +7878,31 @@ body[data-theme="light"] .abtTag:hover {
      already centers this oversized item correctly — no extra margin needed. */
   position: relative;
   width: 100vw;
-  /* Top fade: showcase particles emerge from the same darkness the hero
-     particles dissolved into — one continuous particle field across the boundary. */
+  /* Top fade: particles emerge from hero darkness.
+     Bottom fade: particles dissolve downward — releasing into the About section
+     rather than hard-cutting. The two fades frame the canvas as a middle zone
+     where identity coalesces and then disperses into person. */
   -webkit-mask-image: linear-gradient(
     to bottom,
     transparent       0%,
     rgba(0,0,0, 0.35) 5%,
     rgba(0,0,0, 0.72) 11%,
-    black             20%
+    black             20%,
+    black             72%,
+    rgba(0,0,0, 0.55) 84%,
+    rgba(0,0,0, 0.18) 93%,
+    transparent       100%
   );
   mask-image: linear-gradient(
     to bottom,
     transparent       0%,
     rgba(0,0,0, 0.35) 5%,
     rgba(0,0,0, 0.72) 11%,
-    black             20%
+    black             20%,
+    black             72%,
+    rgba(0,0,0, 0.55) 84%,
+    rgba(0,0,0, 0.18) 93%,
+    transparent       100%
   );
 }
 
@@ -8661,19 +8679,22 @@ body[data-theme="light"] .abtTag:hover {
   z-index: 0;
 }
 
-/* Showcase → About: identity particles resolving into person */
+/* Showcase → About: particles dissolve into person.
+   Stronger purple bloom so the same glow language from showcase
+   carries visibly across the bridge into the About section top. */
 .abtSection::before {
   content: '';
   position: absolute;
-  top: -80px;
+  top: -140px;
   left: 50%;
   transform: translateX(-50%);
-  width: 70%;
-  max-width: 800px;
-  height: 240px;
+  width: 85%;
+  max-width: 960px;
+  height: 360px;
   background: radial-gradient(ellipse at 50% 0%,
-    rgba(75, 105, 255, 0.055) 0%,
-    transparent 68%
+    rgba(122, 107, 255, 0.11) 0%,
+    rgba(75,  105, 255, 0.04) 44%,
+    transparent               72%
   );
   pointer-events: none;
   z-index: 0;

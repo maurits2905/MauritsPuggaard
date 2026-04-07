@@ -1115,6 +1115,15 @@ function initShowcase() {
   const titleEl = document.getElementById('showcaseTitle');
   const descEl  = document.getElementById('showcaseDesc');
 
+  /* Each lens leaves its fingerprint on the About section's eye label —
+     the chosen identity carries forward as the frame for the person. */
+  const ABT_EYE_LABELS = [
+    '// THE PROFESSIONAL',
+    '// THE SAP ENGINEER',
+    '// THE BUILDER',
+  ];
+  const abtEyeEl = document.querySelector('.abtEye');
+
   function setState(idx) {
     if (idx === currentIdx) return;
     currentIdx = idx;
@@ -1125,6 +1134,15 @@ function initShowcase() {
       if (titleEl) { titleEl.textContent = STATES[idx].title; titleEl.classList.remove('scTrans'); }
       if (descEl)  { descEl .textContent = STATES[idx].desc;  descEl .classList.remove('scTrans'); }
     }, 230);
+
+    /* Echo the active lens into the About header with a quick blink-in */
+    if (abtEyeEl) {
+      abtEyeEl.classList.add('abt-eye-flash');
+      setTimeout(() => {
+        abtEyeEl.textContent = ABT_EYE_LABELS[idx];
+        abtEyeEl.classList.remove('abt-eye-flash');
+      }, 210);
+    }
 
     document.querySelectorAll('.showcasePill').forEach((btn, i) => {
       const on = i === idx;
