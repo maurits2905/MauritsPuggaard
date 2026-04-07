@@ -2349,6 +2349,35 @@ html.noReveal .r,
   opacity: 0.72;
 }
 
+/* ── Narrative bridge strip — sits between heading block and search ──
+   Frames the projects as proof-from-trajectory before utility appears.
+   Same monospace language as the section eye labels (abtEye, secCategory)
+   so it reads as part of the same labelling system, not a new element. */
+.workNarrBridge {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: min(520px, 88%);
+  margin: 16px auto 4px;
+}
+
+.workNarrLine {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(155, 140, 255, 0.22), transparent);
+}
+
+.workNarrPhrase {
+  font-family: ui-monospace, 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(155, 140, 255, 0.40);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 /* Total project count badge in subtitle */
 .workTotalBadge {
   display: inline-block;
@@ -3304,7 +3333,9 @@ html.noReveal .r,
 ========================= */
 
 #career {
-  padding-bottom: 80px;
+  /* Reduced from 80px — less dead space between the last timeline entry
+     and the bridge, so the terminal node sits closer to the transition. */
+  padding-bottom: 52px;
   position: relative;
   /* overflow visible so comet can fly in from outside section bounds */
 }
@@ -3522,6 +3553,44 @@ html.noReveal .r,
   max-width: 860px;
   margin: 0 auto;
   padding: 12px 20px 40px;
+}
+
+/* ── Spine terminal node ──────────────────────────────────────────────
+   A small glowing dot at the spine's bottom endpoint — the "end of path"
+   marker. Uses the fill gradient's final pink-magenta color so it reads as
+   the spine's energy arriving at a point and discharging into the next section.
+   Only appears after the comet fires (comet-fired class) and entries cascade
+   in, then fades in slowly so it feels like a definitive closing beat. */
+.cTimeline::after {
+  content: '';
+  position: absolute;
+  left: calc(20px + var(--ce-spine-x));
+  bottom: 16px;
+  transform: translateX(-50%);
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(255, 100, 220, 0.92);
+  box-shadow:
+    0 0 5px  2px rgba(255,  96, 220, 0.80),
+    0 0 16px 5px rgba(155, 140, 255, 0.45),
+    0 0 36px 8px rgba(155, 140, 255, 0.15);
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 0.9s ease;
+}
+
+#career:not(.comet-fired) .cTimeline::after {
+  opacity: 0;
+  transition: none;
+}
+
+#career.comet-fired .cTimeline::after {
+  opacity: 1;
+  /* Delay until after all entry cards have cascaded in
+     (6 entries × 130ms + 500ms settle ≈ 1280ms → use 1.7s) */
+  transition: opacity 0.9s ease 1.7s;
 }
 
 /* Base spine */
@@ -8767,19 +8836,23 @@ body[data-theme="light"] .abtTag:hover {
   z-index: 0;
 }
 
-/* Career → Projects: trajectory arriving at concrete proof */
+/* Career → Projects: trajectory arriving at concrete proof.
+   Uses both the spine's purple and teal to carry the timeline's
+   color language across the boundary into the Projects section.
+   Raised to bleed into the bridge area so glow is visible there. */
 #work::before {
   content: '';
   position: absolute;
-  top: -80px;
+  top: -100px;
   left: 50%;
   transform: translateX(-50%);
-  width: 70%;
-  max-width: 840px;
-  height: 230px;
+  width: 80%;
+  max-width: 920px;
+  height: 320px;
   background: radial-gradient(ellipse at 50% 0%,
-    rgba(68, 240, 177, 0.045) 0%,
-    transparent 65%
+    rgba(155, 140, 255, 0.09) 0%,
+    rgba(68,  240, 177, 0.05) 42%,
+    transparent               70%
   );
   pointer-events: none;
   z-index: 0;
