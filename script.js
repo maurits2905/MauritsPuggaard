@@ -1068,7 +1068,7 @@ function initShowcase() {
      kicks in — bending its path toward the icon. Particles outside PULL_R feel
      nothing and just drift. This creates a continuous, organic "condensation"
      as nearby particles are drawn in and settle, while far ones keep wandering. */
-  let t_a = 0, prev = performance.now(), raf;
+  let t_a = 0, prev = performance.now(), raf, rafStarted = false;
 
   function frame(now) {
     const dt = Math.min((now - prev) * 0.001, 0.05);
@@ -1171,18 +1171,43 @@ function initShowcase() {
     raf = requestAnimationFrame(frame);
   }
 
-  raf = requestAnimationFrame(frame);
+  /* Only start RAF immediately if canvas already has valid dimensions.
+     If the canvas is inside an opacity:0 wrapper at page-load, getBoundingClientRect
+     may return 0x0 — the ResizeObserver will start the RAF on first valid layout. */
+  if (CW > 0) { rafStarted = true; raf = requestAnimationFrame(frame); }
 
-  /* ── Pills interaction (no auto-rotation) ── */
+  /* ── Pills interaction — activates unified hero showcase mode ── */
   document.querySelectorAll('.showcasePill').forEach((btn, i) => {
-    btn.addEventListener('click', () => setState(i));
+    btn.addEventListener('click', () => {
+      const hero = document.getElementById('hero');
+      if (hero && !hero.classList.contains('hero--showcase')) {
+        hero.classList.add('hero--showcase');
+      }
+      setState(i);
+    });
   });
+
+  /* ── Back button: return hero to default ambient state ── */
+  const heroBackBtn = document.getElementById('heroBackBtn');
+  if (heroBackBtn) {
+    heroBackBtn.addEventListener('click', () => {
+      const hero = document.getElementById('hero');
+      if (hero) hero.classList.remove('hero--showcase');
+      document.querySelectorAll('.showcasePill').forEach(btn => {
+        btn.classList.remove('is-active');
+        btn.setAttribute('aria-pressed', 'false');
+      });
+      currentIdx = -1; // allow any pill to retrigger on next click
+    });
+  }
 
   /* ── Resize ── */
   new ResizeObserver(() => {
+    const prevCW = CW;
     resize();
     allTargets = buildTargets();
-    const t = allTargets[currentIdx];
+    const idx = currentIdx >= 0 ? currentIdx : 0;
+    const t = allTargets[idx];
     for (let i = 0; i < N_FORM; i++) { ftx[i] = t[i * 2]; fty[i] = t[i * 2 + 1]; }
     for (let i = 0; i < N_TOT; i++) {
       if (i < N_FORM) {
@@ -1192,6 +1217,14 @@ function initShowcase() {
         hx[i] = Math.random() * CW;
         hy[i] = Math.random() * CH;
       }
+      /* Scatter particles to home when getting first valid layout */
+      if (prevCW < 1) { px[i] = hx[i]; py[i] = hy[i]; }
+    }
+    /* Start RAF if canvas was 0-sized at init time */
+    if (!rafStarted && CW > 0) {
+      rafStarted = true;
+      prev = performance.now();
+      raf = requestAnimationFrame(frame);
     }
   }).observe(canvas);
 }
@@ -2789,7 +2822,9 @@ async function init() {
   initBgStars();
   initHeroThree();
   initHeroSkillTicker();
-  initShowcase();
+  /* Defer showcase init by one frame so the hero section is fully laid out
+     before the canvas reads its dimensions via getBoundingClientRect(). */
+  requestAnimationFrame(initShowcase);
 
   loadTo(40);
 

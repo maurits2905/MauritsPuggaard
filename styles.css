@@ -9526,3 +9526,151 @@ body[data-theme="light"] .abtTag:hover {
 [data-theme="light"] .abtPanel {
   color: rgba(8, 9, 20, 0.60);
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   UNIFIED HERO + SHOWCASE
+   Hero section absorbs the showcase experience. Clicking a category
+   pill fades out the hero text and fades in the formation canvas +
+   descriptive text, all within the same viewport section.
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── Formation canvas overlay ── */
+.heroShowcaseWrap {
+  position: absolute;
+  inset: 0;
+  z-index: 2; /* above heroCanvas (1), below heroContent (3) */
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 1.1s ease;
+}
+#hero.hero--showcase .heroShowcaseWrap {
+  opacity: 1;
+  pointer-events: auto;
+}
+/* Canvas fills the full hero viewport */
+#showcaseCanvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  pointer-events: none;
+}
+#hero.hero--showcase #showcaseCanvas {
+  pointer-events: auto;
+}
+
+/* ── Hero orbital stars dim when showcase activates ── */
+.heroCanvas {
+  transition: opacity 1.1s ease;
+}
+#hero.hero--showcase .heroCanvas {
+  opacity: 0.06;
+}
+
+/* ── Hero text fades out when showcase activates ── */
+.heroContent {
+  transition: opacity 0.55s ease, transform 0.55s ease;
+}
+#hero.hero--showcase .heroContent {
+  opacity: 0;
+  transform: translateY(-28px);
+  pointer-events: none;
+}
+
+/* ── Category pills — always visible at bottom of hero ── */
+.heroPills {
+  position: absolute;
+  bottom: 68px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 6;
+  white-space: nowrap;
+  margin-top: 0;
+}
+
+/* ── Showcase text overlay (title + desc) ── */
+.heroShowcaseText {
+  position: absolute;
+  bottom: 150px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  z-index: 5;
+  width: min(92vw, 540px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.55s ease 0.55s;
+}
+#hero.hero--showcase .heroShowcaseText {
+  opacity: 1;
+}
+
+/* ── Back button — top-center, appears in showcase mode ── */
+.heroBackBtn {
+  position: absolute;
+  top: calc(var(--navH) + 28px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 7;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease 0.25s;
+  padding: 7px 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 100px;
+  color: rgba(255, 255, 255, 0.52);
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  cursor: pointer;
+  white-space: nowrap;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.heroBackBtn:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.24);
+  color: rgba(255, 255, 255, 0.88);
+}
+#hero.hero--showcase .heroBackBtn {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ── Scroll cue hides in showcase mode ── */
+.heroScrollCue {
+  transition: opacity 0.45s ease;
+}
+#hero.hero--showcase .heroScrollCue {
+  opacity: 0 !important;
+  animation: none !important;
+  pointer-events: none;
+}
+
+/* ── Mobile adjustments ── */
+@media (max-width: 760px) {
+  .heroPills {
+    bottom: 28px;
+    gap: 6px !important;
+  }
+  .heroShowcaseText {
+    bottom: 108px;
+    width: min(94vw, 400px);
+  }
+  .heroBackBtn {
+    font-size: 10px;
+    padding: 6px 16px;
+  }
+}
+
+/* ── Light mode: back button legible on dark hero bg ── */
+[data-theme="light"] .heroBackBtn {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.60);
+}
+[data-theme="light"] .heroBackBtn:hover {
+  color: rgba(255, 255, 255, 0.92);
+}
