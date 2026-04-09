@@ -9604,40 +9604,7 @@ body[data-theme="light"] .abtTag:hover {
   opacity: 1;
 }
 
-/* ── Back button — top-center, appears in showcase mode ── */
-.heroBackBtn {
-  position: absolute;
-  top: calc(var(--navH) + 28px);
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 7;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.35s ease 0.25s;
-  padding: 7px 20px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.13);
-  border-radius: 100px;
-  color: rgba(255, 255, 255, 0.52);
-  font-family: var(--font);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.10em;
-  text-transform: uppercase;
-  cursor: pointer;
-  white-space: nowrap;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-.heroBackBtn:hover {
-  background: rgba(255, 255, 255, 0.09);
-  border-color: rgba(255, 255, 255, 0.24);
-  color: rgba(255, 255, 255, 0.88);
-}
-#hero.hero--showcase .heroBackBtn {
-  opacity: 1;
-  pointer-events: auto;
-}
+/* (Back button removed — re-clicking the active pill returns to overview) */
 
 /* ── Scroll cue hides in showcase mode ── */
 .heroScrollCue {
@@ -9665,12 +9632,3 @@ body[data-theme="light"] .abtTag:hover {
   }
 }
 
-/* ── Light mode: back button legible on dark hero bg ── */
-[data-theme="light"] .heroBackBtn {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.18);
-  color: rgba(255, 255, 255, 0.60);
-}
-[data-theme="light"] .heroBackBtn:hover {
-  color: rgba(255, 255, 255, 0.92);
-}

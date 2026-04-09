@@ -1176,30 +1176,34 @@ function initShowcase() {
      may return 0x0 — the ResizeObserver will start the RAF on first valid layout. */
   if (CW > 0) { rafStarted = true; raf = requestAnimationFrame(frame); }
 
-  /* ── Pills interaction — activates unified hero showcase mode ── */
+  /* ── Pills interaction ──
+     First click on any pill: activate showcase mode and form that icon.
+     Second click on the already-active pill: return to the ambient hero. */
+  function deactivateShowcase() {
+    const hero = document.getElementById('hero');
+    if (hero) hero.classList.remove('hero--showcase');
+    document.querySelectorAll('.showcasePill').forEach(b => {
+      b.classList.remove('is-active');
+      b.setAttribute('aria-pressed', 'false');
+    });
+    currentIdx = -1;
+  }
+
   document.querySelectorAll('.showcasePill').forEach((btn, i) => {
     btn.addEventListener('click', () => {
       const hero = document.getElementById('hero');
-      if (hero && !hero.classList.contains('hero--showcase')) {
-        hero.classList.add('hero--showcase');
+      if (currentIdx === i && hero && hero.classList.contains('hero--showcase')) {
+        /* Re-clicking the active pill → back to overview */
+        deactivateShowcase();
+      } else {
+        /* Activate showcase mode with this pill's formation */
+        if (hero && !hero.classList.contains('hero--showcase')) {
+          hero.classList.add('hero--showcase');
+        }
+        setState(i);
       }
-      setState(i);
     });
   });
-
-  /* ── Back button: return hero to default ambient state ── */
-  const heroBackBtn = document.getElementById('heroBackBtn');
-  if (heroBackBtn) {
-    heroBackBtn.addEventListener('click', () => {
-      const hero = document.getElementById('hero');
-      if (hero) hero.classList.remove('hero--showcase');
-      document.querySelectorAll('.showcasePill').forEach(btn => {
-        btn.classList.remove('is-active');
-        btn.setAttribute('aria-pressed', 'false');
-      });
-      currentIdx = -1; // allow any pill to retrigger on next click
-    });
-  }
 
   /* ── Resize ── */
   new ResizeObserver(() => {
