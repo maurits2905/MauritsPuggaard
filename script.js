@@ -1632,7 +1632,6 @@ function renderCareer() {
 
   const fill    = document.getElementById("cSpineFill");
   const section = document.getElementById("career");
-  const canvas  = document.getElementById("cometCanvas");
 
   // ── Build DOM entries ─────────────────────────────────────────
   careerData.forEach((item, i) => {
@@ -1658,300 +1657,21 @@ function renderCareer() {
   const entries = Array.from(track.querySelectorAll(".cEntry"));
 
   // ── Helpers ───────────────────────────────────────────────────
-  const lerp  = (a, b, t) => a + (b - a) * t;
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
-  const ease  = (t) => t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3) / 2;
 
-  // ── Reduced motion: skip straight to content ──────────────────
-  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    section.classList.add("comet-fired");
-    entries.forEach((e) => e.classList.add("cVisible"));
-    startScrollLogic();
-    return;
-  }
+  // ── Reveal entries as they scroll into view ───────────────────
+  section.classList.add("comet-fired");
 
-  // ── Canvas setup ──────────────────────────────────────────────
-  const DPR = Math.min(window.devicePixelRatio || 1, 2);
-  function resizeCanvas() {
-    const W = window.innerWidth, H = window.innerHeight;
-    canvas.width  = W * DPR;
-    canvas.height = H * DPR;
-    canvas.style.width  = W + "px";
-    canvas.style.height = H + "px";
-  }
-  resizeCanvas();
-  const ctx = canvas.getContext("2d");
-  ctx.scale(DPR, DPR);
-
-  // ── Trail ─────────────────────────────────────────────────────
-  const trail = [];
-  const MAX_TRAIL = 90;
-
-  // ── Burst ─────────────────────────────────────────────────────
-  let bursting = false, burstAge = 0;
-  let rings = [], sparks = [];
-  let impactX = 0, impactY = 0;
-
-  function spawnBurst(x, y) {
-    impactX = x; impactY = y;
-    bursting = true; burstAge = 0;
-    rings = [
-      { r: 3, maxR: 100, a: 1.0,  col: "155,140,255" },
-      { r: 3, maxR: 145, a: 0.75, col: "68,240,177"  },
-      { r: 3, maxR: 80,  a: 0.6,  col: "224,96,255"  },
-    ];
-    for (let i = 0; i < 22; i++) {
-      const ang = (i / 22) * Math.PI * 2 + Math.random() * 0.3;
-      const spd = 1.8 + Math.random() * 3.8;
-      const cols = ["255,255,255","155,140,255","68,240,177","224,96,255","126,180,255"];
-      sparks.push({
-        x, y,
-        vx: Math.cos(ang) * spd, vy: Math.sin(ang) * spd,
-        life: 1, decay: 0.012 + Math.random() * 0.012,
-        size: 1.2 + Math.random() * 2.2,
-        col: cols[Math.floor(Math.random() * cols.length)],
-      });
-    }
-  }
-
-  // ── Draw a beautiful star at (x,y) with given radius and alpha ──
-  function drawStar(x, y, r, alpha) {
-    if (r < 0.2 || alpha < 0.01) return;
-
-    // 1. Outer nebula haze
-    const hazeR = r * 9;
-    const haze = ctx.createRadialGradient(x, y, 0, x, y, hazeR);
-    haze.addColorStop(0,   `rgba(180,165,255,${(alpha * 0.22).toFixed(3)})`);
-    haze.addColorStop(0.4, `rgba(120,100,220,${(alpha * 0.10).toFixed(3)})`);
-    haze.addColorStop(1,   "rgba(80,50,180,0)");
-    ctx.fillStyle = haze;
-    ctx.beginPath(); ctx.arc(x, y, hazeR, 0, Math.PI * 2); ctx.fill();
-
-    // 2. Inner glow corona
-    const coronaR = r * 4;
-    const corona = ctx.createRadialGradient(x, y, 0, x, y, coronaR);
-    corona.addColorStop(0,   `rgba(255,252,255,${alpha.toFixed(3)})`);
-    corona.addColorStop(0.2, `rgba(210,200,255,${(alpha * 0.85).toFixed(3)})`);
-    corona.addColorStop(0.5, `rgba(155,140,255,${(alpha * 0.50).toFixed(3)})`);
-    corona.addColorStop(1,   "rgba(100,60,200,0)");
-    ctx.fillStyle = corona;
-    ctx.beginPath(); ctx.arc(x, y, coronaR, 0, Math.PI * 2); ctx.fill();
-
-    // 3. Bright hard core
-    const coreR = r * 0.45;
-    const core = ctx.createRadialGradient(x, y, 0, x, y, coreR);
-    core.addColorStop(0, `rgba(255,255,255,${alpha.toFixed(3)})`);
-    core.addColorStop(1, `rgba(220,215,255,${(alpha * 0.4).toFixed(3)})`);
-    ctx.fillStyle = core;
-    ctx.beginPath(); ctx.arc(x, y, coreR, 0, Math.PI * 2); ctx.fill();
-
-    // 4. Four-point diffraction spikes
-    const spikeLen = r * 14;
-    [[0, 1], [Math.PI/2, 0.6], [Math.PI, 1], [Math.PI*1.5, 0.6]].forEach(([ang, str]) => {
-      const ex = x + Math.cos(ang) * spikeLen * str;
-      const ey = y + Math.sin(ang) * spikeLen * str;
-      const spike = ctx.createLinearGradient(x, y, ex, ey);
-      spike.addColorStop(0,   `rgba(255,255,255,${(alpha * 0.75).toFixed(3)})`);
-      spike.addColorStop(0.2, `rgba(180,170,255,${(alpha * 0.35).toFixed(3)})`);
-      spike.addColorStop(1,   "rgba(100,60,200,0)");
-      ctx.strokeStyle = spike;
-      ctx.lineWidth = Math.max(r * 0.18, 0.8);
-      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(ex, ey); ctx.stroke();
+  const entryObserver = new IntersectionObserver((obs) => {
+    obs.forEach(({ target, isIntersecting }) => {
+      if (isIntersecting) {
+        target.classList.add("cVisible");
+        entryObserver.unobserve(target);
+      }
     });
+  }, { threshold: 0.15 });
 
-    // 5. Diagonal secondary spikes (thinner)
-    const dLen = spikeLen * 0.55;
-    [Math.PI/4, Math.PI*3/4, Math.PI*5/4, Math.PI*7/4].forEach((ang) => {
-      const ex2 = x + Math.cos(ang) * dLen;
-      const ey2 = y + Math.sin(ang) * dLen;
-      const sp2 = ctx.createLinearGradient(x, y, ex2, ey2);
-      sp2.addColorStop(0, `rgba(200,190,255,${(alpha * 0.45).toFixed(3)})`);
-      sp2.addColorStop(1, "rgba(100,60,200,0)");
-      ctx.strokeStyle = sp2;
-      ctx.lineWidth = Math.max(r * 0.10, 0.5);
-      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(ex2, ey2); ctx.stroke();
-    });
-  }
-
-  // ── Draw glowing tail segment ──────────────────────────────────
-  function drawTailSegment(x1, y1, x2, y2, w, alpha) {
-    if (alpha < 0.01) return;
-    const grd = ctx.createLinearGradient(x1, y1, x2, y2);
-    grd.addColorStop(0, `rgba(155,140,255,0)`);
-    grd.addColorStop(1, `rgba(210,200,255,${(alpha * 0.6).toFixed(3)})`);
-    ctx.strokeStyle = grd;
-    ctx.lineWidth = w;
-    ctx.lineCap = "round";
-    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
-  }
-
-  // ── Get first dot's current screen position ───────────────────
-  function getFirstDotPos() {
-    const dot = entries[0] && entries[0].querySelector(".cDot");
-    if (!dot) return { x: window.innerWidth * 0.42, y: window.innerHeight * 0.62 };
-    const r = dot.getBoundingClientRect();
-    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
-  }
-
-  // ── Time-based animation (triggers once on scroll) ────────────
-  let animating  = false;
-  let animStart  = null;
-  let impactDone = false;
-  const ANIM_DURATION = 2600; // ms total
-
-  function drawFrame(ts) {
-    if (!animStart) animStart = ts;
-    const elapsed = ts - animStart;
-    const t = clamp(elapsed / ANIM_DURATION, 0, 1);
-
-    const VW = window.innerWidth, VH = window.innerHeight;
-    ctx.clearRect(0, 0, VW, VH);
-
-    // Dynamic endpoints read fresh each frame so they're accurate
-    const SX = VW * 0.88, SY = VH * 0.06;  // upper-right start
-    // Arc apex — upper-center, creates a natural curve through the screen
-    const AX = VW * 0.52, AY = VH * 0.28;
-    const dot = getFirstDotPos();
-    const EX = dot.x, EY = dot.y;
-
-    let x, y, r, alpha, tailA;
-
-    // Single continuous arc: upper-right → apex → first dot
-    // Quadratic bezier gives a smooth natural arc with no stop
-    const bx = lerp(lerp(SX, AX, t), lerp(AX, EX, t), t);
-    const by = lerp(lerp(SY, AY, t), lerp(AY, EY, t), t);
-
-    // Apply ease to time for smoother feel — faster mid-flight, eases in/out
-    const te = ease(t);
-    x = lerp(lerp(SX, AX, te), lerp(AX, EX, te), te);
-    y = lerp(lerp(SY, AY, te), lerp(AY, EY, te), te);
-
-    // Size: grows to peak at apex (t=0.5) then shrinks to dot size
-    const peakR = 18;
-    r = t < 0.5
-      ? lerp(1.5, peakR, Math.pow(t * 2, 0.55))
-      : lerp(peakR, 5.5, ease((t - 0.5) * 2));
-
-    alpha = clamp(t / 0.04, 0, 1);
-    tailA  = t < 0.5
-      ? clamp(t / 0.08, 0, 0.9)
-      : lerp(0.9, 0.12, ease((t - 0.5) * 2));
-
-    // Record trail
-    if (t < 0.99) {
-      trail.unshift({ x, y, r });
-      if (trail.length > MAX_TRAIL) trail.pop();
-    } else {
-      trail.length = 0;
-    }
-
-    // Draw tail
-    trail.forEach((pt, i) => {
-      if (i >= trail.length - 1) return;
-      const frac = 1 - i / trail.length;
-      drawTailSegment(
-        pt.x, pt.y, trail[i + 1].x, trail[i + 1].y,
-        Math.max(pt.r * frac * 0.3, 0.5),
-        frac * frac * tailA
-      );
-    });
-
-    // Draw comet head
-    if (r > 0.2 && alpha > 0.01) drawStar(x, y, r, alpha);
-
-    // Impact at animation end
-    if (t >= 0.99 && !impactDone) {
-      impactDone = true;
-      spawnBurst(EX, EY);
-      section.classList.add("comet-fired");
-      // Stagger reveal — quick cascade so it feels alive
-      entries.forEach((e, i) => setTimeout(() => e.classList.add("cVisible"), i * 130));
-      setTimeout(() => {
-        canvas.style.display = "none";
-        unlockScroll();
-        startScrollLogic();
-      }, entries.length * 130 + 500);
-    }
-
-    // Draw burst rings + sparks
-    if (bursting) {
-      burstAge++;
-      rings = rings.filter((rg) => rg.a > 0.01);
-      rings.forEach((rg) => {
-        rg.r += (rg.maxR - rg.r) * 0.085;
-        rg.a *= 0.90;
-        ctx.shadowColor = `rgba(${rg.col},0.5)`;
-        ctx.shadowBlur  = 12;
-        ctx.strokeStyle = `rgba(${rg.col},${rg.a.toFixed(3)})`;
-        ctx.lineWidth   = 1.8;
-        ctx.beginPath(); ctx.arc(impactX, impactY, rg.r, 0, Math.PI * 2); ctx.stroke();
-        ctx.shadowBlur  = 0;
-      });
-      sparks = sparks.filter((s) => s.life > 0);
-      sparks.forEach((s) => {
-        s.x += s.vx; s.y += s.vy;
-        s.vx *= 0.955; s.vy *= 0.955;
-        s.life = Math.max(0, s.life - s.decay);
-        const a = s.life * s.life;
-        ctx.shadowColor = `rgba(${s.col},${(a * 0.6).toFixed(3)})`;
-        ctx.shadowBlur  = 6;
-        ctx.fillStyle   = `rgba(${s.col},${a.toFixed(3)})`;
-        ctx.beginPath(); ctx.arc(s.x, s.y, s.size * s.life, 0, Math.PI * 2); ctx.fill();
-        ctx.shadowBlur  = 0;
-      });
-      if (rings.length === 0 && sparks.length === 0) bursting = false;
-    }
-
-    // Fading star residue at impact point while burst plays
-    if (impactDone && bursting) {
-      const fadeT = clamp(burstAge / 60, 0, 1);
-      drawStar(impactX, impactY, lerp(8, 2.5, fadeT), lerp(0.85, 0, fadeT));
-    }
-
-    if (animating && (!impactDone || bursting)) {
-      requestAnimationFrame(drawFrame);
-    }
-  }
-
-  // ── Scroll lock — prevent scrolling past the animation ──────────
-  let scrollLocked = false;
-  let savedScrollY = 0;
-
-  function lockScroll() {
-    if (scrollLocked) return;
-    scrollLocked = true;
-    savedScrollY = window.scrollY;
-    document.body.style.position  = "fixed";
-    document.body.style.top       = `-${savedScrollY}px`;
-    document.body.style.width     = "100%";
-    document.body.style.overflowY = "scroll"; // keep scrollbar width to avoid layout shift
-  }
-
-  function unlockScroll() {
-    if (!scrollLocked) return;
-    scrollLocked = false;
-    document.body.style.position  = "";
-    document.body.style.top       = "";
-    document.body.style.width     = "";
-    document.body.style.overflowY = "";
-    window.scrollTo(0, savedScrollY);
-  }
-
-  // ── Scroll trigger: fire once when first entry enters viewport ─
-  let triggered = false;
-  function checkTrigger() {
-    if (triggered || !entries[0]) return;
-    const r = entries[0].getBoundingClientRect();
-    if (r.top < window.innerHeight * 0.70) {
-      triggered = true;
-      animating  = true;
-      lockScroll();
-      canvas.style.display = "block";
-      requestAnimationFrame(drawFrame);
-    }
-  }
-  window.addEventListener("scroll", checkTrigger, { passive: true });
-  checkTrigger(); // catch the case where section is already visible on load
+  entries.forEach((e) => entryObserver.observe(e));
 
   // ── Scroll-driven spine fill + active card highlight ──────────
   let currentActive = -1;
@@ -1966,9 +1686,7 @@ function renderCareer() {
       (vh * 0.5 - trackRect.top) / Math.max(1, trackRect.height),
       0, 1
     );
-    if (section.classList.contains("comet-fired") && fill) {
-      fill.style.height = progress * trackRect.height + "px";
-    }
+    if (fill) fill.style.height = progress * trackRect.height + "px";
     const viewCenter = vh * 0.5;
     let bestIdx = 0, bestDist = Infinity;
     entries.forEach((entry, i) => {
@@ -1991,6 +1709,8 @@ function renderCareer() {
     window.addEventListener("resize", updateScroll);
     requestAnimationFrame(updateScroll);
   }
+
+  startScrollLogic();
 }
 
 // Always start at top on refresh (prevents browser restoring old scroll position)

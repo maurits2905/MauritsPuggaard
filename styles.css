@@ -8761,33 +8761,6 @@ body[data-theme="light"] .abtTag:hover {
   border-color: rgba(255, 255, 255, 0.08);
 }
 
-/* ============================================================
-   COMET INTRO ANIMATION
-   ============================================================ */
-
-/* Fixed overlay — hidden until JS triggers the comet */
-#cometCanvas {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 9999;
-  display: none;
-}
-
-/* Hide spine & entries until comet fires */
-#career:not(.comet-fired) .cTimeline::before { opacity: 0; transition: opacity 0.4s; }
-#career:not(.comet-fired) .cSpineFill        { opacity: 0; }
-#career:not(.comet-fired) .cEntry            { opacity: 0 !important; transform: translateX(28px) !important; }
-
-/* Reduce motion: skip straight to content */
-@media (prefers-reduced-motion: reduce) {
-  #cometCanvas { display: none !important; }
-  #career:not(.comet-fired) .cTimeline::before { opacity: 1; }
-  #career:not(.comet-fired) .cSpineFill        { opacity: 1; }
-  #career:not(.comet-fired) .cEntry            { opacity: 1 !important; transform: none !important; }
-}
 
 /* ============================================================
    SECTION TRANSITION CUES
