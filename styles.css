@@ -3628,7 +3628,7 @@ html.noReveal .r,
   filter: drop-shadow(0 0 7px rgba(155, 140, 255, 0.45))
     drop-shadow(0 0 18px rgba(68, 240, 177, 0.18));
   border-radius: 999px;
-  transition: height 80ms linear;
+  transition: height 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   pointer-events: none;
 }
 
@@ -5523,10 +5523,10 @@ html.noReveal .r,
     display: none;
   }
 
-  /* =========================
-     Career timeline — mobile
-  ========================= */
+}
 
+/* ── Career timeline: switch to single-column below 640px ── */
+@media (max-width: 640px) {
   :root {
     --ce-year-w: 0px;
     --ce-gap: 0px;

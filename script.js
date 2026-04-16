@@ -1680,24 +1680,33 @@ function renderCareer() {
   function updateScroll() {
     raf = 0;
     if (!entries.length) return;
-    const vh        = window.innerHeight;
-    const trackRect = track.getBoundingClientRect();
-    const progress  = clamp(
-      (vh * 0.5 - trackRect.top) / Math.max(1, trackRect.height),
-      0, 1
-    );
-    if (fill) fill.style.height = progress * trackRect.height + "px";
+    const vh         = window.innerHeight;
+    const trackRect  = track.getBoundingClientRect();
     const viewCenter = vh * 0.5;
+
+    // Find the entry closest to viewport centre
     let bestIdx = 0, bestDist = Infinity;
     entries.forEach((entry, i) => {
       const r    = entry.getBoundingClientRect();
       const dist = Math.abs(r.top + r.height * 0.5 - viewCenter);
       if (dist < bestDist) { bestDist = dist; bestIdx = i; }
     });
+
+    // Swap active class
     if (bestIdx !== currentActive) {
       if (currentActive >= 0) entries[currentActive].classList.remove("cActive");
       entries[bestIdx].classList.add("cActive");
       currentActive = bestIdx;
+    }
+
+    // Grow fill to reach the active dot centre exactly
+    if (fill) {
+      const dot = entries[bestIdx].querySelector(".cDot");
+      if (dot) {
+        const dotR         = dot.getBoundingClientRect();
+        const dotCenterInTrack = dotR.top + dotR.height * 0.5 - trackRect.top;
+        fill.style.height  = Math.max(0, dotCenterInTrack) + "px";
+      }
     }
   }
 
