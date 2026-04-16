@@ -514,18 +514,28 @@ body.isLoading {
    Custom Page Scrollbar (progress rail)
 ========================= */
 
-/* Hide native scrollbar */
+/* Custom scrollbar */
 
-html,
-body {
-  scrollbar-width: none;
+html {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(155, 140, 255, 0.35) transparent;
 }
 
-/* Firefox */
+::-webkit-scrollbar {
+  width: 4px;
+}
 
-body::-webkit-scrollbar {
-  width: 0;
-  height: 0;
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(155, 140, 255, 0.35);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(155, 140, 255, 0.6);
 }
 
 /* Tune */
