@@ -538,80 +538,6 @@ html {
   background: rgba(155, 140, 255, 0.6);
 }
 
-/* Tune */
-
-/* invisible hit-area */
-
-.cScroll {
-  position: fixed;
-  top: 50%;
-  right: 12px;
-  z-index: 999;
-  width: var(--cscroll-hit);
-  height: 12.5vh; /* overridden by JS to match crRail height */
-  user-select: none;
-  touch-action: none;
-  transform: translateY(-50%);
-}
-
-/* thin track line */
-
-.cScrollTrack {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 50%;
-  width: var(--cscroll-rail);
-  background: var(--cscroll-track);
-  opacity: 0; /* hidden — crTrack::before spine is the shared track */
-  border-radius: 999px;
-  transform: translateX(-50%);
-}
-
-/* fill grows from bottom */
-
-.cScrollFill {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  width: 2px; /* slim — matches spine weight */
-  height: 0%;
-  background: var(--cscroll-fill);
-  opacity: 0.92;
-  border-radius: 999px;
-  box-shadow: 0 0 8px var(--cscroll-glow), 0 0 3px var(--cscroll-fill);
-  transform: translateX(-50%);
-}
-
-/* the little bright â€œcapâ€ */
-
-.cScrollThumb {
-  position: absolute;
-  left: 50%;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: var(--cscroll-fill);
-  opacity: 0.98;
-  box-shadow: 0 0 10px var(--cscroll-glow), 0 0 4px var(--cscroll-fill);
-  transform: translate(-50%, -50%); /* center the dot on its position */
-  transition: box-shadow 0.15s ease;
-}
-
-/* optional hover/drag emphasis */
-
-.cScroll:hover .cScrollThumb,
-.cScroll.isDragging .cScrollThumb {
-  opacity: 1;
-}
-
-/* hide on mobile */
-
-@media (max-width: 768px) {
-  .cScroll {
-    display: none;
-  }
-}
 
 a {
   text-decoration: none;
@@ -9024,16 +8950,38 @@ body[data-theme="light"] .abtTag:hover {
   padding: 4px 0;
 }
 
-/* Spine connecting the dots */
+/* Spine track — left/transform set by JS to align with dots */
 .crTrack::before {
   content: '';
   position: absolute;
-  right: 3px;            /* centres on the 5–7 px dot */
-  top: 7px;
-  bottom: 7px;
+  top: 0;
+  bottom: 0;
   width: 1px;
   background: rgba(155, 140, 255, 0.12);
   pointer-events: none;
+  /* JS sets left via --cr-dot-x so the line runs through every dot */
+  left: var(--cr-dot-x, 50%);
+  transform: translateX(-50%);
+}
+
+/* Fill — grows from top dot down to active dot; left set by JS */
+.crFill {
+  position: absolute;
+  top: 0;
+  width: 2px;
+  height: 0px;
+  background: linear-gradient(
+    180deg,
+    rgba(155, 140, 255, 0.75) 0%,
+    rgba(68, 240, 177, 0.65) 100%
+  );
+  border-radius: 999px;
+  box-shadow: 0 0 6px rgba(155, 140, 255, 0.45);
+  pointer-events: none;
+  transition: height 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 1;
+  /* JS sets left via updateFill() */
+  transform: translateX(-50%);
 }
 
 .crItem {

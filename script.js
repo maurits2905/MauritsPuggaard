@@ -1818,6 +1818,10 @@ function initAskMe() {
 }
 
 function initCustomScrollbar() {
+  // Removed — replaced by crFill inside initChapterRail
+}
+
+function _initCustomScrollbar_unused() {
   const wrap = document.getElementById("cScroll");
   const thumb = document.getElementById("cScrollThumb");
   if (!wrap || !thumb) return;
@@ -1960,7 +1964,7 @@ function initCustomScrollbar() {
 
   layoutThumb();
   syncThumb();
-}
+} // end _initCustomScrollbar_unused
 
 /* ------------------------------
    Hero stars (canvas)
@@ -2561,8 +2565,6 @@ async function init() {
 
   loadTo(40);
 
-  initCustomScrollbar();
-
   forceTopAndRefresh();
   window.addEventListener("load", forceTopAndRefresh, { once: true });
 
@@ -3007,24 +3009,51 @@ function initChapterRail() {
   const rail = document.getElementById("crRail");
   if (!rail) return;
 
-  const STOPS = ["hero", "showcase", "about", "career", "work", "tech", "ask", "contact"];
+  // Sections in order — must match the crItem order in HTML
+  const STOPS = ["hero", "about", "career", "work", "tech", "ask", "contact"];
 
   const items      = Array.from(rail.querySelectorAll(".crItem"));
+  const fill       = document.getElementById("crFill");
+  const trackEl    = rail.querySelector(".crTrack");
   const sectionEls = STOPS.map((id) => document.getElementById(id));
 
   let activeIdx = -1;
   let raf = 0;
+  let dotX = null; // cached dot X offset from track left
+
+  // Measure and cache the dot center's X position relative to the track.
+  // This drives both the fill's left and the spine ::before via a CSS var.
+  function alignSpine() {
+    const firstDot = items[0]?.querySelector(".crDot");
+    if (!firstDot || !trackEl) return;
+    const dr = firstDot.getBoundingClientRect();
+    const tr = trackEl.getBoundingClientRect();
+    dotX = dr.left + dr.width / 2 - tr.left; // dot centre from track left
+    fill.style.left = dotX + "px";
+    trackEl.style.setProperty("--cr-dot-x", dotX + "px");
+  }
 
   function setActive(idx) {
     if (idx === activeIdx) return;
     activeIdx = idx;
     items.forEach((el, i) => el.classList.toggle("cr-active", i === idx));
+    updateFill(idx);
+  }
+
+  function updateFill(idx) {
+    if (!fill || !items[idx] || !trackEl) return;
+    if (dotX === null) alignSpine();
+    const dot       = items[idx].querySelector(".crDot");
+    if (!dot) return;
+    const dotRect   = dot.getBoundingClientRect();
+    const trackRect = trackEl.getBoundingClientRect();
+    // Grow fill from track top (0) to active dot centre
+    const dotCenterInTrack = dotRect.top + dotRect.height / 2 - trackRect.top;
+    fill.style.height = Math.max(0, dotCenterInTrack) + "px";
   }
 
   function update() {
     raf = 0;
-    // Section becomes active when its top crosses 40% from viewport top.
-    // Walk forward — last section whose top ≤ threshold wins.
     const threshold = window.innerHeight * 0.40;
     let best = 0;
     sectionEls.forEach((el, i) => {
@@ -3038,10 +3067,16 @@ function initChapterRail() {
   }, { passive: true });
 
   window.addEventListener("resize", () => {
+    dotX = null;        // re-measure on resize
+    alignSpine();
     if (!raf) raf = requestAnimationFrame(update);
   }, { passive: true });
 
-  update(); // set initial active state
+  // Align after layout is stable
+  requestAnimationFrame(() => {
+    alignSpine();
+    update();
+  });
 }
 
 /* ---------------------------
