@@ -7437,7 +7437,7 @@ body[data-theme="light"] .abtTag:hover {
 /* Canvas: particles are white — invert + multiply so they read as
    soft dark marks against the white background */
 [data-theme="light"] .heroCanvas {
-  opacity: 0.12;
+  opacity: 0.42;
   mix-blend-mode: multiply;
   filter: invert(1);
 }
