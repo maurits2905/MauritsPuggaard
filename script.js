@@ -3038,12 +3038,16 @@ function initChapterRail() {
     if (idx === activeIdx) return;
     activeIdx = idx;
     items.forEach((el, i) => el.classList.toggle("cr-active", i === idx));
-    updateFill(idx);
+    // Re-measure after the class change so spine and fill stay aligned
+    requestAnimationFrame(() => {
+      alignSpine();
+      updateFill(idx);
+    });
   }
 
   function updateFill(idx) {
     if (!fill || !items[idx] || !trackEl) return;
-    if (dotX === null) alignSpine();
+    alignSpine(); // always re-measure — never use stale dotX
     const dot       = items[idx].querySelector(".crDot");
     if (!dot) return;
     const dotRect   = dot.getBoundingClientRect();

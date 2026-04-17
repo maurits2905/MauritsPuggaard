@@ -9074,15 +9074,15 @@ body[data-theme="light"] .abtTag:hover {
 }
 
 .crDot {
-  width: 7px;
-  height: 7px;
+  /* Small fixed size — grows via transform so layout never shifts */
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   background: rgba(155, 140, 255, 0.28);
   transition:
-    background  0.30s ease,
-    box-shadow  0.30s ease,
-    width       0.30s ease,
-    height      0.30s ease;
+    background   0.28s ease,
+    box-shadow   0.28s ease,
+    transform    0.32s cubic-bezier(0.34, 1.56, 0.64, 1); /* spring pop */
   flex-shrink: 0;
   position: relative;
   z-index: 2;
@@ -9100,23 +9100,23 @@ body[data-theme="light"] .abtTag:hover {
   line-height: 1;
 }
 
-/* — Active — */
+/* — Active — scale up via transform (no layout shift → spine stays stable) */
 .crItem.cr-active .crDot {
-  width: 10px;
-  height: 10px;
+  transform: scale(2.4);
   background: #9b8cff;
   box-shadow:
-    0 0 0 2px rgba(155, 140, 255, 0.18),
-    0 0 14px rgba(155, 140, 255, 0.60);
+    0 0 0 3px rgba(155, 140, 255, 0.16),
+    0 0 16px rgba(155, 140, 255, 0.55);
 }
 
 .crItem.cr-active .crLabel {
   color: rgba(200, 192, 255, 0.95);
-  letter-spacing: 0.22em;
+  /* no letter-spacing change — keeps label width stable */
 }
 
 /* — Hover — */
-.crItem:hover .crDot {
+.crItem:hover:not(.cr-active) .crDot {
+  transform: scale(1.5);
   background: rgba(155, 140, 255, 0.55);
 }
 
@@ -9140,8 +9140,8 @@ body[data-theme="light"] .abtTag:hover {
 [data-theme="light"] .crItem.cr-active .crDot {
   background: #6a50e8;
   box-shadow:
-    0 0 0 2px rgba(100, 80, 220, 0.14),
-    0 0 14px rgba(100, 80, 220, 0.42);
+    0 0 0 3px rgba(100, 80, 220, 0.12),
+    0 0 16px rgba(100, 80, 220, 0.40);
 }
 
 [data-theme="light"] .crItem.cr-active .crLabel {
@@ -9152,7 +9152,7 @@ body[data-theme="light"] .abtTag:hover {
   color: rgba(60, 40, 150, 0.60);
 }
 
-[data-theme="light"] .crItem:hover .crDot {
+[data-theme="light"] .crItem:hover:not(.cr-active) .crDot {
   background: rgba(80, 60, 180, 0.45);
 }
 
