@@ -3305,43 +3305,51 @@ html.noReveal .r,
 
 /* ================================================
    Unified Section Heading System
-   [01] [───] [CATEGORY]  then large title below
+   Small eyebrow row: [01] [───]
+   Large title below: [Category Name]
 ================================================ */
 
-/* ── Signal eyebrow label ── */
+/* ── Signal label — column layout so number sits above big title ── */
 .secLabel {
   display: flex;
-  align-items: center;
-  gap: 14px;
+  flex-direction: column;
+  align-items: center;    /* horizontally center children */
+  gap: 10px;
   margin-bottom: 28px;
+  text-align: center;
+}
+
+/* ── Eyebrow row: number + line on one line ── */
+.secEyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .secNum {
   font-family: ui-monospace, 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
-  font-size: clamp(12px, 1.4vw, 16px);
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: rgba(155, 140, 255, 0.65);
+  color: rgba(155, 140, 255, 0.55);
   font-variant-numeric: tabular-nums;
-  flex-shrink: 0;
 }
 
 .secLabelLine {
-  width: 48px;
+  width: 40px;
   height: 1px;
-  background: linear-gradient(90deg, rgba(155, 140, 255, 0.55), rgba(68, 240, 177, 0.15), transparent);
-  flex-shrink: 0;
+  background: linear-gradient(90deg, rgba(155, 140, 255, 0.5), rgba(68, 240, 177, 0.15), transparent);
   border-radius: 1px;
 }
 
 .secCategory {
   font-family: 'Inter', 'DM Sans', system-ui, -apple-system, sans-serif;
-  font-size: clamp(32px, 4.5vw, 64px);
+  font-size: clamp(30px, 4.2vw, 60px);
   font-weight: 800;
   letter-spacing: -0.03em;
   text-transform: none;
-  line-height: 1;
+  line-height: 1.05;
   color: transparent;
   background: linear-gradient(
     110deg,
