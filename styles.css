@@ -521,42 +521,13 @@ body.isLoading {
    Custom Page Scrollbar (progress rail)
 ========================= */
 
-/* Custom scrollbar */
-
+/* Native scrollbar hidden — crRail handles navigation */
 html {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(155, 140, 255, 0.35) transparent;
+  scrollbar-width: none;
 }
-
 ::-webkit-scrollbar {
-  width: 4px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(155, 140, 255, 0.35);
-  border-radius: 999px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(155, 140, 255, 0.6);
-}
-
-/* Light mode scrollbar — visible track on white background */
-[data-theme="light"] html {
-  scrollbar-color: rgba(75, 105, 255, 0.28) rgba(8, 9, 20, 0.05);
-}
-[data-theme="light"] ::-webkit-scrollbar-track {
-  background: rgba(8, 9, 20, 0.04);
-}
-[data-theme="light"] ::-webkit-scrollbar-thumb {
-  background: rgba(75, 105, 255, 0.26);
-}
-[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
-  background: rgba(75, 105, 255, 0.48);
+  width: 0;
+  display: none;
 }
 
 
@@ -9039,12 +9010,11 @@ body[data-theme="light"] .abtTag:hover {
 
 .crRail {
   position: fixed;
-  right: 20px;
+  right: 24px;
   top: 50%;
   transform: translateY(-50%);
   z-index: 9000;
   pointer-events: none;
-  /* Only render in a viewport wide enough to have a gutter */
   display: none;
 }
 
@@ -9057,24 +9027,23 @@ body[data-theme="light"] .abtTag:hover {
   flex-direction: column;
   align-items: flex-end;
   position: relative;
-  padding: 4px 0;
+  padding: 6px 0;
 }
 
-/* Spine track — left/transform set by JS to align with dots */
+/* Spine — runs through every dot */
 .crTrack::before {
   content: '';
   position: absolute;
   top: 0;
   bottom: 0;
   width: 1px;
-  background: rgba(155, 140, 255, 0.12);
+  background: rgba(155, 140, 255, 0.15);
   pointer-events: none;
-  /* JS sets left via --cr-dot-x so the line runs through every dot */
   left: var(--cr-dot-x, 50%);
   transform: translateX(-50%);
 }
 
-/* Fill — grows from top dot down to active dot; left set by JS */
+/* Fill — grows from top dot to active dot */
 .crFill {
   position: absolute;
   top: 0;
@@ -9082,23 +9051,22 @@ body[data-theme="light"] .abtTag:hover {
   height: 0px;
   background: linear-gradient(
     180deg,
-    rgba(155, 140, 255, 0.75) 0%,
-    rgba(68, 240, 177, 0.65) 100%
+    rgba(155, 140, 255, 0.80) 0%,
+    rgba(68, 240, 177, 0.70) 100%
   );
   border-radius: 999px;
-  box-shadow: 0 0 6px rgba(155, 140, 255, 0.45);
+  box-shadow: 0 0 8px rgba(155, 140, 255, 0.50);
   pointer-events: none;
   transition: height 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   z-index: 1;
-  /* JS sets left via updateFill() */
   transform: translateX(-50%);
 }
 
 .crItem {
   display: flex;
   align-items: center;
-  gap: 9px;
-  padding: 7px 0;
+  gap: 12px;
+  padding: 10px 0;
   text-decoration: none;
   pointer-events: all;
   cursor: pointer;
@@ -9106,16 +9074,15 @@ body[data-theme="light"] .abtTag:hover {
 }
 
 .crDot {
-  width: 5px;
-  height: 5px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  background: rgba(155, 140, 255, 0.20);
+  background: rgba(155, 140, 255, 0.28);
   transition:
-    background   0.32s ease,
-    box-shadow   0.32s ease,
-    width        0.32s ease,
-    height       0.32s ease,
-    transform    0.14s ease; /* water-tension merge */
+    background  0.30s ease,
+    box-shadow  0.30s ease,
+    width       0.30s ease,
+    height      0.30s ease;
   flex-shrink: 0;
   position: relative;
   z-index: 2;
@@ -9123,11 +9090,11 @@ body[data-theme="light"] .abtTag:hover {
 
 .crLabel {
   font-family: ui-monospace, 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
-  font-size: 8px;
-  letter-spacing: 0.16em;
+  font-size: 9px;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0);
-  transition: color 0.28s ease;
+  color: rgba(255, 255, 255, 0.22);
+  transition: color 0.25s ease;
   white-space: nowrap;
   user-select: none;
   line-height: 1;
@@ -9135,45 +9102,58 @@ body[data-theme="light"] .abtTag:hover {
 
 /* — Active — */
 .crItem.cr-active .crDot {
-  width: 7px;
-  height: 7px;
+  width: 10px;
+  height: 10px;
   background: #9b8cff;
-  box-shadow: 0 0 10px rgba(155, 140, 255, 0.55);
+  box-shadow:
+    0 0 0 2px rgba(155, 140, 255, 0.18),
+    0 0 14px rgba(155, 140, 255, 0.60);
 }
 
 .crItem.cr-active .crLabel {
-  color: rgba(155, 140, 255, 0.85);
+  color: rgba(200, 192, 255, 0.95);
+  letter-spacing: 0.22em;
 }
 
-/* — Hover (any item) — */
+/* — Hover — */
 .crItem:hover .crDot {
-  background: rgba(155, 140, 255, 0.52);
+  background: rgba(155, 140, 255, 0.55);
 }
 
 .crItem:hover .crLabel {
-  color: rgba(255, 255, 255, 0.38);
+  color: rgba(255, 255, 255, 0.50);
 }
 
-/* ── Light mode overrides ── */
+/* ── Light mode ── */
 [data-theme="light"] .crTrack::before {
-  background: rgba(80, 60, 180, 0.12);
+  background: rgba(80, 60, 180, 0.14);
 }
 
 [data-theme="light"] .crDot {
-  background: rgba(80, 60, 180, 0.22);
+  background: rgba(80, 60, 180, 0.20);
+}
+
+[data-theme="light"] .crLabel {
+  color: rgba(60, 40, 150, 0.30);
 }
 
 [data-theme="light"] .crItem.cr-active .crDot {
   background: #6a50e8;
-  box-shadow: 0 0 10px rgba(100, 80, 220, 0.38);
+  box-shadow:
+    0 0 0 2px rgba(100, 80, 220, 0.14),
+    0 0 14px rgba(100, 80, 220, 0.42);
 }
 
 [data-theme="light"] .crItem.cr-active .crLabel {
-  color: rgba(80, 60, 180, 0.88);
+  color: rgba(80, 60, 180, 0.92);
 }
 
 [data-theme="light"] .crItem:hover .crLabel {
-  color: rgba(0, 0, 0, 0.35);
+  color: rgba(60, 40, 150, 0.60);
+}
+
+[data-theme="light"] .crItem:hover .crDot {
+  background: rgba(80, 60, 180, 0.45);
 }
 
 /* ============================================================
