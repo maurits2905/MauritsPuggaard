@@ -75,6 +75,19 @@ body {
   overscroll-behavior-y: none; /* prevent pull-to-refresh on mobile */
 }
 
+/* ── Atmospheric background layer — fixed so it never creates scroll seams ── */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 90% 55% at 25%  20%, rgba(155, 140, 255, 0.055) 0%, transparent 65%),
+    radial-gradient(ellipse 70% 45% at 75%  55%, rgba(68,  240, 177, 0.035) 0%, transparent 60%),
+    radial-gradient(ellipse 80% 50% at 50%  85%, rgba(75,  105, 255, 0.045) 0%, transparent 65%);
+}
+
 /* =========================
    Preloader — Cinematic Ring
 ========================= */
@@ -8755,17 +8768,15 @@ body[data-theme="light"] .abtTag:hover {
 .abtSection::before {
   content: '';
   position: absolute;
-  top: -160px;
+  top: -200px;
+  bottom: -200px;
   left: 50%;
   transform: translateX(-50%);
-  width: 100%;
-  max-width: 1100px;
-  height: 700px;
-  background: radial-gradient(ellipse at 50% 15%,
-    rgba(122, 107, 255, 0.10) 0%,
-    rgba(75,  105, 255, 0.05) 35%,
-    rgba(122, 107, 255, 0.02) 58%,
-    transparent               80%
+  width: 140%;
+  max-width: 1400px;
+  background: radial-gradient(ellipse 80% 50% at 50% 40%,
+    rgba(155, 140, 255, 0.05) 0%,
+    transparent               65%
   );
   pointer-events: none;
   z-index: 0;
@@ -8778,17 +8789,15 @@ body[data-theme="light"] .abtTag:hover {
 .careerX::before {
   content: '';
   position: absolute;
-  top: -160px;
-  left: 60%;
+  top: -200px;
+  bottom: -200px;
+  left: 58%;
   transform: translateX(-50%);
-  width: 100%;
-  max-width: 1100px;
-  height: 700px;
-  background: radial-gradient(ellipse at 52% 15%,
-    rgba(155, 140, 255, 0.12) 0%,
-    rgba(180, 165, 255, 0.06) 35%,
-    rgba(155, 140, 255, 0.02) 60%,
-    transparent               82%
+  width: 140%;
+  max-width: 1400px;
+  background: radial-gradient(ellipse 80% 50% at 50% 40%,
+    rgba(155, 140, 255, 0.06) 0%,
+    transparent               65%
   );
   pointer-events: none;
   z-index: 0;
@@ -8801,17 +8810,15 @@ body[data-theme="light"] .abtTag:hover {
 #work::before {
   content: '';
   position: absolute;
-  top: -180px;
+  top: -200px;
+  bottom: -200px;
   left: 50%;
   transform: translateX(-50%);
-  width: 100%;
-  max-width: 1100px;
-  height: 700px;
-  background: radial-gradient(ellipse at 50% 20%,
-    rgba(155, 140, 255, 0.10) 0%,
-    rgba(68,  240, 177, 0.06) 35%,
-    rgba(100, 180, 255, 0.02) 58%,
-    transparent               80%
+  width: 140%;
+  max-width: 1400px;
+  background: radial-gradient(ellipse 80% 50% at 50% 40%,
+    rgba(155, 140, 255, 0.05) 0%,
+    transparent               65%
   );
   pointer-events: none;
   z-index: 0;
@@ -8823,17 +8830,15 @@ body[data-theme="light"] .abtTag:hover {
 #tech::before {
   content: '';
   position: absolute;
-  top: -180px;
+  top: -200px;
+  bottom: -200px;
   left: 50%;
   transform: translateX(-50%);
-  width: 100%;
-  max-width: 1100px;
-  height: 700px;
-  background: radial-gradient(ellipse at 50% 20%,
-    rgba(68,  240, 177, 0.09) 0%,
-    rgba(155, 140, 255, 0.06) 32%,
-    rgba(68,  240, 177, 0.02) 56%,
-    transparent               80%
+  width: 140%;
+  max-width: 1400px;
+  background: radial-gradient(ellipse 80% 50% at 50% 40%,
+    rgba(68,  240, 177, 0.045) 0%,
+    transparent               65%
   );
   pointer-events: none;
   z-index: 0;
@@ -8870,17 +8875,15 @@ body[data-theme="light"] .abtTag:hover {
 #ask::before {
   content: '';
   position: absolute;
-  top: -180px;
+  top: -200px;
+  bottom: -200px;
   left: 50%;
   transform: translateX(-50%);
-  width: 100%;
-  max-width: 1100px;
-  height: 700px;
-  background: radial-gradient(ellipse at 50% 18%,
-    rgba(75, 105, 255, 0.11) 0%,
-    rgba(155, 140, 255, 0.06) 32%,
-    rgba(75, 105, 255, 0.02) 56%,
-    transparent 80%
+  width: 140%;
+  max-width: 1400px;
+  background: radial-gradient(ellipse 80% 50% at 50% 40%,
+    rgba(75, 105, 255, 0.05) 0%,
+    transparent               65%
   );
   pointer-events: none;
   z-index: 0;
@@ -8933,16 +8936,15 @@ body[data-theme="light"] .abtTag:hover {
 #contact::before {
   content: '';
   position: absolute;
-  top: -160px;
+  top: -200px;
+  bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 100%;
-  max-width: 1000px;
-  height: 600px;
-  background: radial-gradient(ellipse at 50% 20%,
-    rgba(155, 140, 255, 0.08) 0%,
-    rgba(68,  240, 177, 0.03) 42%,
-    transparent 75%
+  width: 140%;
+  max-width: 1400px;
+  background: radial-gradient(ellipse 80% 50% at 50% 40%,
+    rgba(155, 140, 255, 0.05) 0%,
+    transparent               65%
   );
   pointer-events: none;
   z-index: 0;
