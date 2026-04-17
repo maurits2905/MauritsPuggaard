@@ -1635,33 +1635,37 @@ function renderCareer() {
 
   // ── Build DOM entries ─────────────────────────────────────────
   careerData.forEach((item, i) => {
-    const color = CAREER_COLORS[i] || "#9b8cff";
-    const entry = document.createElement("div");
-    entry.className = "cEntry";
+    const color  = CAREER_COLORS[i] || "#9b8cff";
+    const isLeft = i % 2 === 0;
+    const entry  = document.createElement("div");
+    entry.className   = `ptEntry ${isLeft ? "ptEntry--l" : "ptEntry--r"} cEntry`;
     entry.dataset.index = String(i);
     entry.style.setProperty("--ce-color", color);
-    entry.innerHTML =
-      '<div class="cYear" aria-hidden="true">' + escapeHtml(item.year) + "</div>" +
-      '<div class="cNode" aria-hidden="true"><div class="cDot"></div></div>' +
-      "<article class=\"cCard\">" +
-        '<div class="cCard__head">' +
-          '<span class="cCard__badge">' + escapeHtml(item.year) + "</span>" +
-          '<span class="cCard__company">' + escapeHtml(item.sub) + "</span>" +
-        "</div>" +
-        '<h3 class="cCard__role">' + escapeHtml(item.role) + "</h3>" +
-        '<p class="cCard__desc">' + escapeHtml(item.desc) + "</p>" +
-      "</article>";
+
+    const card =
+      `<article class="ptCard">` +
+        `<div class="ptGhost" aria-hidden="true">${escapeHtml(item.year)}</div>` +
+        `<div class="ptMeta">` +
+          `<span class="ptBadge">${escapeHtml(item.year)}</span>` +
+          `<span class="ptCtx">${escapeHtml(item.sub)}</span>` +
+        `</div>` +
+        `<h3 class="ptRole">${escapeHtml(item.role)}</h3>` +
+        `<p class="ptDesc">${escapeHtml(item.desc)}</p>` +
+      `</article>`;
+
+    const node = `<div class="ptNode" aria-hidden="true"><div class="cDot"></div></div>`;
+    const gap  = `<div class="ptGap" aria-hidden="true"></div>`;
+
+    entry.innerHTML = isLeft ? card + node + gap : gap + node + card;
     track.appendChild(entry);
   });
 
   const entries = Array.from(track.querySelectorAll(".cEntry"));
 
-  // ── Helpers ───────────────────────────────────────────────────
-  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
-
-  // ── Reveal entries as they scroll into view ───────────────────
+  // Mark section active (drives terminal-dot CSS)
   section.classList.add("comet-fired");
 
+  // ── Reveal entries as they scroll into view ───────────────────
   const entryObserver = new IntersectionObserver((obs) => {
     obs.forEach(({ target, isIntersecting }) => {
       if (isIntersecting) {
@@ -1669,7 +1673,7 @@ function renderCareer() {
         entryObserver.unobserve(target);
       }
     });
-  }, { threshold: 0.15 });
+  }, { threshold: 0.12 });
 
   entries.forEach((e) => entryObserver.observe(e));
 
@@ -1684,7 +1688,6 @@ function renderCareer() {
     const trackRect  = track.getBoundingClientRect();
     const viewCenter = vh * 0.5;
 
-    // Find the entry closest to viewport centre
     let bestIdx = 0, bestDist = Infinity;
     entries.forEach((entry, i) => {
       const r    = entry.getBoundingClientRect();
@@ -1692,20 +1695,18 @@ function renderCareer() {
       if (dist < bestDist) { bestDist = dist; bestIdx = i; }
     });
 
-    // Swap active class
     if (bestIdx !== currentActive) {
       if (currentActive >= 0) entries[currentActive].classList.remove("cActive");
       entries[bestIdx].classList.add("cActive");
       currentActive = bestIdx;
     }
 
-    // Grow fill to reach the active dot centre exactly
     if (fill) {
       const dot = entries[bestIdx].querySelector(".cDot");
       if (dot) {
-        const dotR         = dot.getBoundingClientRect();
+        const dotR             = dot.getBoundingClientRect();
         const dotCenterInTrack = dotR.top + dotR.height * 0.5 - trackRect.top;
-        fill.style.height  = Math.max(0, dotCenterInTrack) + "px";
+        fill.style.height      = Math.max(0, dotCenterInTrack) + "px";
       }
     }
   }
