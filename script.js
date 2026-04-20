@@ -4248,11 +4248,14 @@ function initMpHero() {
       });
     }, 200);
 
-    // After zoom completes: show UI chrome, hand off to video sequence
+    // After zoom completes: reveal all chrome + start video sequence
     // (introWrap stays fully visible — the video IS the background now)
     setTimeout(() => {
       if (heroSub) heroSub.classList.add("mp-visible");
       if (scrollCue) scrollCue.classList.add("mp-visible");
+      // Fade in header and resume button now that the intro is done
+      document.querySelector(".topbar")?.classList.add("mp-chrome-ready");
+      document.querySelector(".resumeBtn")?.classList.add("mp-chrome-ready");
       if (vidA) startVideoSequence(0, vidA, vidB);
     }, 2900);
   }

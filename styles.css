@@ -9910,3 +9910,19 @@ body[data-theme="light"] .abtTag:hover {
   }
 }
 
+/* ══════════════════════════════════════════════════════════════
+   Chrome hidden during the intro sequence.
+   .topbar and .resumeBtn are invisible until JS adds
+   .mp-chrome-ready once the video sequence begins.
+   ══════════════════════════════════════════════════════════════ */
+.topbar:not(.mp-chrome-ready),
+.resumeBtn:not(.mp-chrome-ready) {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.topbar,
+.resumeBtn {
+  transition: opacity 0.9s ease;
+}
+
