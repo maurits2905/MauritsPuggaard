@@ -2607,6 +2607,7 @@ async function init() {
   initBgStars();
   initHeroThree();
   initHeroSkillTicker();
+  initMpHero();
   /* Defer showcase init by one frame so the hero section is fully laid out
      before the canvas reads its dimensions via getBoundingClientRect(). */
   requestAnimationFrame(initShowcase);
@@ -4057,4 +4058,137 @@ if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", initTermsModal);
 } else {
   initTermsModal();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   initMpHero
+   Full hero redesign:
+   1. 8 small portrait photos cycle at center
+   2. Last photo zooms to full screen
+   3. Full-screen carousel + title reveal
+   4. Scroll → 6 vertical blinds close (staggered left→right)
+   5. Rolling text section rises on scroll
+   ══════════════════════════════════════════════════════════════ */
+function initMpHero() {
+  const introWrap = document.getElementById("mpIntroWrap");
+  if (!introWrap) return; // guard: not on this page
+
+  const introPad   = document.getElementById("mpIntroPad");
+  const photosWrap = document.getElementById("mpPhotos");
+  const titleWrap  = document.getElementById("mpTitleWrap");
+  const heroSub    = document.getElementById("mpHeroSub");
+  const scrollCue  = document.getElementById("mpScrollCue");
+  const heroWrap   = document.getElementById("hero");
+  const rollSection = document.querySelector(".mpRollSection");
+  const rollTrack   = document.getElementById("mpRollTrack");
+
+  const introPhotos = Array.from(introWrap.querySelectorAll(".mpIntroPhoto"));
+  const fullPhotos  = photosWrap
+    ? Array.from(photosWrap.querySelectorAll(".mpPhoto"))
+    : [];
+  const blinds = Array.from(document.querySelectorAll(".mpBlind"));
+
+  // ── Blind close timings: [scrollStart, scrollEnd] fractions 0–1 ──
+  // Leftmost closes fastest, rightmost closes slowest (subtle stagger)
+  const BLIND_TIMINGS = [
+    [0.00, 0.52],
+    [0.06, 0.60],
+    [0.12, 0.70],
+    [0.20, 0.80],
+    [0.28, 0.90],
+    [0.36, 1.00],
+  ];
+
+  function smoothStep(t) {
+    return t * t * (3 - 2 * t);
+  }
+
+  // ── Phase 1: Cycle intro portraits ──
+  let introIdx = 0;
+  const INTRO_INTERVAL = 370; // ms per portrait
+
+  function showIntroPhoto(i) {
+    introPhotos.forEach((p, j) => p.classList.toggle("mp-active", j === i));
+  }
+
+  const introTimer = setInterval(() => {
+    introIdx = (introIdx + 1) % introPhotos.length;
+    showIntroPhoto(introIdx);
+
+    if (introIdx === introPhotos.length - 1) {
+      // Reached last photo — pause briefly then zoom
+      clearInterval(introTimer);
+      setTimeout(startZoom, 420);
+    }
+  }, INTRO_INTERVAL);
+
+  // ── Phase 2: Zoom portrait to full screen ──
+  function startZoom() {
+    introWrap.classList.add("mp-zoomed");
+
+    // After transition completes, swap to full-screen carousel
+    setTimeout(() => {
+      // 1. Fade in full-screen photos (already at mp-active index 0)
+      if (photosWrap) photosWrap.classList.add("mp-visible");
+
+      // 2. Fade out intro wrap (behind the carousel)
+      introWrap.style.opacity = "0";
+
+      // 3. Slide up title
+      if (titleWrap) titleWrap.classList.add("mp-visible");
+
+      // 4. Fade in subtitle + scroll cue (CSS delays handle timing)
+      if (heroSub) heroSub.classList.add("mp-visible");
+      if (scrollCue) scrollCue.classList.add("mp-visible");
+
+      // 5. Start full-screen photo cycling
+      startFullCycle();
+    }, 1400);
+  }
+
+  // ── Phase 3: Full-screen photo carousel (5 s per photo) ──
+  let fullIdx = 0;
+
+  function showFullPhoto(i) {
+    fullPhotos.forEach((p, j) => p.classList.toggle("mp-active", j === i));
+  }
+
+  function startFullCycle() {
+    setInterval(() => {
+      fullIdx = (fullIdx + 1) % fullPhotos.length;
+      showFullPhoto(fullIdx);
+    }, 5000);
+  }
+
+  // ── Phase 4 & 5: Scroll handler — blinds + rolling text ──
+  function onMpScroll() {
+    // Blinds (driven by scroll through mpHeroWrap)
+    if (heroWrap && blinds.length) {
+      const scrollable = heroWrap.offsetHeight - window.innerHeight;
+      const progress   = Math.max(0, Math.min(1,
+        -heroWrap.getBoundingClientRect().top / scrollable
+      ));
+
+      blinds.forEach((blind, i) => {
+        const [s, e] = BLIND_TIMINGS[i];
+        let t = (progress - s) / (e - s);
+        t = smoothStep(Math.max(0, Math.min(1, t)));
+        blind.style.transform = `scaleX(${t})`;
+      });
+    }
+
+    // Rolling text (driven by scroll through mpRollSection)
+    if (rollSection && rollTrack) {
+      const rollScrollable = rollSection.offsetHeight - window.innerHeight;
+      const rollProgress   = Math.max(0, Math.min(1,
+        -rollSection.getBoundingClientRect().top / rollScrollable
+      ));
+      // Track travels from +115 vh (below) to –115 vh (above)
+      const yVh = 115 - rollProgress * 230;
+      rollTrack.style.transform = `translateY(${yVh}vh)`;
+    }
+  }
+
+  window.addEventListener("scroll", onMpScroll, { passive: true });
+  onMpScroll(); // set initial state
 }
