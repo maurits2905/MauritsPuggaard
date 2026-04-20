@@ -4073,7 +4073,6 @@ function initMpHero() {
   const introWrap = document.getElementById("mpIntroWrap");
   if (!introWrap) return; // guard: not on this page
 
-  const introPad   = document.getElementById("mpIntroPad");
   const photosWrap = document.getElementById("mpPhotos");
   const titleWrap  = document.getElementById("mpTitleWrap");
   const heroSub    = document.getElementById("mpHeroSub");

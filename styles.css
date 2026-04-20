@@ -9604,44 +9604,27 @@ body[data-theme="light"] .abtTag:hover {
 }
 
 /* ══════════════════════════
-   Phase 1 — Intro portraits
+   Phase 1 — Intro portraits (clip-path reveal)
+
+   Photos are always full-screen. A clip-path masks them down to a
+   portrait-sized window at the centre. mp-zoomed expands the clip
+   to inset(0%) — no scaling, just the matte pulling back.
    ══════════════════════════ */
 .mpIntroWrap {
   position: absolute;
   inset: 0;
   z-index: 20;
   pointer-events: none;
-  transition: opacity 0.6s ease;
-}
-
-.mpIntroPad {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: clamp(100px, 13vw, 200px);
-  height: clamp(150px, 20vw, 300px);
-  overflow: hidden;
-  border-radius: 4px;
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.85);
+  /* Portrait window: ~40% top+bottom, ~43% left+right inset
+     → roughly 14 vw wide × 20 vh tall centred                */
+  clip-path: inset(40% 43% round 6px);
   transition:
-    width     1.35s cubic-bezier(0.16, 1, 0.3, 1),
-    height    1.35s cubic-bezier(0.16, 1, 0.3, 1),
-    top       1.35s cubic-bezier(0.16, 1, 0.3, 1),
-    left      1.35s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 1.35s cubic-bezier(0.16, 1, 0.3, 1),
-    border-radius 1.35s cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow    1.35s ease;
+    clip-path 1.4s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity   0.7s ease;
 }
 
-.mpIntroWrap.mp-zoomed .mpIntroPad {
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  transform: none;
-  border-radius: 0;
-  box-shadow: none;
+.mpIntroWrap.mp-zoomed {
+  clip-path: inset(0% round 0px);
 }
 
 .mpIntroPhoto {
@@ -9892,9 +9875,9 @@ body[data-theme="light"] .abtTag:hover {
   .mpRollLine {
     font-size: clamp(2.2rem, 11vw, 4rem);
   }
-  .mpIntroPad {
-    width: clamp(80px, 22vw, 130px);
-    height: clamp(120px, 33vw, 195px);
+  /* On mobile, show a slightly taller portrait window */
+  .mpIntroWrap:not(.mp-zoomed) {
+    clip-path: inset(36% 36% round 6px);
   }
 }
 
