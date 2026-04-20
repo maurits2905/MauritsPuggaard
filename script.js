@@ -4061,6 +4061,76 @@ if (document.readyState === "loading") {
 }
 
 /* ══════════════════════════════════════════════════════════════
+   runSlotMachine
+   Replaces text in `containerEl` with per-letter slot reels.
+   Each column cycles through random characters then snaps to the
+   correct letter, left → right with `staggerMs` between columns.
+   ══════════════════════════════════════════════════════════════ */
+function runSlotMachine(containerEl, word, staggerMs) {
+  const CHARSET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const REEL_RANDOMS = 10;   // random chars above the target
+  const COL_STAGGER  = 75;   // ms between each column starting
+  const DURATION     = 720;  // ms for each column to reach target
+
+  containerEl.innerHTML = "";
+
+  const cols = [];
+
+  // Build DOM for every letter
+  for (let i = 0; i < word.length; i++) {
+    const char = word[i];
+
+    const slotEl = document.createElement("span");
+    slotEl.className = "mpLetterSlot";
+
+    // Ghost: invisible target char that locks the slot's width so
+    // cycling characters can't cause layout reflow.
+    const ghostEl = document.createElement("span");
+    ghostEl.className = "mpLetterGhost";
+    ghostEl.setAttribute("aria-hidden", "true");
+    ghostEl.textContent = char;
+    slotEl.appendChild(ghostEl);
+
+    // Reel: absolutely positioned column of chars
+    const reelEl = document.createElement("span");
+    reelEl.className = "mpLetterReel";
+
+    // Random chars that scroll past before the target
+    for (let r = 0; r < REEL_RANDOMS; r++) {
+      const c = document.createElement("span");
+      c.className = "mpLetterChar";
+      c.textContent = CHARSET[Math.floor(Math.random() * CHARSET.length)];
+      reelEl.appendChild(c);
+    }
+    // The target character sits at the bottom of the reel
+    const target = document.createElement("span");
+    target.className = "mpLetterChar";
+    target.textContent = char;
+    reelEl.appendChild(target);
+
+    slotEl.appendChild(reelEl);
+    containerEl.appendChild(slotEl);
+    cols.push({ reel: reelEl, slot: slotEl });
+  }
+
+  // Measure after layout so we get real pixel heights
+  requestAnimationFrame(() => {
+    const charH = cols[0] ? cols[0].slot.offsetHeight : 0;
+    if (!charH) return;
+    const travelPx = REEL_RANDOMS * charH; // distance to final char
+
+    cols.forEach(({ reel }, i) => {
+      const delay = staggerMs + i * COL_STAGGER;
+      setTimeout(() => {
+        reel.style.transition =
+          `transform ${DURATION}ms cubic-bezier(0.22, 1, 0.36, 1)`;
+        reel.style.transform = `translateY(-${travelPx}px)`;
+      }, delay);
+    });
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════
    initMpHero
    Full hero redesign:
    1. 8 small portrait photos cycle at center
@@ -4121,26 +4191,33 @@ function initMpHero() {
     }
   }, INTRO_INTERVAL);
 
-  // ── Phase 2: Zoom portrait to full screen ──
+  // ── Phase 2: Zoom + simultaneous letter-slot reveal ──
   function startZoom() {
     introWrap.classList.add("mp-zoomed");
 
-    // After transition completes, swap to full-screen carousel
+    // Show title container immediately so slot reels are visible
+    // during the clip-path expansion (same as the reference site)
+    if (titleWrap) titleWrap.classList.add("mp-visible");
+
+    // Start both words' slot machines — staggered so MAURITS
+    // resolves first, PUGGAARD follows ~120 ms later.
+    // 200 ms head-start lets the zoom begin before characters appear.
     setTimeout(() => {
-      // 1. Fade in full-screen photos (already at mp-active index 0)
+      const lines = titleWrap
+        ? titleWrap.querySelectorAll(".mpTitleInner")
+        : [];
+      const words = ["MAURITS", "PUGGAARD"];
+      lines.forEach((line, idx) => {
+        runSlotMachine(line, words[idx], idx * 120);
+      });
+    }, 200);
+
+    // After zoom completes, hand off to full-screen carousel
+    setTimeout(() => {
       if (photosWrap) photosWrap.classList.add("mp-visible");
-
-      // 2. Fade out intro wrap (behind the carousel)
       introWrap.style.opacity = "0";
-
-      // 3. Slide up title
-      if (titleWrap) titleWrap.classList.add("mp-visible");
-
-      // 4. Fade in subtitle + scroll cue (CSS delays handle timing)
       if (heroSub) heroSub.classList.add("mp-visible");
       if (scrollCue) scrollCue.classList.add("mp-visible");
-
-      // 5. Start full-screen photo cycling
       startFullCycle();
     }, 1400);
   }
