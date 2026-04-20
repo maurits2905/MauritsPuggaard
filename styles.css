@@ -1314,6 +1314,7 @@ html[data-theme=”light”] body[data-bg=”stars”] .bgDeep {
   height: 100%;
   opacity: 0.9;
   pointer-events: none;
+  will-change: transform; /* promote to own GPU compositor layer */
 }
 
 /* =========================
@@ -2241,6 +2242,7 @@ html.noReveal .r,
   position: relative;
   z-index: 1;
   padding: clamp(80px, 11vh, 128px) 0 0;
+  contain: layout style; /* limit repaint scope to this section */
 }
 
 .centerHead {
@@ -3573,6 +3575,7 @@ html.noReveal .r,
   padding-bottom: 60px;
   position: relative;
   opacity: 0;
+  will-change: opacity, transform; /* pre-promote for enter animation */
   transition:
     opacity  0.65s cubic-bezier(0.16, 1, 0.3, 1),
     transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
@@ -7181,6 +7184,7 @@ body[data-theme="light"] .abtTag:hover {
   z-index: 1;
   width: 100%;
   height: 100%;
+  will-change: opacity; /* own compositor layer — avoids repaint on opacity change */
   pointer-events: none;
   /* Stars stay fully visible almost to the very bottom so they flow
      seamlessly into the next section's star field */

@@ -354,7 +354,7 @@ function initDeepFade() {
   }
 
   window.addEventListener("scroll", onScroll, { passive: true });
-  window.addEventListener("resize", onScroll);
+  window.addEventListener("resize", onScroll, { passive: true });
   window.addEventListener("themechange", update);
 
   update();
@@ -496,7 +496,7 @@ function initHeaderPillNav() {
   }
 
   window.addEventListener("scroll", onScroll, { passive: true });
-  window.addEventListener("resize", pickActiveFromScroll);
+  window.addEventListener("resize", pickActiveFromScroll, { passive: true });
   window.addEventListener("load", () => {
     // If page loads with a hash, align it nicely
     const id = (location.hash || "").slice(1);
@@ -1727,7 +1727,7 @@ function renderCareer() {
       if (!raf) raf = requestAnimationFrame(updateScroll);
     }
     window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", updateScroll);
+    window.addEventListener("resize", updateScroll, { passive: true });
     requestAnimationFrame(updateScroll);
   }
 
@@ -2042,6 +2042,10 @@ function initBgStars() {
   function draw() {
     ctx.clearRect(0, 0, w, h);
 
+    // hoist theme check — one DOM read per frame, not per star
+    const isLight = document.documentElement.getAttribute("data-theme") === "light";
+    const starColor = isLight ? "20,15,10" : "255,255,255";
+
     // stars drift (subtle, but visible)
     for (const s of stars) {
       s.y += s.v;
@@ -2060,13 +2064,11 @@ function initBgStars() {
 
       ctx.beginPath();
       ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-      const isLight = document.documentElement.getAttribute("data-theme") === "light";
-      ctx.fillStyle = isLight ? `rgba(20,15,10,${s.a})` : `rgba(255,255,255,${s.a})`;
+      ctx.fillStyle = `rgba(${starColor},${s.a})`;
       ctx.fill();
     }
 
     // vignette only in dark mode
-    const isLight = document.documentElement.getAttribute("data-theme") === "light";
     if (!isLight) {
       ctx.fillStyle = vignette;
       ctx.fillRect(0, 0, w, h);
@@ -2098,7 +2100,7 @@ function initBgStars() {
   });
 
   resize();
-  window.addEventListener("resize", resize);
+  window.addEventListener("resize", resize, { passive: true });
 
   if (!reduced) loop(0);
   else draw();
@@ -2338,7 +2340,24 @@ function initHeroThree() {
     raf = requestAnimationFrame(frame);
   }
 
-  raf = requestAnimationFrame(frame);
+  function startRaf() {
+    if (!raf) { prev = performance.now(); raf = requestAnimationFrame(frame); }
+  }
+  function stopRaf() {
+    if (raf) { cancelAnimationFrame(raf); raf = undefined; }
+  }
+
+  // Pause when tab is hidden, resume when visible
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) stopRaf(); else startRaf();
+  });
+
+  // Pause when hero scrolls out of view — biggest win after tab-hide
+  new IntersectionObserver((entries) => {
+    entries[0].isIntersecting ? startRaf() : stopRaf();
+  }, { threshold: 0 }).observe(canvas);
+
+  startRaf();
 
   new ResizeObserver(() => {
     const oldW = W, oldH = H;
@@ -2784,7 +2803,7 @@ async function init() {
   // Projects
   try {
     loadTo(62);
-    const res = await fetch("projects.json", { cache: "no-store" });
+    const res = await fetch("projects.json", { cache: "default" });
     state.projects = await res.json();
     state.tags = uniqueTags(state.projects);
     // Update pinned story stats
