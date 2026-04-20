@@ -7062,6 +7062,41 @@ html.noReveal .r,
   color: rgba(180,185,220,0.45);
 }
 
+/* MBTI badge — ENTJ Commander (16Personalities Analyst purple) */
+.abtMbti {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px 3px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(124, 58, 237, 0.35);
+  background: rgba(124, 58, 237, 0.10);
+}
+.abtMbtiCode {
+  font-family: ui-monospace, 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #a78bfa;
+}
+.abtMbtiLabel {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: rgba(167, 139, 250, 0.65);
+}
+
+[data-theme="light"] .abtMbti {
+  border-color: rgba(124, 58, 237, 0.28);
+  background: rgba(124, 58, 237, 0.07);
+}
+[data-theme="light"] .abtMbtiCode {
+  color: #7c3aed;
+}
+[data-theme="light"] .abtMbtiLabel {
+  color: rgba(124, 58, 237, 0.60);
+}
+
 /* ── Responsive ────────────────────────────────────── */
 
 @media (max-width: 860px) {
