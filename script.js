@@ -1638,100 +1638,117 @@ const CAREER_COLORS = [
 ];
 
 function renderCareer() {
-  const track   = document.getElementById("cTimeline");
-  if (!track) return;
+  const track  = document.getElementById("chTrack");
+  const dotsEl = document.getElementById("chDots");
+  const btnPrev = document.getElementById("chPrev");
+  const btnNext = document.getElementById("chNext");
+  if (!track || !dotsEl) return;
 
-  const fill    = document.getElementById("cSpineFill");
-  const section = document.getElementById("career");
-
-  // ── Build DOM entries ─────────────────────────────────────────
+  // ── Build cards ───────────────────────────────────────────────
   careerData.forEach((item, i) => {
-    const color  = CAREER_COLORS[i] || "#9b8cff";
-    const isLeft = i % 2 === 0;
-    const entry  = document.createElement("div");
-    entry.className   = `ptEntry ${isLeft ? "ptEntry--l" : "ptEntry--r"} cEntry`;
-    entry.dataset.index = String(i);
-    entry.style.setProperty("--ce-color", color);
+    const color = CAREER_COLORS[i] || "#9b8cff";
 
-    const card =
-      `<article class="ptCard">` +
-        `<div class="ptGhost" aria-hidden="true">${escapeHtml(item.year)}</div>` +
-        `<div class="ptMeta">` +
-          `<span class="ptBadge">${escapeHtml(item.year)}</span>` +
-          `<span class="ptCtx">${escapeHtml(item.sub)}</span>` +
-        `</div>` +
-        `<h3 class="ptRole">${escapeHtml(item.role)}</h3>` +
-        `<p class="ptDesc">${escapeHtml(item.desc)}</p>` +
-      `</article>`;
+    const card = document.createElement("article");
+    card.className = "chCard";
+    card.dataset.index = String(i);
+    card.style.setProperty("--ch-color", color);
+    card.setAttribute("role", "tab");
+    card.setAttribute("aria-label", `${item.year} — ${item.role}`);
+    card.innerHTML =
+      `<div class="chGhost" aria-hidden="true">${escapeHtml(item.year)}</div>` +
+      `<div class="chMeta">` +
+        `<span class="chYear">${escapeHtml(item.year)}</span>` +
+        `<span class="chSub">${escapeHtml(item.sub)}</span>` +
+      `</div>` +
+      `<h3 class="chRole">${escapeHtml(item.role)}</h3>` +
+      `<p class="chDesc">${escapeHtml(item.desc)}</p>`;
+    track.appendChild(card);
 
-    const node = `<div class="ptNode" aria-hidden="true"><div class="cDot"></div></div>`;
-    const gap  = `<div class="ptGap" aria-hidden="true"></div>`;
-
-    entry.innerHTML = isLeft ? card + node + gap : gap + node + card;
-    track.appendChild(entry);
+    // Dot indicator
+    const dot = document.createElement("button");
+    dot.className = "chDotEl";
+    dot.setAttribute("aria-label", item.role);
+    dot.setAttribute("role", "tab");
+    dotsEl.appendChild(dot);
   });
 
-  const entries = Array.from(track.querySelectorAll(".cEntry"));
+  const cards = Array.from(track.querySelectorAll(".chCard"));
+  const dots  = Array.from(dotsEl.querySelectorAll(".chDotEl"));
+  let activeIdx = 0;
 
-  // Mark section active (drives terminal-dot CSS)
-  section.classList.add("comet-fired");
-
-  // ── Reveal entries as they scroll into view ───────────────────
-  const entryObserver = new IntersectionObserver((obs) => {
-    obs.forEach(({ target, isIntersecting }) => {
-      if (isIntersecting) {
-        target.classList.add("cVisible");
-        entryObserver.unobserve(target);
-      }
+  // ── Active state ──────────────────────────────────────────────
+  function setActive(idx) {
+    activeIdx = idx;
+    cards.forEach((c, i) => {
+      const dist = Math.abs(i - idx);
+      c.classList.toggle("ch-active", i === idx);
+      c.classList.toggle("ch-near",   dist === 1);
     });
-  }, { threshold: 0.12 });
-
-  entries.forEach((e) => entryObserver.observe(e));
-
-  // ── Scroll-driven spine fill + active card highlight ──────────
-  let currentActive = -1;
-  let raf = 0;
-
-  function updateScroll() {
-    raf = 0;
-    if (!entries.length) return;
-    const vh         = window.innerHeight;
-    const trackRect  = track.getBoundingClientRect();
-    const viewCenter = vh * 0.5;
-
-    let bestIdx = 0, bestDist = Infinity;
-    entries.forEach((entry, i) => {
-      const r    = entry.getBoundingClientRect();
-      const dist = Math.abs(r.top + r.height * 0.5 - viewCenter);
-      if (dist < bestDist) { bestDist = dist; bestIdx = i; }
-    });
-
-    if (bestIdx !== currentActive) {
-      if (currentActive >= 0) entries[currentActive].classList.remove("cActive");
-      entries[bestIdx].classList.add("cActive");
-      currentActive = bestIdx;
-    }
-
-    if (fill) {
-      const dot = entries[bestIdx].querySelector(".cDot");
-      if (dot) {
-        const dotR             = dot.getBoundingClientRect();
-        const dotCenterInTrack = dotR.top + dotR.height * 0.5 - trackRect.top;
-        fill.style.height      = Math.max(0, dotCenterInTrack) + "px";
-      }
-    }
+    dots.forEach((d, i) => d.classList.toggle("ch-on", i === idx));
+    if (btnPrev) btnPrev.disabled = idx === 0;
+    if (btnNext) btnNext.disabled = idx === cards.length - 1;
   }
 
-  function startScrollLogic() {
-    function onScroll() {
-      if (!raf) raf = requestAnimationFrame(updateScroll);
-    }
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", updateScroll, { passive: true });
-    requestAnimationFrame(updateScroll);
+  function scrollToCard(idx) {
+    const card = cards[Math.max(0, Math.min(cards.length - 1, idx))];
+    if (!card) return;
+    card.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+    setActive(idx);
   }
 
-  startScrollLogic();
+  // ── Sync active to scroll position ───────────────────────────
+  let rafId = 0;
+  track.addEventListener("scroll", () => {
+    if (rafId) return;
+    rafId = requestAnimationFrame(() => {
+      rafId = 0;
+      const cx = track.getBoundingClientRect().left + track.offsetWidth / 2;
+      let best = 0, bestDist = Infinity;
+      cards.forEach((c, i) => {
+        const r = c.getBoundingClientRect();
+        const d = Math.abs(r.left + r.width / 2 - cx);
+        if (d < bestDist) { bestDist = d; best = i; }
+      });
+      setActive(best);
+    });
+  }, { passive: true });
+
+  // ── Arrow buttons ─────────────────────────────────────────────
+  if (btnPrev) btnPrev.addEventListener("click", () => scrollToCard(activeIdx - 1));
+  if (btnNext) btnNext.addEventListener("click", () => scrollToCard(activeIdx + 1));
+
+  // ── Dot buttons ───────────────────────────────────────────────
+  dots.forEach((d, i) => d.addEventListener("click", () => scrollToCard(i)));
+
+  // ── Click card to centre it ───────────────────────────────────
+  cards.forEach((c, i) => c.addEventListener("click", () => scrollToCard(i)));
+
+  // ── Keyboard navigation ───────────────────────────────────────
+  track.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowLeft")  { e.preventDefault(); scrollToCard(activeIdx - 1); }
+    if (e.key === "ArrowRight") { e.preventDefault(); scrollToCard(activeIdx + 1); }
+  });
+
+  // ── Drag to scroll (mouse) ────────────────────────────────────
+  let dragging = false, startX = 0, startScroll = 0;
+  track.addEventListener("mousedown", (e) => {
+    dragging = true;
+    startX = e.pageX;
+    startScroll = track.scrollLeft;
+    track.classList.add("is-dragging");
+  }, { passive: true });
+  window.addEventListener("mousemove", (e) => {
+    if (!dragging) return;
+    track.scrollLeft = startScroll - (e.pageX - startX);
+  }, { passive: true });
+  window.addEventListener("mouseup", () => {
+    if (!dragging) return;
+    dragging = false;
+    track.classList.remove("is-dragging");
+  }, { passive: true });
+
+  // ── Init ──────────────────────────────────────────────────────
+  setActive(0);
 }
 
 // Always start at top on refresh (prevents browser restoring old scroll position)

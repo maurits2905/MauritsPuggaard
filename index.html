@@ -732,9 +732,18 @@ body[data-theme="light"] .abtTag:hover {
           <p class="p">The jobs, the turns, and what they built.</p>
         </div>
 
-        <div class="cTimeline" id="cTimeline">
-          <div class="cSpineFill" id="cSpineFill" aria-hidden="true"></div>
-          <!-- entries injected by JS -->
+        <div class="chShelf" id="chShelf">
+          <!-- fade edges -->
+          <div class="chEdge chEdge--l" aria-hidden="true"></div>
+          <div class="chEdge chEdge--r" aria-hidden="true"></div>
+          <!-- scrollable card track — cards injected by JS -->
+          <div class="chTrack" id="chTrack" tabindex="0" role="region" aria-label="Career timeline"></div>
+          <!-- nav row -->
+          <div class="chNav">
+            <button class="chArrow" id="chPrev" aria-label="Previous entry">&#8592;</button>
+            <div class="chDots" id="chDots" role="tablist"></div>
+            <button class="chArrow" id="chNext" aria-label="Next entry">&#8594;</button>
+          </div>
         </div>
       </section>
 
