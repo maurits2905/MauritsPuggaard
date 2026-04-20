@@ -78,8 +78,19 @@ async function applySnapshotToSlices(preloaderEl, slicesEl) {
 }
 
 function createPreloader() {
+  // ── Toggle to re-enable the loading screen ──────────────────
+  const PRELOADER_ENABLED = false;
+  // ────────────────────────────────────────────────────────────
+
   const el = document.getElementById("preloader");
   if (!el) return null;
+
+  if (!PRELOADER_ENABLED) {
+    el.style.display = "none";
+    document.body.classList.remove("isLoading");
+    document.body.classList.add("loaded");
+    return null;
+  }
 
   const fill = document.getElementById("preBarFill");
   const pct = document.getElementById("prePct");
