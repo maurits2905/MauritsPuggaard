@@ -9613,7 +9613,7 @@ body[data-theme="light"] .abtTag:hover {
 .mpIntroWrap {
   position: absolute;
   inset: 0;
-  z-index: 20;
+  z-index: 5;
   pointer-events: none;
   /* Portrait window: ~40% top+bottom, ~43% left+right inset
      → roughly 14 vw wide × 20 vh tall centred                */
