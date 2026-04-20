@@ -4069,8 +4069,8 @@ if (document.readyState === "loading") {
 function runSlotMachine(containerEl, word, staggerMs) {
   const CHARSET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   const REEL_RANDOMS = 10;   // random chars above the target
-  const COL_STAGGER  = 75;   // ms between each column starting
-  const DURATION     = 720;  // ms for each column to reach target
+  const COL_STAGGER  = 110;  // ms between each column starting
+  const DURATION     = 1400; // ms for each column to reach target
 
   containerEl.innerHTML = "";
 
@@ -4254,7 +4254,7 @@ function initMpHero() {
       if (heroSub) heroSub.classList.add("mp-visible");
       if (scrollCue) scrollCue.classList.add("mp-visible");
       if (vidA) startVideoSequence(0, vidA, vidB);
-    }, 1400);
+    }, 2900);
   }
 
   // ── Phase 3: Video sequence — ping-pong cross-fade through all clips ──
