@@ -4199,32 +4199,41 @@ function initMpHero() {
     showIntroPhoto(introIdx);
 
     if (introIdx === introPhotos.length - 1) {
-      // Reached last photo — pause briefly then zoom
+      // Reached last portrait slot — switch to Intro_1 video instantly
+      // so the visitor sees the actual video in the portrait window
       clearInterval(introTimer);
+      if (vidA) {
+        vidA.src = VIDEO_LIST[0];
+        vidA.load();
+        vidA.play().catch(() => {});
+        // Show instantly (no fade) — it replaces the last static photo
+        vidA.style.transition = "none";
+        vidA.style.opacity    = "1";
+        // Re-enable CSS transition after one paint so future fades work
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          vidA.style.transition = "";
+          vidA.style.opacity    = "";
+          vidA.classList.add("mp-visible");
+        }));
+      }
+      // Preload Intro_2 in the background while Intro_1 plays
+      if (vidB) {
+        vidB.src = VIDEO_LIST[1];
+        vidB.load();
+      }
       setTimeout(startZoom, 420);
     }
   }, INTRO_INTERVAL);
 
   // ── Phase 2: Zoom + simultaneous letter-slot reveal ──
   function startZoom() {
+    // vidA is already playing Intro_1 through the portrait window —
+    // just expand the clip-path to reveal it full-screen.
     introWrap.classList.add("mp-zoomed");
 
     // Show title container immediately so slot reels are visible
     // during the clip-path expansion (same as the reference site)
     if (titleWrap) titleWrap.classList.add("mp-visible");
-
-    // Start Intro_1 video immediately so it plays through the expanding portal
-    if (vidA) {
-      vidA.src = VIDEO_LIST[0];
-      vidA.load();
-      vidA.play().catch(() => {});
-      vidA.classList.add("mp-visible");
-      // Preload Intro_2 into the inactive slot while Intro_1 plays
-      if (vidB) {
-        vidB.src = VIDEO_LIST[1 % VIDEO_LIST.length];
-        vidB.load();
-      }
-    }
 
     // Start both words' slot machines — staggered so MAURITS
     // resolves first, PUGGAARD follows ~120 ms later.
@@ -4239,7 +4248,7 @@ function initMpHero() {
       });
     }, 200);
 
-    // After zoom completes: show UI chrome, start video sequence
+    // After zoom completes: show UI chrome, hand off to video sequence
     // (introWrap stays fully visible — the video IS the background now)
     setTimeout(() => {
       if (heroSub) heroSub.classList.add("mp-visible");
@@ -4254,29 +4263,32 @@ function initMpHero() {
   // inactiveEl  : the <video> preloaded with the NEXT clip (hidden)
   function startVideoSequence(currentIdx, activeEl, inactiveEl) {
     function scheduleNext() {
-      const nextIdx = (currentIdx + 1) % VIDEO_LIST.length;
+      const nextIdx   = (currentIdx + 1) % VIDEO_LIST.length;
+      const afterNext = (nextIdx   + 1) % VIDEO_LIST.length;
 
       // inactiveEl already has the next src preloaded — just play & cross-fade
       inactiveEl.play().catch(() => {});
       inactiveEl.classList.add("mp-visible");
       activeEl.classList.remove("mp-visible");
 
-      // After active has faded out, pause it and preload the one-after-next
-      const afterNext = (nextIdx + 1) % VIDEO_LIST.length;
+      // *** Capture the OLD active BEFORE swapping references so the
+      //     timeout below doesn't accidentally target the new active. ***
+      const oldActive = activeEl;
+
+      // Swap roles for the next iteration
+      currentIdx = nextIdx;
+      activeEl   = inactiveEl;
+      inactiveEl = oldActive;
+
+      // After old active has faded out, pause it and preload the one-after-next
       setTimeout(() => {
-        activeEl.pause();
-        activeEl.src = VIDEO_LIST[afterNext];
-        activeEl.load();
+        oldActive.pause();
+        oldActive.src = VIDEO_LIST[afterNext];
+        oldActive.load();
       }, 950); // slightly longer than the 0.9s opacity transition
 
-      // Recurse: swap roles and wait for the next video to end
-      const newActive   = inactiveEl;
-      const newInactive = activeEl;
-      currentIdx = nextIdx;
-      activeEl   = newActive;
-      inactiveEl = newInactive;
-
-      newActive.addEventListener("ended", scheduleNext, { once: true });
+      // Wait for the new active to finish, then do it all again
+      activeEl.addEventListener("ended", scheduleNext, { once: true });
     }
 
     // Attach ended handler to the currently-playing Intro_1
