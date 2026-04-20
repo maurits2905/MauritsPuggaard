@@ -3326,6 +3326,16 @@ const TECH_GROUPS = [
     title: "AI & Platforms",
     items: [
       {
+        name: "Claude",
+        slug: "claude",
+        url: "https://claude.ai/",
+      },
+      {
+        name: "Claude Code",
+        slug: "claudecode",
+        url: "https://claude.ai/code",
+      },
+      {
         name: "Hugging Face",
         slug: "huggingface",
         url: "https://huggingface.co/",
@@ -3363,7 +3373,7 @@ async function getIconMarkup(slug) {
   );
   if (si2) return si2;
 
-  // 3) OpenAI special fallback
+  // 3) Special fallbacks
   if (slug === "openai") {
     return `
       <svg viewBox="0 0 24 24" role="img" aria-label="OpenAI">
@@ -3373,6 +3383,25 @@ async function getIconMarkup(slug) {
               font-size="7.5"
               font-family="Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial"
               fill="currentColor">AI</text>
+      </svg>
+    `;
+  }
+  if (slug === "claude") {
+    /* Anthropic / Claude — simplified diamond logo */
+    return `
+      <svg viewBox="0 0 24 24" role="img" aria-label="Claude" fill="currentColor">
+        <path d="M12 2.5 L19 8 L19 16 L12 21.5 L5 16 L5 8 Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+        <path d="M9 12 L11.2 7 L13.4 12 L11.2 17 Z" opacity="0.8"/>
+      </svg>
+    `;
+  }
+  if (slug === "claudecode") {
+    /* Claude Code — terminal prompt icon */
+    return `
+      <svg viewBox="0 0 24 24" role="img" aria-label="Claude Code" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="3" width="20" height="16" rx="2"/>
+        <path d="M7 9 L10 12 L7 15"/>
+        <path d="M13 15 L17 15"/>
       </svg>
     `;
   }
@@ -3389,178 +3418,173 @@ async function getIconMarkup(slug) {
   `;
 }
 
-function tileHTML(item) {
-  return `
-    <a class="tech-tile" href="${item.url}" target="_blank" rel="noopener noreferrer"
-       aria-label="${item.name} (opens official site)">
-      <div class="tech-tile-inner">
-        <div class="tech-icon" data-icon="${item.slug}" aria-hidden="true"></div>
-        <div class="tech-label">${item.name}</div>
-      </div>
-    </a>
-  `;
-}
-
-
+/* ----------------------------------------------------------
+   Tech Stack — Terminal editor renderer
+   ---------------------------------------------------------- */
 async function renderTechStack() {
   const mount = document.getElementById("techGrid");
-  if (!mount) return;
+  if (!mount || mount.dataset.rendered) return;
+  mount.dataset.rendered = "1";
 
   const CAT_META = {
-    "Languages":                     { color: "#7eb4ff", rgb: "126,180,255", short: "LANG",   label: "Languages"  },
-    "SAP & Enterprise":              { color: "#f0c060", rgb: "240,192,96",  short: "SAP",    label: "SAP"        },
-    "Frameworks & Machine Learning": { color: "#44f0b1", rgb: "68,240,177",  short: "FWK",    label: "Frameworks" },
-    "Data & Databases":              { color: "#b08dff", rgb: "176,141,255", short: "DATA",   label: "Data"       },
-    "DevOps & Infrastructure":       { color: "#ff8c42", rgb: "255,140,66",  short: "OPS",    label: "DevOps"     },
-    "Development Tools":             { color: "#6ef3c5", rgb: "110,243,197", short: "TOOLS",  label: "Tools"      },
-    "AI & Platforms":                { color: "#e060ff", rgb: "224,96,255",  short: "AI",     label: "AI"         },
+    "Languages":                     { color: "#7eb4ff", rgb: "126,180,255" },
+    "SAP & Enterprise":              { color: "#f0c060", rgb: "240,192,96"  },
+    "Frameworks & Machine Learning": { color: "#44f0b1", rgb: "68,240,177"  },
+    "Data & Databases":              { color: "#b08dff", rgb: "176,141,255" },
+    "DevOps & Infrastructure":       { color: "#ff8c42", rgb: "255,140,66"  },
+    "Development Tools":             { color: "#6ef3c5", rgb: "110,243,197" },
+    "AI & Platforms":                { color: "#e060ff", rgb: "224,96,255"  },
   };
 
-  // Build filter tabs
-  const filtersHtml = [
-    `<button class="ars-tab active" data-cat="all" aria-pressed="true">All</button>`,
-    ...TECH_GROUPS.map((g) => {
-      const meta = CAT_META[g.title] || {};
-      return `<button class="ars-tab" data-cat="${escapeHtml(g.title)}" aria-pressed="false">${escapeHtml(meta.label || g.title)}</button>`;
-    }),
-  ].join("\n      ");
+  const totalItems = TECH_GROUPS.reduce((s, g) => s + g.items.length, 0);
 
-  // Build strips
-  const stripsHtml = TECH_GROUPS.map((group) => {
-    const meta = CAT_META[group.title] || { color: "#9b8cff", rgb: "155,140,255", short: "TECH" };
+  // Assign comment line numbers (each block = comment + blank + chips rows + blank)
+  let ln = 1;
+  const blockLn = TECH_GROUPS.map(g => {
+    const n = ln;
+    ln += 2 + Math.ceil(g.items.length / 5) + 2;
+    return n;
+  });
 
-    const chipsHtml = group.items.map((item, idx) =>
-      `<a class="ars-chip" style="--chip-i:${idx}"
+  // ── Sidebar HTML ──
+  const sidebarHtml = TECH_GROUPS.map((g, i) => {
+    const m = CAT_META[g.title] || {};
+    return `<div class="tsSideItem${i === 0 ? " ts-active" : ""}"
+      data-cat="${escapeHtml(g.title)}"
+      style="--cat-color:${m.color};--cat-rgb:${m.rgb}"
+      role="button" tabindex="0" aria-label="${escapeHtml(g.title)}">
+      <span class="tsSideDot"></span>
+      <span class="tsSideName">${escapeHtml(g.title)}</span>
+      <span class="tsSideCount">${g.items.length}</span>
+    </div>`;
+  }).join("");
+
+  // ── Content blocks HTML ──
+  const blocksHtml = TECH_GROUPS.map((g, i) => {
+    const m = CAT_META[g.title] || { color: "#9b8cff", rgb: "155,140,255" };
+    const dashes = "─".repeat(Math.max(2, 28 - g.title.length));
+    const commentText = `/* ─── ${g.title.toUpperCase()} ${dashes} */`;
+
+    const chipsHtml = g.items.map(item =>
+      `<a class="tsChip"
           href="${escapeHtml(item.url || "#")}"
           target="_blank" rel="noopener noreferrer"
-          aria-label="${escapeHtml(item.name)} (opens official site)">
-        <span class="ars-chip-icon" data-icon="${escapeHtml(item.slug || "")}" aria-hidden="true"></span>
-        <span class="ars-chip-name">${escapeHtml(item.name)}</span>
+          aria-label="${escapeHtml(item.name)}"
+          style="--cat-color:${m.color};--cat-rgb:${m.rgb}">
+        <span class="tsChipIcon" data-icon="${escapeHtml(item.slug || "")}" aria-hidden="true"></span>
+        <span class="tsChipName">${escapeHtml(item.name)}</span>
       </a>`
-    ).join("\n        ");
+    ).join("");
 
-    return `
-    <div class="ars-strip"
-         data-cat="${escapeHtml(group.title)}"
-         style="--cat-color:${meta.color};--cat-rgb:${meta.rgb}">
-      <div class="ars-strip-inner">
-        <span class="ars-strip-ghost" aria-hidden="true">${escapeHtml(meta.short)}</span>
-        <div class="ars-strip-head">
-          <span class="ars-cat-dot"></span>
-          <span class="ars-cat-name">${escapeHtml(group.title)}</span>
-          <span class="ars-cat-count">${group.items.length}</span>
-        </div>
-        <div class="ars-chips">
-          ${chipsHtml}
-        </div>
+    return `<div class="tsBlock" data-cat="${escapeHtml(g.title)}" style="--cat-color:${m.color};--cat-rgb:${m.rgb}">
+      <div class="tsLine tsLine--comment">
+        <span class="tsLn" aria-hidden="true">${blockLn[i]}</span>
+        <span class="tsCommentText" aria-hidden="true">${commentText}</span>
+      </div>
+      <div class="tsLine tsLine--chips">
+        <span class="tsLn" aria-hidden="true"></span>
+        <div class="tsChips" role="list" aria-label="${escapeHtml(g.title)} tools">${chipsHtml}</div>
+      </div>
+      <div class="tsLine tsLine--blank" aria-hidden="true">
+        <span class="tsLn">${blockLn[i] + 1}</span>
       </div>
     </div>`;
-  }).join("\n");
+  }).join("");
 
-  mount.innerHTML = `
-  <div class="arsenal-wrap">
-    <div class="arsenal-filters" role="group" aria-label="Filter by category">
-      ${filtersHtml}
-    </div>
-    <div class="ars-strips">
-      ${stripsHtml}
+  // ── Full editor HTML ──
+  mount.innerHTML = `<div class="tsWrap">
+    <div class="tsEditor" role="region" aria-label="Tech stack">
+
+      <!-- Title bar -->
+      <div class="tsBar" aria-hidden="true">
+        <div class="tsDots">
+          <span class="tsDot tsDot--close"></span>
+          <span class="tsDot tsDot--min"></span>
+          <span class="tsDot tsDot--max"></span>
+        </div>
+        <span class="tsBarFile">stack.config.js</span>
+      </div>
+
+      <!-- Body: sidebar + main pane -->
+      <div class="tsBody">
+        <div class="tsSidebar" aria-label="Categories">
+          <div class="tsSideHead">Explorer</div>
+          <div class="tsSideTree">
+            <span class="tsSideTreeCaret">▾</span>
+            <span class="tsSideTreeName">stack.config.js</span>
+          </div>
+          <div class="tsSideItems" id="tsSideItems">${sidebarHtml}</div>
+        </div>
+
+        <div class="tsMain" id="tsMain" tabindex="0" aria-label="Tech stack items">
+          <div class="tsContent" id="tsContent">${blocksHtml}</div>
+        </div>
+      </div>
+
+      <!-- Status bar -->
+      <div class="tsStatusBar" aria-hidden="true">
+        <span class="tsStatusIcon">⎇</span>
+        <span>main</span>
+        <span class="tsStatusSep">·</span>
+        <span>JavaScript</span>
+        <span class="tsStatusSep">·</span>
+        <span>${totalItems} items · ${TECH_GROUPS.length} categories</span>
+        <span class="tsStatusRight">UTF-8</span>
+      </div>
+
     </div>
   </div>`;
 
-  // ── Load icons ──
-  const iconEls = [...mount.querySelectorAll(".ars-chip-icon[data-icon]")];
-  await Promise.all(
-    iconEls.map(async (el) => {
-      const slug = el.getAttribute("data-icon");
-      try {
-        el.innerHTML = await getIconMarkup(slug);
-      } catch (_) {
-        el.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="currentColor" opacity="0.35"/></svg>`;
-      }
-    })
-  );
+  // ── Load icons async ──
+  const iconEls = [...mount.querySelectorAll(".tsChipIcon[data-icon]")];
+  await Promise.all(iconEls.map(async (el) => {
+    const slug = el.getAttribute("data-icon");
+    try { el.innerHTML = await getIconMarkup(slug); }
+    catch (_) { el.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="currentColor" opacity="0.35"/></svg>`; }
+  }));
 
-  // ── Staggered entrance via IntersectionObserver ──
-  const strips = [...mount.querySelectorAll(".ars-strip")];
-
+  // ── Staggered chip entrance when section scrolls into view ──
+  const chips = [...mount.querySelectorAll(".tsChip")];
   const triggerEntrance = () => {
-    strips.forEach((s, i) => {
-      setTimeout(() => s.classList.add("in-view"), i * 80);
-    });
+    chips.forEach((c, i) => setTimeout(() => c.classList.add("ts-in"), i * 22));
   };
+  const sectionEl = document.getElementById("tech");
+  const entryIO = new IntersectionObserver(entries => {
+    if (entries.some(e => e.isIntersecting)) { triggerEntrance(); entryIO.disconnect(); }
+  }, { threshold: 0.06 });
+  if (sectionEl) entryIO.observe(sectionEl); else triggerEntrance();
 
-  const io = new IntersectionObserver(
-    (entries) => {
-      if (entries.some((e) => e.isIntersecting)) {
-        triggerEntrance();
-        io.disconnect();
-      }
-    },
-    { threshold: 0.08 }
-  );
-  io.observe(mount);
+  // ── Sidebar: click → scroll main pane to block ──
+  const sideItems = [...mount.querySelectorAll(".tsSideItem")];
+  const blocks    = [...mount.querySelectorAll(".tsBlock")];
+  const mainEl    = mount.querySelector(".tsMain");
 
-  requestAnimationFrame(() => {
-    const r = mount.getBoundingClientRect();
-    if (r.top < window.innerHeight * 0.85) {
-      triggerEntrance();
-      io.disconnect();
-    }
-  });
-
-  // ── Filter tabs + collapsed strip clicks ──
-  const tabs = [...mount.querySelectorAll(".ars-tab")];
-
-  function activateCat(cat) {
-    tabs.forEach((t) => { t.classList.remove("active"); t.setAttribute("aria-pressed", "false"); });
-    const matchTab = mount.querySelector(`.ars-tab[data-cat="${cat}"]`);
-    if (matchTab) { matchTab.classList.add("active"); matchTab.setAttribute("aria-pressed", "true"); }
-
-    if (cat === "all") {
-      strips.forEach((s) => s.classList.remove("featured", "collapsed"));
-      return;
-    }
-
-    strips.forEach((s) => {
-      const match = s.dataset.cat === cat;
-      if (match) {
-        s.classList.remove("collapsed");
-        s.classList.add("featured");
-        // Retrigger chip pop animations
-        s.querySelectorAll(".ars-chip").forEach((chip) => {
-          chip.style.animationName = "none";
-          chip.offsetHeight; // reflow
-          chip.style.animationName = "";
-        });
-      } else {
-        s.classList.remove("featured");
-        s.classList.add("collapsed");
-      }
-    });
+  function setActiveSide(catName) {
+    sideItems.forEach(el => el.classList.toggle("ts-active", el.dataset.cat === catName));
   }
 
-  tabs.forEach((tab) => {
-    tab.addEventListener("click", () => activateCat(tab.dataset.cat));
-  });
-
-  // Clicking a collapsed strip expands it
-  strips.forEach((strip) => {
-    strip.addEventListener("click", () => {
-      if (strip.classList.contains("collapsed")) {
-        activateCat(strip.dataset.cat);
+  sideItems.forEach(el => {
+    const go = () => {
+      const block = blocks.find(b => b.dataset.cat === el.dataset.cat);
+      if (block && mainEl) {
+        mainEl.scrollTo({ top: block.offsetTop - 10, behavior: "smooth" });
       }
-    });
+      setActiveSide(el.dataset.cat);
+    };
+    el.addEventListener("click", go);
+    el.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
   });
+
+  // ── Scroll → update active sidebar item ──
+  if (mainEl && blocks.length) {
+    const scrollIO = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) setActiveSide(e.target.dataset.cat); });
+    }, { root: mainEl, threshold: 0.35 });
+    blocks.forEach(b => scrollIO.observe(b));
+  }
 }
 
-// run when ready
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", renderTechStack);
-} else {
-  renderTechStack();
-}
-
-// run when ready
+// Run when ready (single guard — mount.dataset.rendered prevents double run)
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", renderTechStack);
 } else {
