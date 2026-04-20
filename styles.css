@@ -9641,32 +9641,24 @@ body[data-theme="light"] .abtTag:hover {
 }
 
 /* ══════════════════════════
-   Phase 2 — Full-screen carousel
+   Phase 2 — Video ping-pong pair
+   Two <video> elements inside mpIntroWrap; one is always faded in,
+   the other preloads the next clip off-screen.
    ══════════════════════════ */
-.mpPhotos {
+.mpVid {
   position: absolute;
   inset: 0;
-  z-index: 5;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
   opacity: 0;
   transition: opacity 0.9s ease;
+  will-change: opacity;
   pointer-events: none;
 }
 
-.mpPhotos.mp-visible {
-  opacity: 1;
-}
-
-.mpPhoto {
-  position: absolute;
-  inset: 0;
-  background-size: cover;
-  background-position: center;
-  opacity: 0;
-  transition: opacity 1.4s ease;
-  will-change: opacity;
-}
-
-.mpPhoto.mp-active {
+.mpVid.mp-visible {
   opacity: 1;
 }
 

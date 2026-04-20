@@ -578,7 +578,8 @@ body[data-theme="light"] .abtTag:hover {
         <section class="mpHeroSticky" aria-label="Maurits Puggaard – Portfolio">
 
           <!-- Phase 1: Intro photos — full-screen but clipped to portrait window.
-               The clip-path expands on zoom to reveal the full image. -->
+               The clip-path expands on zoom to reveal the full image.
+               Phase 2: Video ping-pong pair fades in after zoom. -->
           <div class="mpIntroWrap" id="mpIntroWrap" aria-hidden="true">
             <div class="mpIntroPhoto mp-active" style="background-image:url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1920&q=80')"></div>
             <div class="mpIntroPhoto" style="background-image:url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1920&q=80')"></div>
@@ -588,18 +589,9 @@ body[data-theme="light"] .abtTag:hover {
             <div class="mpIntroPhoto" style="background-image:url('https://images.unsplash.com/photo-1475924156734-496f6cac6ec1?auto=format&fit=crop&w=1920&q=80')"></div>
             <div class="mpIntroPhoto" style="background-image:url('https://images.unsplash.com/photo-1434394354979-a235cd36269d?auto=format&fit=crop&w=1920&q=80')"></div>
             <div class="mpIntroPhoto" style="background-image:url('https://images.unsplash.com/photo-1508193638397-1c4234db14d8?auto=format&fit=crop&w=1920&q=80')"></div>
-          </div>
-
-          <!-- Phase 2: Full-screen photo carousel -->
-          <div class="mpPhotos" id="mpPhotos" aria-hidden="true">
-            <div class="mpPhoto mp-active" style="background-image:url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1920&q=80')"></div>
-            <div class="mpPhoto" style="background-image:url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1920&q=80')"></div>
-            <div class="mpPhoto" style="background-image:url('https://images.unsplash.com/photo-1501854140801-50d01698950b?auto=format&fit=crop&w=1920&q=80')"></div>
-            <div class="mpPhoto" style="background-image:url('https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1920&q=80')"></div>
-            <div class="mpPhoto" style="background-image:url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1920&q=80')"></div>
-            <div class="mpPhoto" style="background-image:url('https://images.unsplash.com/photo-1475924156734-496f6cac6ec1?auto=format&fit=crop&w=1920&q=80')"></div>
-            <div class="mpPhoto" style="background-image:url('https://images.unsplash.com/photo-1434394354979-a235cd36269d?auto=format&fit=crop&w=1920&q=80')"></div>
-            <div class="mpPhoto" style="background-image:url('https://images.unsplash.com/photo-1508193638397-1c4234db14d8?auto=format&fit=crop&w=1920&q=80')"></div>
+            <!-- Video ping-pong pair — hidden until zoom starts -->
+            <video class="mpVid" id="mpVidA" muted playsinline preload="auto"></video>
+            <video class="mpVid" id="mpVidB" muted playsinline preload="none"></video>
           </div>
 
           <!-- Dark gradient overlay for text legibility -->

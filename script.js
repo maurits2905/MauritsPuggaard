@@ -4143,7 +4143,6 @@ function initMpHero() {
   const introWrap = document.getElementById("mpIntroWrap");
   if (!introWrap) return; // guard: not on this page
 
-  const photosWrap = document.getElementById("mpPhotos");
   const titleWrap  = document.getElementById("mpTitleWrap");
   const heroSub    = document.getElementById("mpHeroSub");
   const scrollCue  = document.getElementById("mpScrollCue");
@@ -4152,10 +4151,25 @@ function initMpHero() {
   const rollTrack   = document.getElementById("mpRollTrack");
 
   const introPhotos = Array.from(introWrap.querySelectorAll(".mpIntroPhoto"));
-  const fullPhotos  = photosWrap
-    ? Array.from(photosWrap.querySelectorAll(".mpPhoto"))
-    : [];
+  const vidA = document.getElementById("mpVidA");
+  const vidB = document.getElementById("mpVidB");
   const blinds = Array.from(document.querySelectorAll(".mpBlind"));
+
+  // Ordered list of intro videos — Intro_1 is the zoom target,
+  // rest cycle after the zoom completes, looping back to Intro_1.
+  const VIDEO_LIST = [
+    "videos/Intro_1.mp4",
+    "videos/Intro_2.mp4",
+    "videos/Intro_3.mp4",
+    "videos/Intro_4.mp4",
+    "videos/Intro_5.mp4",
+    "videos/Intro_6.mp4",
+    "videos/Intro_7.mp4",
+    "videos/Intro_8.mp4",
+    "videos/Intro_9.mp4",
+    "videos/Intro_10.mp4",
+    "videos/Intro_11.mp4",
+  ];
 
   // ── Blind close timings: [scrollStart, scrollEnd] fractions 0–1 ──
   // Leftmost closes fastest, rightmost closes slowest (subtle stagger)
@@ -4199,6 +4213,19 @@ function initMpHero() {
     // during the clip-path expansion (same as the reference site)
     if (titleWrap) titleWrap.classList.add("mp-visible");
 
+    // Start Intro_1 video immediately so it plays through the expanding portal
+    if (vidA) {
+      vidA.src = VIDEO_LIST[0];
+      vidA.load();
+      vidA.play().catch(() => {});
+      vidA.classList.add("mp-visible");
+      // Preload Intro_2 into the inactive slot while Intro_1 plays
+      if (vidB) {
+        vidB.src = VIDEO_LIST[1 % VIDEO_LIST.length];
+        vidB.load();
+      }
+    }
+
     // Start both words' slot machines — staggered so MAURITS
     // resolves first, PUGGAARD follows ~120 ms later.
     // 200 ms head-start lets the zoom begin before characters appear.
@@ -4212,28 +4239,48 @@ function initMpHero() {
       });
     }, 200);
 
-    // After zoom completes, hand off to full-screen carousel
+    // After zoom completes: show UI chrome, start video sequence
+    // (introWrap stays fully visible — the video IS the background now)
     setTimeout(() => {
-      if (photosWrap) photosWrap.classList.add("mp-visible");
-      introWrap.style.opacity = "0";
       if (heroSub) heroSub.classList.add("mp-visible");
       if (scrollCue) scrollCue.classList.add("mp-visible");
-      startFullCycle();
+      if (vidA) startVideoSequence(0, vidA, vidB);
     }, 1400);
   }
 
-  // ── Phase 3: Full-screen photo carousel (5 s per photo) ──
-  let fullIdx = 0;
+  // ── Phase 3: Video sequence — ping-pong cross-fade through all clips ──
+  // currentIdx  : index of the video currently playing in activeEl
+  // activeEl    : the <video> currently faded in
+  // inactiveEl  : the <video> preloaded with the NEXT clip (hidden)
+  function startVideoSequence(currentIdx, activeEl, inactiveEl) {
+    function scheduleNext() {
+      const nextIdx = (currentIdx + 1) % VIDEO_LIST.length;
 
-  function showFullPhoto(i) {
-    fullPhotos.forEach((p, j) => p.classList.toggle("mp-active", j === i));
-  }
+      // inactiveEl already has the next src preloaded — just play & cross-fade
+      inactiveEl.play().catch(() => {});
+      inactiveEl.classList.add("mp-visible");
+      activeEl.classList.remove("mp-visible");
 
-  function startFullCycle() {
-    setInterval(() => {
-      fullIdx = (fullIdx + 1) % fullPhotos.length;
-      showFullPhoto(fullIdx);
-    }, 5000);
+      // After active has faded out, pause it and preload the one-after-next
+      const afterNext = (nextIdx + 1) % VIDEO_LIST.length;
+      setTimeout(() => {
+        activeEl.pause();
+        activeEl.src = VIDEO_LIST[afterNext];
+        activeEl.load();
+      }, 950); // slightly longer than the 0.9s opacity transition
+
+      // Recurse: swap roles and wait for the next video to end
+      const newActive   = inactiveEl;
+      const newInactive = activeEl;
+      currentIdx = nextIdx;
+      activeEl   = newActive;
+      inactiveEl = newInactive;
+
+      newActive.addEventListener("ended", scheduleNext, { once: true });
+    }
+
+    // Attach ended handler to the currently-playing Intro_1
+    activeEl.addEventListener("ended", scheduleNext, { once: true });
   }
 
   // ── Phase 4 & 5: Scroll handler — blinds + rolling text ──
