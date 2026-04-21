@@ -65,7 +65,9 @@ body {
   font-family: var(--font);
   color: var(--text);
   background: var(--bg);
-  overflow-x: hidden;
+  /* clip instead of hidden — same visual result but does NOT create a new
+     scroll container, so position:sticky keeps working throughout the page */
+  overflow-x: clip;
   overscroll-behavior-y: none; /* prevent pull-to-refresh on mobile */
 }
 
@@ -3780,31 +3782,54 @@ html.noReveal .r,
    TECH STACK (your tiles)
 ========================= */
 
-/* ── Sticky shell ──────────────────────────────────────────────────
-   Wraps the tech section so it can linger (sticky) while the AI
-   section rises from beneath.  z-index: 1 puts shell below #ask (2).
-   padding-bottom = the "peel distance" — how far AI rises before
-   tech finally unsticks and scrolls away.
-   Full-width breakout lives here so .section.tech can be width:100%.
+/* ── Tech sticky shell & pin ───────────────────────────────────────
+   Mirrors the proven career section pattern:
+     #tech (.techStickyShell)  = tall outer container, position:relative
+     .techStickyInner          = viewport-pinned card, position:sticky
+
+   z-index: 1 on the shell puts it below #ask (z-index: 2), so the AI
+   section can rise from beneath and "peel" the tech layer off.
+   padding-bottom on the shell = linger distance (how far AI rises
+   from the bottom before tech finally unsticks and flies off).
 ─────────────────────────────────────────────────────────────────── */
-.techStickyShell {
+#tech.techStickyShell {
   position: relative;
-  z-index: 1;
+  /* NO z-index here — setting z-index + position:relative creates a stacking
+     context that traps position:sticky children and prevents them from sticking.
+     Career section works because its wrapper has z-index:auto (unset).
+     #ask has z-index:2 and comes later in HTML, so it stacks above this shell
+     naturally even without an explicit z-index on the shell. */
+  /* Full-width breakout */
   width: 100vw;
   margin-left: calc(50% - 50vw);
-  padding-bottom: 55svh;
+  /* padding-bottom alone doesn't extend the sticky constraint rectangle
+     (browsers use content-box height for sticky, not padding-box).
+     Height is set by JS (setTechShellHeight) = inner height + 55svh linger.
+     This matches how the career section sets its wrapper height via JS. */
+  padding-bottom: 0;
+  padding-top: 0;
+  contain: none;
+  background: transparent;
 }
 
-.section.tech {
+.techStickyInner {
   position: sticky;
   top: 0;
-  /* Shell handles breakout — reset overrides */
-  width: 100%;
-  margin-left: 0;
+  /* z-index:auto — no stacking context; avoids the sticky-in-stacking-context trap */
+  z-index: auto;
+  /* Fill viewport height so the peel covers the full screen */
+  min-height: 100svh;
   overflow: hidden;
   /* Solid base colour sits under the glyph canvas, isolating the section */
   background: #06070f;
   padding: clamp(40px, 5.5vw, 72px) 20px clamp(64px, 8vw, 110px);
+  contain: none;
+}
+
+/* .section.tech still targets the inner div (class="techStickyInner section tech")
+   for any rules that reference that selector — keep the old rule as a no-op fallback */
+.section.tech {
+  /* intentionally empty — specifics handled by .techStickyInner above */
 }
 
 /* Heatmap canvas — fills the section, sits behind all content */
@@ -4754,8 +4779,8 @@ html.noReveal .r,
   width: 100vw;
   margin-left: calc(50% - 50vw);
 
-  /* Pull up to overlap the shell's linger padding — creates the peel */
-  margin-top: -55svh;
+  /* Pull-up is set by JS (setTechShellHeight) to exactly match linger distance */
+  margin-top: 0;
 
   /* Photo background */
   background-image: url('https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1800&q=80');
@@ -5256,7 +5281,7 @@ html.noReveal .r,
   /* Hard stop: no accidental horizontal overflow */
   html,
   body {
-    overflow-x: hidden;
+    overflow-x: clip; /* clip, not hidden — preserves sticky scroll containers */
   }
 
   /* =========================
@@ -8854,7 +8879,8 @@ html.noReveal .r,
 /* Projects → Skills: proof decomposing into underlying system.
    Purple-teal carried from the project tag pill colors so the glow
    feels like the same palette arriving in a new layer. */
-#tech::before {
+/* Glow lives on the sticky inner card (the visible element), not the outer shell */
+.techStickyInner::before {
   content: '';
   position: absolute;
   top: -200px;

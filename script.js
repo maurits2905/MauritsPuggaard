@@ -3450,7 +3450,8 @@ async function getIconMarkup(slug) {
    ---------------------------------------------------------- */
 function initTechHeatmap() {
   const canvas  = document.getElementById("techHeatCanvas");
-  const section = document.getElementById("tech");
+  // #tech is now the tall sticky shell — the visible card is .techStickyInner
+  const section = document.querySelector(".techStickyInner") || document.getElementById("tech");
   if (!canvas || !section) return;
 
   const ctx = canvas.getContext("2d");
@@ -3577,6 +3578,38 @@ function initTechHeatmap() {
 
 // Kick off heatmap immediately (canvas is cheap until visible)
 initTechHeatmap();
+
+/* ----------------------------------------------------------
+   Tech shell height — must be set via JS so the browser's
+   sticky constraint rectangle (content-box only) has room
+   for the inner sticky card to pin.
+   Formula: inner card height  +  linger distance (55svh)
+   Also syncs #ask margin-top so the peel overlap is correct.
+   ---------------------------------------------------------- */
+function setTechShellHeight() {
+  const shell = document.getElementById("tech");
+  const inner = document.querySelector(".techStickyInner");
+  const ask   = document.getElementById("ask");
+  if (!shell || !inner) return;
+
+  const vh     = window.innerHeight;
+  const innerH = inner.offsetHeight;
+
+  // Shell height = tech content height  +  one full viewport for the peel.
+  // The extra vh is the sticky linger range.  During that range, #ask (which
+  // starts exactly at shell-end in document flow) rises from viewport-bottom
+  // to viewport-top.  Because #ask has z-index:2 and the sticky inner has
+  // z-index:auto, the photo gradually covers the heatmap from the bottom —
+  // the "peel off" curtain illusion.
+  shell.style.height = (innerH + vh) + "px";
+
+  // No negative margin needed — #ask starts at natural document position
+  // (shell end) which is exactly viewport-bottom when linger begins.
+  if (ask) ask.style.marginTop = "0px";
+}
+
+setTechShellHeight();
+window.addEventListener("resize", setTechShellHeight);
 
 /* ----------------------------------------------------------
    Tech Stack — Terminal editor renderer

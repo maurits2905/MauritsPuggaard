@@ -918,9 +918,12 @@ body[data-theme="light"] .abtTag:hover {
       </section>
 
 
-      <!-- 4) TECH STACK — wrapped in sticky shell for peel reveal -->
-      <div class="techStickyShell">
-        <section id="tech" class="section tech">
+      <!-- 4) TECH STACK
+           #tech is the tall outer shell (position:relative, extra scroll height).
+           .techStickyInner is the pinned viewport-filling card (position:sticky).
+           Mirrors the proven career section pattern: mpCareerWrap / mpCareerSticky. -->
+      <section id="tech" class="techStickyShell">
+        <div class="techStickyInner section tech">
           <canvas id="techHeatCanvas" aria-hidden="true"></canvas>
           <div class="techHead">
             <div class="secLabel">
@@ -934,8 +937,8 @@ body[data-theme="light"] .abtTag:hover {
           </div>
 
           <div id="techGrid" aria-label="Tech stack"></div>
-        </section>
-      </div>
+        </div>
+      </section>
 
 
       <!-- 5) ASK ME -->
