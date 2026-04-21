@@ -1025,9 +1025,9 @@ function initShowcase() {
   /* Each lens leaves its fingerprint on the About section's eye label —
      the chosen identity carries forward as the frame for the person. */
   const ABT_EYE_LABELS = [
-    '// THE PROFESSIONAL',
-    '// THE SAP ENGINEER',
-    '// THE BUILDER',
+    'THE PROFESSIONAL',
+    'THE SAP ENGINEER',
+    'THE BUILDER',
   ];
   const abtEyeEl = document.querySelector('.abtEye');
 
