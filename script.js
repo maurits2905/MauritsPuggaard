@@ -4127,6 +4127,16 @@ function runSlotMachine(containerEl, word, staggerMs) {
         reel.style.transform = `translateY(-${travelPx}px)`;
       }, delay);
     });
+
+    // Once every column has finished animating, swap the slot DOM for
+    // plain text. The pixel translateY becomes stale on resize (the font
+    // is clamp-based so charHeight changes), which makes the text vanish.
+    // Plain text is always resize-safe.
+    const settleDuration =
+      staggerMs + (cols.length - 1) * COL_STAGGER + DURATION + 80;
+    setTimeout(() => {
+      containerEl.textContent = word;
+    }, settleDuration);
   });
 }
 
