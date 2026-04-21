@@ -9766,7 +9766,7 @@ body[data-theme="light"] .abtTag:hover {
 /* ── Subtitle ── */
 .mpHeroSub {
   position: absolute;
-  bottom: 13vh;
+  bottom: 17vh;
   left: 0;
   right: 0;
   z-index: 10;
