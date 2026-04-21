@@ -9620,13 +9620,19 @@ body[data-theme="light"] .abtTag:hover {
   /* Portrait window: ~40% top+bottom, ~43% left+right inset
      → roughly 14 vw wide × 20 vh tall centred                */
   clip-path: inset(40% 43% round 6px);
-  transition:
-    clip-path 2.8s cubic-bezier(0.16, 1, 0.3, 1),
-    opacity   0.7s ease;
+  /* clip-path is animated via @keyframes (not transition) so the
+     start value is always explicit — avoids the "computed-start"
+     snap that causes the visible jump at the beginning of the zoom. */
+  transition: opacity 0.7s ease;
 }
 
 .mpIntroWrap.mp-zoomed {
-  clip-path: inset(0% round 0px);
+  animation: mpPortalOpen 2.8s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes mpPortalOpen {
+  from { clip-path: inset(40% 43% round 6px); }
+  to   { clip-path: inset(0% 0%   round 0px); }
 }
 
 .mpIntroPhoto {
@@ -9944,6 +9950,11 @@ body[data-theme="light"] .abtTag:hover {
   /* On mobile, show a slightly taller portrait window */
   .mpIntroWrap:not(.mp-zoomed) {
     clip-path: inset(36% 36% round 6px);
+  }
+  /* Override keyframe start value to match mobile portrait size */
+  @keyframes mpPortalOpen {
+    from { clip-path: inset(36% 36% round 6px); }
+    to   { clip-path: inset(0% 0%   round 0px); }
   }
 }
 
