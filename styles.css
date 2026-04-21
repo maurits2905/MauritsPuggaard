@@ -3454,8 +3454,11 @@ html.noReveal .r,
    ============================================================ */
 
 /* ── Scroll wrapper: height set by JS → (N + 0.5) * window.innerHeight ── */
+/* Break out of the max-width .wrap container to span the full viewport */
 .mpCareerWrap {
   position: relative;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
 }
 
 /* ── Sticky frame — stays pinned while wrapper scrolls past ── */
@@ -9704,6 +9707,9 @@ html.noReveal .r,
    ═══════════════════════════════════════════════════════════ */
 .mpMarqueeSection {
   position: relative;
+  /* Break out of max-width .wrap to span full viewport */
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
   background: #000;
   height: 38vh;    /* fallback */
   height: 38svh;
