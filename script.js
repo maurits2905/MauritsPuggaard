@@ -4171,6 +4171,11 @@ function initMpHero() {
     "videos/Intro_11.mp4",
   ];
 
+  // Preload Intro_1 and Intro_2 immediately so they are buffered
+  // well before the last photo slot fires (~3 s from now).
+  if (vidA) { vidA.src = VIDEO_LIST[0]; vidA.preload = "auto"; vidA.load(); }
+  if (vidB) { vidB.src = VIDEO_LIST[1]; vidB.preload = "auto"; vidB.load(); }
+
   // ── Blind close timings: [scrollStart, scrollEnd] fractions 0–1 ──
   // Leftmost closes fastest, rightmost closes slowest (subtle stagger)
   const BLIND_TIMINGS = [
@@ -4199,14 +4204,13 @@ function initMpHero() {
     showIntroPhoto(introIdx);
 
     if (introIdx === introPhotos.length - 1) {
-      // Reached last portrait slot — switch to Intro_1 video instantly
-      // so the visitor sees the actual video in the portrait window
+      // Reached last portrait slot — switch to Intro_1 video instantly.
+      // vidA is already buffered (preloaded at init), so the first frame
+      // is available immediately with no black flash.
       clearInterval(introTimer);
       if (vidA) {
-        vidA.src = VIDEO_LIST[0];
-        vidA.load();
         vidA.play().catch(() => {});
-        // Show instantly (no fade) — it replaces the last static photo
+        // Show instantly (no CSS transition) so the cut is sharp
         vidA.style.transition = "none";
         vidA.style.opacity    = "1";
         // Re-enable CSS transition after one paint so future fades work
@@ -4216,12 +4220,9 @@ function initMpHero() {
           vidA.classList.add("mp-visible");
         }));
       }
-      // Preload Intro_2 in the background while Intro_1 plays
-      if (vidB) {
-        vidB.src = VIDEO_LIST[1];
-        vidB.load();
-      }
-      setTimeout(startZoom, 420);
+      // Let the visitor clearly see the video in the portrait window
+      // before zoom begins — 800 ms gives a definite "landing" feel.
+      setTimeout(startZoom, 800);
     }
   }, INTRO_INTERVAL);
 
