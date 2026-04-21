@@ -3783,7 +3783,11 @@ html.noReveal .r,
 .section.tech {
   position: relative;
   overflow: hidden;
-  background: #06070f;  /* single dark base colour the heatmap sits on */
+  /* Break out of max-width .wrap — match marquee / career behaviour */
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  /* Solid base colour sits under the glyph canvas, isolating the section */
+  background: #06070f;
   padding: clamp(40px, 5.5vw, 72px) 20px clamp(64px, 8vw, 110px);
 }
 
