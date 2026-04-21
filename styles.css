@@ -3780,12 +3780,28 @@ html.noReveal .r,
    TECH STACK (your tiles)
 ========================= */
 
-.section.tech {
+/* ── Sticky shell ──────────────────────────────────────────────────
+   Wraps the tech section so it can linger (sticky) while the AI
+   section rises from beneath.  z-index: 1 puts shell below #ask (2).
+   padding-bottom = the "peel distance" — how far AI rises before
+   tech finally unsticks and scrolls away.
+   Full-width breakout lives here so .section.tech can be width:100%.
+─────────────────────────────────────────────────────────────────── */
+.techStickyShell {
   position: relative;
-  overflow: hidden;
-  /* Break out of max-width .wrap — match marquee / career behaviour */
+  z-index: 1;
   width: 100vw;
   margin-left: calc(50% - 50vw);
+  padding-bottom: 55svh;
+}
+
+.section.tech {
+  position: sticky;
+  top: 0;
+  /* Shell handles breakout — reset overrides */
+  width: 100%;
+  margin-left: 0;
+  overflow: hidden;
   /* Solid base colour sits under the glyph canvas, isolating the section */
   background: #06070f;
   padding: clamp(40px, 5.5vw, 72px) 20px clamp(64px, 8vw, 110px);
@@ -4717,6 +4733,59 @@ html.noReveal .r,
 }
 
 #askSend {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── AI / Ask Me peel reveal ───────────────────────────────────────
+   #ask sits at z-index:2 — above .techStickyShell (z-index:1).
+   negative margin-top = same value as shell padding-bottom (55svh),
+   pulling the section up so it overlaps the shell's linger zone.
+   As the user scrolls through those 55svh, #ask rises from the bottom
+   of the viewport, covering the sticky tech section from below — the
+   classic “curtain peel” illusion without any JS.
+─────────────────────────────────────────────────────────────────── */
+.ask-reveal {
+  position: relative;
+  z-index: 2;                          /* sits above the sticky shell */
+  contain: none;                       /* override base .section contain */
+
+  /* Full-width breakout */
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+
+  /* Pull up to overlap the shell's linger padding — creates the peel */
+  margin-top: -55svh;
+
+  /* Photo background */
+  background-image: url('https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1800&q=80');
+  background-size: cover;
+  background-position: center 30%;
+  background-attachment: scroll;
+
+  /* Standard section top padding; bottom gives the panel room to breathe */
+  padding: clamp(80px, 11svh, 128px) 0 clamp(80px, 10svh, 120px);
+}
+
+/* Dark overlay — lighter in the hero strip so the galaxy shows through,
+   then deepens around the panel for legibility */
+.ask-reveal::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(4, 5, 14, 0.55)  0%,
+    rgba(4, 5, 14, 0.62) 22%,
+    rgba(4, 5, 14, 0.88) 42%,
+    rgba(4, 5, 14, 0.94) 100%
+  );
+  pointer-events: none;
+}
+
+/* Lift all direct children above the overlay */
+.ask-reveal > * {
   position: relative;
   z-index: 1;
 }
