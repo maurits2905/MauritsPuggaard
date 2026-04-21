@@ -3269,11 +3269,7 @@ html.noReveal .r,
   /* overflow visible so comet can fly in from outside section bounds */
 }
 
-.careerX {
-  /* Slightly tightened — less dead space between bridge and career heading,
-     so the comet lands into content rather than into void. */
-  padding-top: 44px;
-}
+/* .careerX removed — new mpCareer section is full-screen, needs no padding */
 
 /* ================================================
    Unified Section Heading System
@@ -3354,49 +3350,7 @@ html.noReveal .r,
 
 /* ── Per-section heading containers ── */
 
-.careerHead {
-  margin-bottom: 22px;
-  text-align: center;
-}
-
-.careerTitle {
-  display: none;
-  position: relative;
-  margin: 0 0 14px;
-  font-size: clamp(56px, 8vw, 112px);
-  font-weight: 900;
-  line-height: 0.93;
-  letter-spacing: -0.055em;
-  color: transparent;
-  background: linear-gradient(120deg, #9b8cff 0%, #7eb4ff 42%, #44f0b1 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  filter: drop-shadow(0 0 48px rgba(155, 140, 255, 0.22));
-}
-
-.careerTitle::before {
-  content: attr(data-text);
-  position: absolute;
-  inset: 3px 0 0 3px;
-  color: transparent;
-  -webkit-text-stroke: 1px rgba(155, 140, 255, 0.09);
-  background: none;
-  -webkit-background-clip: unset;
-  background-clip: unset;
-  pointer-events: none;
-  z-index: -1;
-}
-
-.careerTitle.sig-hidden {
-  opacity: 0;
-  transform: translateY(36px);
-}
-.careerTitle.sig-visible {
-  opacity: 1;
-  transform: translateY(0);
-  transition: opacity 0.85s cubic-bezier(0.22, 1, 0.36, 1),
-              transform 0.85s cubic-bezier(0.22, 1, 0.36, 1);
-}
+/* .careerHead / .careerTitle removed — embedded in new mpCareer sticky section */
 
 /* Big section title (Projects, Ask) */
 
@@ -3496,310 +3450,328 @@ html.noReveal .r,
 }
 
 /* ============================================================
-   THE PATH — horizontal card rail
+   MP CAREER — full-screen sticky scroll section
    ============================================================ */
 
-/* ── Outer shell ── */
-.chShelf {
+/* ── Scroll wrapper: height set by JS → (N + 0.5) * window.innerHeight ── */
+.mpCareerWrap {
   position: relative;
-  padding-bottom: 56px;
-  overflow: hidden;
 }
 
-/* Gradient fade at left/right edges to hint at more cards */
-.chEdge {
-  position: absolute;
+/* ── Sticky frame — stays pinned while wrapper scrolls past ── */
+.mpCareerSticky {
+  position: sticky;
   top: 0;
-  bottom: 56px; /* stop before nav row */
-  width: 120px;
-  pointer-events: none;
-  z-index: 2;
-}
-.chEdge--l {
-  left: 0;
-  background: linear-gradient(to right, var(--bg, #080912) 0%, transparent 100%);
-}
-.chEdge--r {
-  right: 0;
-  background: linear-gradient(to left, var(--bg, #080912) 0%, transparent 100%);
-}
-
-/* ── Scrollable track ── */
-.chTrack {
-  display: flex;
-  gap: 18px;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  padding: 24px max(20px, calc(50% - 168px)) 32px;
-  outline: none;
-  cursor: grab;
-}
-.chTrack::-webkit-scrollbar { display: none; }
-.chTrack.is-dragging {
-  cursor: grabbing;
-  scroll-behavior: auto;
-  scroll-snap-type: none;
-}
-
-/* ── Individual card ── */
-.chCard {
-  flex: 0 0 300px;
-  min-height: 340px;
-  position: relative;
-  border-radius: 20px;
-  padding: 26px 24px 32px;
-  background: rgba(255, 255, 255, 0.028);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  height: 100vh;
+  height: 100svh;
   overflow: hidden;
-  scroll-snap-align: center;
-  cursor: pointer;
-  transition:
-    opacity      0.38s ease,
-    transform    0.38s cubic-bezier(0.16, 1, 0.3, 1),
-    background   0.38s ease,
-    border-color 0.38s ease,
-    box-shadow   0.38s ease;
-  opacity: 0.38;
-  transform: scale(0.93) translateY(4px);
-  will-change: transform, opacity;
-  user-select: none;
+  background: #080912;
 }
 
-/* Left accent bar */
-.chCard::before {
-  content: '';
+/* ── Full-bleed background photo layer ── */
+.mpCareerBg {
   position: absolute;
-  left: 0;
-  top: 24px;
-  bottom: 24px;
-  width: 3px;
-  border-radius: 0 3px 3px 0;
-  background: var(--ch-color, #9b8cff);
-  opacity: 0;
-  transition: opacity 0.38s ease;
-}
-
-/* Top glow line */
-.chCard::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 20%;
-  right: 20%;
-  height: 1px;
-  background: linear-gradient(90deg,
-    transparent,
-    var(--ch-color, #9b8cff),
-    transparent
-  );
-  opacity: 0;
-  transition: opacity 0.38s ease;
-}
-
-/* Adjacent cards (one step away) */
-.chCard.ch-near {
-  opacity: 0.62;
-  transform: scale(0.965) translateY(2px);
-}
-
-/* Active card */
-.chCard.ch-active {
-  opacity: 1;
-  transform: scale(1) translateY(0);
-  background: rgba(255, 255, 255, 0.05);
-  border-color: color-mix(in srgb, var(--ch-color, #9b8cff) 32%, rgba(255,255,255,0.07));
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--ch-color, #9b8cff) 12%, transparent),
-    0 18px 56px rgba(0, 0, 0, 0.50),
-    inset 0 0 48px color-mix(in srgb, var(--ch-color, #9b8cff) 4%, transparent);
-}
-.chCard.ch-active::before,
-.chCard.ch-active::after { opacity: 1; }
-
-/* ── Ghost year watermark ── */
-.chGhost {
-  position: absolute;
-  bottom: -8px;
-  right: 12px;
-  font-size: clamp(72px, 9vw, 108px);
-  font-weight: 900;
-  letter-spacing: -0.06em;
-  line-height: 1;
-  color: transparent;
-  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.04);
-  pointer-events: none;
-  user-select: none;
-  transition: -webkit-text-stroke 0.38s ease;
+  inset: 0;
   z-index: 0;
 }
-.chCard.ch-active .chGhost {
-  -webkit-text-stroke: 1px color-mix(in srgb, var(--ch-color, #9b8cff) 28%, transparent);
+
+.mpCareerBgSlide {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  transition: opacity 0.9s ease;
+}
+.mpCareerBgSlide.mp-active { opacity: 1; }
+
+/* ── Dark gradient overlay (left-heavy for text legibility) ── */
+.mpCareerOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    105deg,
+    rgba(8, 9, 18, 0.90) 0%,
+    rgba(8, 9, 18, 0.65) 35%,
+    rgba(8, 9, 18, 0.38) 62%,
+    rgba(8, 9, 18, 0.65) 100%
+  );
 }
 
-/* ── Card content ── */
-.chMeta {
+/* ── Vertical grid lines ── */
+.mpCareerGrid {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  pointer-events: none;
+}
+.mpCareerGridLine {
+  border-right: 1px solid rgba(255, 255, 255, 0.055);
+}
+.mpCareerGridLine:last-child { border-right: none; }
+
+/* ── Left description panel ── */
+.mpCareerLeft {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 28%;
+  height: 100%;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 48px 40px 48px 48px;
+  box-sizing: border-box;
+}
+
+.mpCareerLabel {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 18px;
-  flex-wrap: wrap;
-  position: relative;
-  z-index: 1;
+  gap: 10px;
+  margin-bottom: 36px;
 }
 
-.chYear {
-  font-family: ui-monospace, 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+.mpCareerLabelNum {
+  font-family: ui-monospace, 'JetBrains Mono', monospace;
   font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ch-color, #9b8cff);
-  border: 1px solid color-mix(in srgb, var(--ch-color, #9b8cff) 45%, transparent);
-  border-radius: 999px;
-  padding: 3px 10px;
-  background: color-mix(in srgb, var(--ch-color, #9b8cff) 8%, transparent);
+  letter-spacing: 0.22em;
+  color: rgba(155, 140, 255, 0.55);
+}
+
+.mpCareerLabelDash {
+  display: block;
+  width: 36px;
+  height: 1px;
+  background: rgba(155, 140, 255, 0.35);
+  border-radius: 1px;
   flex-shrink: 0;
 }
 
-.chSub {
-  font-size: 11px;
+.mpCareerLabelText {
+  font-family: ui-monospace, 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
   color: rgba(255, 255, 255, 0.30);
-  letter-spacing: 0.01em;
-  line-height: 1.4;
 }
 
-.chRole {
-  margin: 0 0 12px;
-  font-size: clamp(15px, 1.8vw, 18px);
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  line-height: 1.25;
-  color: rgba(255, 255, 255, 0.72);
-  transition: color 0.38s ease;
+.mpCareerDesc {
   position: relative;
-  z-index: 1;
+  min-height: 130px;
 }
-.chCard.ch-active .chRole { color: #ffffff; }
 
-.chDesc {
+.mpCareerDescItem {
+  position: absolute;
+  top: 0;
+  left: 0;
   margin: 0;
-  font-size: 13px;
-  line-height: 1.72;
-  color: rgba(255, 255, 255, 0.26);
-  transition: color 0.38s ease;
-  position: relative;
-  z-index: 1;
+  font-size: clamp(13px, 1.05vw, 15px);
+  line-height: 1.78;
+  color: rgba(255, 255, 255, 0.52);
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  pointer-events: none;
+  max-width: 32ch;
 }
-.chCard.ch-active .chDesc { color: rgba(255, 255, 255, 0.58); }
+.mpCareerDescItem.mp-active {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
 
-/* ── Navigation row ── */
-.chNav {
+/* ── Card stage ── */
+.mpCareerStage {
+  position: absolute;
+  top: 0;
+  left: 28%;
+  right: 10%;
+  height: 100%;
+  z-index: 10;
   display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+.mpCareerTrack {
+  display: flex;
+  gap: 22px;
+  align-items: center;
+  flex-shrink: 0;
+  will-change: transform;
+}
+
+/* ── Portrait card ── */
+.mpCareerCard {
+  flex: 0 0 240px;
+  height: min(70svh, 430px);
+  border-radius: 14px;
+  overflow: hidden;
+  position: relative;
+  flex-shrink: 0;
+  opacity: 0.38;
+  transform: scale(0.88);
+  transition:
+    opacity  0.5s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  user-select: none;
+}
+.mpCareerCard.mp-active {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Photo (top 60%) */
+.mpCareerCardPhoto {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60%;
+  background-size: cover;
+  background-position: center;
+}
+
+/* White body (bottom 40%) */
+.mpCareerCardBody {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40%;
+  background: #ffffff;
+  padding: 18px 18px 20px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+/* Color accent bar top of body */
+.mpCareerCardBody::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #9b8cff 0%, #44f0b1 100%);
+}
+
+.mpCareerCardRole {
+  margin: 0;
+  font-size: clamp(10px, 0.88vw, 12px);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #080912;
+  line-height: 1.35;
+}
+
+.mpCareerCardMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 8px;
+}
+
+.mpCareerCardCategory,
+.mpCareerCardLocation {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(8, 9, 18, 0.40);
+}
+
+.mpCareerCardYear {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: #9b8cff;
+  margin-top: 3px;
+}
+
+/* ── Right sidebar strip ── */
+.mpCareerSidebar {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 10%;
+  height: 100%;
+  z-index: 10;
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 20px;
-  padding-top: 4px;
+  padding: 0 8px;
+  box-sizing: border-box;
 }
 
-.chArrow {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.04);
-  color: rgba(255, 255, 255, 0.45);
-  cursor: pointer;
-  font-size: 15px;
-  transition:
-    background    0.22s ease,
-    border-color  0.22s ease,
-    color         0.22s ease,
-    transform     0.22s ease;
-}
-.chArrow:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.09);
-  border-color: rgba(155, 140, 255, 0.38);
-  color: #fff;
-  transform: scale(1.08);
-}
-.chArrow:disabled {
-  opacity: 0.22;
-  cursor: not-allowed;
+.mpCareerSidebarLabel {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+  font-family: ui-monospace, 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.22);
 }
 
-.chDots {
-  display: flex;
-  gap: 7px;
-  align-items: center;
+.mpCareerSidebarCounter {
+  font-family: ui-monospace, 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.40);
+  transition: color 0.3s ease;
 }
 
-.chDotEl {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.18);
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  transition:
-    background  0.25s ease,
-    transform   0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* ── Bottom progress bar ── */
+.mpCareerProgress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: 15;
+  background: rgba(255, 255, 255, 0.07);
 }
-.chDotEl.ch-on {
-  background: #9b8cff;
-  transform: scale(1.5);
+.mpCareerProgressBar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #9b8cff 0%, #44f0b1 100%);
+  transition: width 0.12s ease;
 }
 
-/* ── Light mode ── */
-[data-theme="light"] .chEdge--l {
-  background: linear-gradient(to right, #f4f4fa 0%, transparent 100%);
+/* ── Mobile ── */
+@media (max-width: 700px) {
+  .mpCareerLeft {
+    display: none;
+  }
+  .mpCareerStage {
+    left: 0;
+    right: 9%;
+  }
+  .mpCareerCard {
+    flex: 0 0 200px;
+    height: min(65svh, 360px);
+  }
+  .mpCareerSidebar {
+    width: 9%;
+  }
 }
-[data-theme="light"] .chEdge--r {
-  background: linear-gradient(to left, #f4f4fa 0%, transparent 100%);
-}
-[data-theme="light"] .chCard {
-  background: rgba(8, 9, 20, 0.025);
-  border-color: rgba(8, 9, 20, 0.08);
-}
-[data-theme="light"] .chCard.ch-near {
-  background: rgba(8, 9, 20, 0.03);
-}
-[data-theme="light"] .chCard.ch-active {
-  background: rgba(255, 255, 255, 0.92);
-  border-color: color-mix(in srgb, var(--ch-color, #9b8cff) 30%, rgba(8,9,20,0.08));
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--ch-color, #9b8cff) 12%, transparent),
-    0 18px 56px rgba(8, 9, 20, 0.10);
-}
-[data-theme="light"] .chRole { color: rgba(8, 9, 20, 0.65); }
-[data-theme="light"] .chCard.ch-active .chRole { color: rgba(8, 9, 20, 0.92); }
-[data-theme="light"] .chSub  { color: rgba(8, 9, 20, 0.38); }
-[data-theme="light"] .chDesc { color: rgba(8, 9, 20, 0.35); }
-[data-theme="light"] .chCard.ch-active .chDesc { color: rgba(8, 9, 20, 0.65); }
-[data-theme="light"] .chGhost {
-  -webkit-text-stroke: 1px rgba(8, 9, 20, 0.045);
-}
-[data-theme="light"] .chCard.ch-active .chGhost {
-  -webkit-text-stroke: 1px color-mix(in srgb, var(--ch-color, #9b8cff) 28%, transparent);
-}
-[data-theme="light"] .chArrow {
-  border-color: rgba(8, 9, 20, 0.14);
-  background: rgba(8, 9, 20, 0.03);
-  color: rgba(8, 9, 20, 0.45);
-}
-[data-theme="light"] .chArrow:hover:not(:disabled) {
-  background: rgba(8, 9, 20, 0.06);
-  border-color: rgba(100, 80, 220, 0.35);
-  color: rgba(8, 9, 20, 0.90);
-}
-[data-theme="light"] .chDotEl { background: rgba(8, 9, 20, 0.18); }
-[data-theme="light"] .chDotEl.ch-on { background: #7c3aed; }
 
 /* =========================
    TECH STACK (your tiles)

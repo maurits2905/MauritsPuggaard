@@ -1587,168 +1587,186 @@ function renderStack() {
 }
 
 /* ------------------------------
-   Career — Signal Log Timeline
+   Career — Sticky Scroll Section
 ------------------------------ */
 const careerData = [
   {
     role: "SAP Technical Consultant",
     sub: "2BM · Client & internal projects",
     year: "NOW",
+    category: "Consulting",
+    location: "Denmark",
     desc: "Working with ABAP, CDS, OData, and SAP Fiori/UI5. Building clean, maintainable SAP solutions close to real business needs. Contributing to internal AI initiatives, SAP Public Cloud setup, and quality assurance.",
+    img: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&q=80",
   },
   {
     role: "AI & Automation",
     sub: "Internal projects",
     year: "2025",
+    category: "Engineering",
+    location: "Remote",
     desc: "Developing AI-driven tools to support consulting work. Hands-on with LLM-based assistants, multi-agent systems, and practical automation. MSc in Computer Science completed summer 2025.",
+    img: "https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=1200&q=80",
   },
   {
     role: "Full-Stack Development",
     sub: "Projects & tools",
     year: "2024",
+    category: "Development",
+    location: "Denmark",
     desc: "Built complete web applications from frontend to backend. Focused on usability, performance, and clear system design.",
+    img: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=1200&q=80",
   },
   {
     role: "Python & Machine Learning",
     sub: "Self-driven projects",
     year: "2023",
+    category: "Research",
+    location: "University",
     desc: "Worked with Python, data analysis, and machine learning. Built automation, prototypes, and early ML-based solutions.",
+    img: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1200&q=80",
   },
   {
     role: "Technical & Visual Foundations",
     sub: "Design & development crossover",
     year: "2022",
+    category: "Design",
+    location: "Denmark",
     desc: "Combined technical thinking with visual design. Developed a strong sense for UX, structure, and clarity.",
+    img: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=1200&q=80",
   },
   {
     role: "Digital Foundations",
     sub: "Getting started",
     year: "2021",
+    category: "Learning",
+    location: "Denmark",
     desc: "First exposure to structured digital tools and software. Sparked a long-term interest in technology and problem-solving.",
+    img: "https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?w=1200&q=80",
   },
 ];
 
-const CAREER_COLORS = [
-  "#9b8cff",
-  "#44f0b1",
-  "#9b8cff",
-  "#44f0b1",
-  "#9b8cff",
-  "#44f0b1",
-];
+function initMpCareer() {
+  const wrap    = document.getElementById("career");
+  const track   = document.getElementById("mpCareerTrack");
+  const descEl  = document.getElementById("mpCareerDesc");
+  const counter = document.getElementById("mpCareerSidebarCounter");
+  const progBar = document.getElementById("mpCareerProgressBar");
+  const bgEl    = wrap ? wrap.querySelector(".mpCareerBg") : null;
+  if (!wrap || !track || !bgEl) return;
 
-function renderCareer() {
-  const track  = document.getElementById("chTrack");
-  const dotsEl = document.getElementById("chDots");
-  const btnPrev = document.getElementById("chPrev");
-  const btnNext = document.getElementById("chNext");
-  if (!track || !dotsEl) return;
+  const N = careerData.length;
 
-  // ── Build cards ───────────────────────────────────────────────
-  careerData.forEach((item, i) => {
-    const color = CAREER_COLORS[i] || "#9b8cff";
+  // ── Set wrapper height: N scrollable cards + 0.5 exit buffer ──
+  function setHeight() {
+    wrap.style.height = `${(N + 0.5) * window.innerHeight}px`;
+  }
+  setHeight();
+  window.addEventListener("resize", setHeight);
 
+  // ── Build background slides ──
+  careerData.forEach((item) => {
+    const slide = document.createElement("div");
+    slide.className = "mpCareerBgSlide";
+    slide.style.backgroundImage = `url('${item.img}')`;
+    bgEl.appendChild(slide);
+  });
+  const bgSlides = Array.from(bgEl.querySelectorAll(".mpCareerBgSlide"));
+
+  // ── Build description items ──
+  if (descEl) {
+    careerData.forEach((item) => {
+      const p = document.createElement("p");
+      p.className = "mpCareerDescItem";
+      p.textContent = item.desc;
+      descEl.appendChild(p);
+    });
+  }
+  const descItems = descEl ? Array.from(descEl.querySelectorAll(".mpCareerDescItem")) : [];
+
+  // ── Build portrait cards ──
+  careerData.forEach((item) => {
     const card = document.createElement("article");
-    card.className = "chCard";
-    card.dataset.index = String(i);
-    card.style.setProperty("--ch-color", color);
-    card.setAttribute("role", "tab");
+    card.className = "mpCareerCard";
     card.setAttribute("aria-label", `${item.year} — ${item.role}`);
     card.innerHTML =
-      `<div class="chGhost" aria-hidden="true">${escapeHtml(item.year)}</div>` +
-      `<div class="chMeta">` +
-        `<span class="chYear">${escapeHtml(item.year)}</span>` +
-        `<span class="chSub">${escapeHtml(item.sub)}</span>` +
-      `</div>` +
-      `<h3 class="chRole">${escapeHtml(item.role)}</h3>` +
-      `<p class="chDesc">${escapeHtml(item.desc)}</p>`;
+      `<div class="mpCareerCardPhoto" style="background-image:url('${item.img}')"></div>` +
+      `<div class="mpCareerCardBody">` +
+        `<h3 class="mpCareerCardRole">${escapeHtml(item.role)}</h3>` +
+        `<div class="mpCareerCardMeta">` +
+          `<span class="mpCareerCardCategory">${escapeHtml(item.category)}</span>` +
+          `<span class="mpCareerCardLocation">${escapeHtml(item.location)}</span>` +
+          `<span class="mpCareerCardYear">${escapeHtml(item.year)}</span>` +
+        `</div>` +
+      `</div>`;
     track.appendChild(card);
-
-    // Dot indicator
-    const dot = document.createElement("button");
-    dot.className = "chDotEl";
-    dot.setAttribute("aria-label", item.role);
-    dot.setAttribute("role", "tab");
-    dotsEl.appendChild(dot);
   });
+  const cards = Array.from(track.querySelectorAll(".mpCareerCard"));
 
-  const cards = Array.from(track.querySelectorAll(".chCard"));
-  const dots  = Array.from(dotsEl.querySelectorAll(".chDotEl"));
-  let activeIdx = 0;
+  let activeIdx = -1;
 
-  // ── Active state ──────────────────────────────────────────────
   function setActive(idx) {
+    if (idx === activeIdx) return;
+
+    bgSlides[activeIdx]?.classList.remove("mp-active");
+    bgSlides[idx]?.classList.add("mp-active");
+
+    descItems[activeIdx]?.classList.remove("mp-active");
+    descItems[idx]?.classList.add("mp-active");
+
+    cards[activeIdx]?.classList.remove("mp-active");
+    cards[idx]?.classList.add("mp-active");
+
+    if (counter) {
+      counter.textContent =
+        `${String(idx + 1).padStart(2, "0")} / ${String(N).padStart(2, "0")}`;
+    }
+
     activeIdx = idx;
-    cards.forEach((c, i) => {
-      const dist = Math.abs(i - idx);
-      c.classList.toggle("ch-active", i === idx);
-      c.classList.toggle("ch-near",   dist === 1);
-    });
-    dots.forEach((d, i) => d.classList.toggle("ch-on", i === idx));
-    if (btnPrev) btnPrev.disabled = idx === 0;
-    if (btnNext) btnNext.disabled = idx === cards.length - 1;
   }
 
-  function scrollToCard(idx) {
-    const card = cards[Math.max(0, Math.min(cards.length - 1, idx))];
-    if (!card) return;
-    card.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
-    setActive(idx);
-  }
-
-  // ── Sync active to scroll position ───────────────────────────
+  // ── Scroll driver ──
   let rafId = 0;
-  track.addEventListener("scroll", () => {
+  let lastProgress = -1;
+
+  function onScroll() {
     if (rafId) return;
-    rafId = requestAnimationFrame(() => {
-      rafId = 0;
-      const cx = track.getBoundingClientRect().left + track.offsetWidth / 2;
-      let best = 0, bestDist = Infinity;
-      cards.forEach((c, i) => {
-        const r = c.getBoundingClientRect();
-        const d = Math.abs(r.left + r.width / 2 - cx);
-        if (d < bestDist) { bestDist = d; best = i; }
-      });
-      setActive(best);
-    });
-  }, { passive: true });
+    rafId = requestAnimationFrame(update);
+  }
 
-  // ── Arrow buttons ─────────────────────────────────────────────
-  if (btnPrev) btnPrev.addEventListener("click", () => scrollToCard(activeIdx - 1));
-  if (btnNext) btnNext.addEventListener("click", () => scrollToCard(activeIdx + 1));
+  function update() {
+    rafId = 0;
+    const wrapTop    = wrap.getBoundingClientRect().top;
+    const wrapH      = wrap.offsetHeight;
+    const viewH      = window.innerHeight;
+    const scrolled   = -wrapTop;                          // px scrolled into wrapper
+    const scrollRange = Math.max(1, wrapH - viewH);       // total scroll travel
+    const progress   = Math.max(0, Math.min(1, scrolled / scrollRange));
 
-  // ── Dot buttons ───────────────────────────────────────────────
-  dots.forEach((d, i) => d.addEventListener("click", () => scrollToCard(i)));
+    if (Math.abs(progress - lastProgress) < 0.00005) return;
+    lastProgress = progress;
 
-  // ── Click card to centre it ───────────────────────────────────
-  cards.forEach((c, i) => c.addEventListener("click", () => scrollToCard(i)));
+    // Fractional card index: 0 → card 0, 1 → card N-1
+    const cardFrac = progress * (N - 1);
+    const newIdx   = Math.min(N - 1, Math.max(0, Math.round(cardFrac)));
+    if (newIdx !== activeIdx) setActive(newIdx);
 
-  // ── Keyboard navigation ───────────────────────────────────────
-  track.addEventListener("keydown", (e) => {
-    if (e.key === "ArrowLeft")  { e.preventDefault(); scrollToCard(activeIdx - 1); }
-    if (e.key === "ArrowRight") { e.preventDefault(); scrollToCard(activeIdx + 1); }
-  });
+    // Translate track so active card stays centred in stage
+    const cardW  = cards[0]?.offsetWidth || 240;
+    const gap    = 22;
+    const stageW = (track.parentElement || wrap).offsetWidth;
+    const baseX  = stageW / 2 - cardW / 2;       // centres card-0 at start
+    const trackX = baseX - cardFrac * (cardW + gap);
+    track.style.transform = `translateX(${Math.round(trackX)}px)`;
 
-  // ── Drag to scroll (mouse) ────────────────────────────────────
-  let dragging = false, startX = 0, startScroll = 0;
-  track.addEventListener("mousedown", (e) => {
-    dragging = true;
-    startX = e.pageX;
-    startScroll = track.scrollLeft;
-    track.classList.add("is-dragging");
-  }, { passive: true });
-  window.addEventListener("mousemove", (e) => {
-    if (!dragging) return;
-    track.scrollLeft = startScroll - (e.pageX - startX);
-  }, { passive: true });
-  window.addEventListener("mouseup", () => {
-    if (!dragging) return;
-    dragging = false;
-    track.classList.remove("is-dragging");
-  }, { passive: true });
+    // Progress bar
+    if (progBar) progBar.style.width = `${progress * 100}%`;
+  }
 
-  // ── Init ──────────────────────────────────────────────────────
-  setActive(0);
+  window.addEventListener("scroll", onScroll, { passive: true });
+
+  // Initial draw
+  requestAnimationFrame(update);
 }
 
 // Always start at top on refresh (prevents browser restoring old scroll position)
@@ -2814,7 +2832,7 @@ async function init() {
   initChapterRail();
 
   // Career
-  renderCareer();
+  initMpCareer();
 
   loadTo(52);
 

@@ -747,30 +747,50 @@ body[data-theme="light"] .abtTag:hover {
       </section>
 
 
-      <section id="career" class="section careerX">
-        <div class="careerHead r">
-          <div class="secLabel">
-            <div class="secEyebrow">
-              <span class="secNum">01</span>
-              <span class="secLabelLine"></span>
-            </div>
-            <span class="secCategory">The Path</span>
-          </div>
-          <p class="p">The jobs, the turns, and what they built.</p>
-        </div>
+      <section id="career" class="mpCareerWrap">
+        <div class="mpCareerSticky">
 
-        <div class="chShelf" id="chShelf">
-          <!-- fade edges -->
-          <div class="chEdge chEdge--l" aria-hidden="true"></div>
-          <div class="chEdge chEdge--r" aria-hidden="true"></div>
-          <!-- scrollable card track — cards injected by JS -->
-          <div class="chTrack" id="chTrack" tabindex="0" role="region" aria-label="Career timeline"></div>
-          <!-- nav row -->
-          <div class="chNav">
-            <button class="chArrow" id="chPrev" aria-label="Previous entry">&#8592;</button>
-            <div class="chDots" id="chDots" role="tablist"></div>
-            <button class="chArrow" id="chNext" aria-label="Next entry">&#8594;</button>
+          <!-- full-bleed background photos (JS-injected) -->
+          <div class="mpCareerBg" aria-hidden="true"></div>
+
+          <!-- dark overlay -->
+          <div class="mpCareerOverlay" aria-hidden="true"></div>
+
+          <!-- vertical grid lines -->
+          <div class="mpCareerGrid" aria-hidden="true">
+            <div class="mpCareerGridLine"></div>
+            <div class="mpCareerGridLine"></div>
+            <div class="mpCareerGridLine"></div>
+            <div class="mpCareerGridLine"></div>
+            <div class="mpCareerGridLine"></div>
           </div>
+
+          <!-- left: section label + description text (JS-injected) -->
+          <div class="mpCareerLeft">
+            <div class="mpCareerLabel">
+              <span class="mpCareerLabelNum">01</span>
+              <span class="mpCareerLabelDash" aria-hidden="true"></span>
+              <span class="mpCareerLabelText">The Path</span>
+            </div>
+            <div class="mpCareerDesc" id="mpCareerDesc"></div>
+          </div>
+
+          <!-- center: horizontal card rail -->
+          <div class="mpCareerStage">
+            <div class="mpCareerTrack" id="mpCareerTrack"></div>
+          </div>
+
+          <!-- right sidebar -->
+          <div class="mpCareerSidebar" aria-hidden="true">
+            <span class="mpCareerSidebarLabel">Career</span>
+            <span class="mpCareerSidebarCounter" id="mpCareerSidebarCounter">01 / 06</span>
+          </div>
+
+          <!-- bottom progress line -->
+          <div class="mpCareerProgress" aria-hidden="true">
+            <div class="mpCareerProgressBar" id="mpCareerProgressBar"></div>
+          </div>
+
         </div>
       </section>
 
