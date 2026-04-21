@@ -9855,49 +9855,81 @@ body[data-theme="light"] .abtTag:hover {
 
 
 /* ═══════════════════════════════════════════════════════════
-   MP ROLL SECTION — vertical scroll-driven text strip
+   MP MARQUEE SECTION — horizontal airport-terminal keyword strip
+   Continuous auto-scrolling, right edge progressively blurred.
    ═══════════════════════════════════════════════════════════ */
-.mpRollSection {
+.mpMarqueeSection {
   position: relative;
-  height: 250vh;   /* fallback */
-  height: 250svh;
   background: #000;
-}
-
-.mpRollSticky {
-  position: sticky;
-  top: 0;
-  height: 100vh;   /* fallback */
-  height: 100svh;
-  overflow: hidden;
+  height: 38vh;    /* fallback */
+  height: 38svh;
   display: flex;
   align-items: center;
+  overflow: hidden;
 }
 
-.mpRollTrack {
+/* Left edge: hard fade to black so text appears smoothly */
+.mpMarqueeSection::before {
+  content: "";
   position: absolute;
   left: 0;
-  right: 0;
-  transform: translateY(115svh);
-  will-change: transform;
-  padding: 0 6vw;
+  top: 0;
+  bottom: 0;
+  width: 12%;
+  background: linear-gradient(to right, #000 0%, transparent 100%);
+  z-index: 3;
+  pointer-events: none;
 }
 
-.mpRollLine {
-  display: block;
-  font-family: var(--font);
-  font-size: clamp(3.2rem, 9.5vw, 9rem);
-  font-weight: 900;
-  letter-spacing: -0.025em;
-  line-height: 1.0;
-  color: #fff;
+/* Marquee track — two identical runs side by side for seamless loop */
+.mpMarqueeTrack {
+  display: flex;
   white-space: nowrap;
-  padding: 0.06em 0;
+  flex-shrink: 0;
+  animation: mpMarquee 32s linear infinite;
+  will-change: transform;
 }
 
-.mpRollLine--dim {
-  -webkit-text-stroke: 2px rgba(255, 255, 255, 0.28);
-  color: transparent;
+.mpMarqueeRun {
+  font-family: var(--font);
+  font-size: clamp(4rem, 13vw, 12rem);
+  font-weight: 900;
+  color: #fff;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+@keyframes mpMarquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* Right-side blur overlay — backdrop-filter blurs the text behind it.
+   The gradient mask makes it transparent on the left (text sharp)
+   and opaque on the right (text blurred). */
+.mpMarqueeBlur {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  -webkit-backdrop-filter: blur(7px);
+  backdrop-filter: blur(7px);
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    transparent 52%,
+    rgba(0,0,0,0.4) 68%,
+    black 85%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    transparent 52%,
+    rgba(0,0,0,0.4) 68%,
+    black 85%
+  );
 }
 
 /* ── Mobile tweaks ── */
@@ -9905,8 +9937,9 @@ body[data-theme="light"] .abtTag:hover {
   .mpTitleInner {
     font-size: clamp(2.8rem, 14vw, 5rem);
   }
-  .mpRollLine {
-    font-size: clamp(2.2rem, 11vw, 4rem);
+  /* Slightly smaller marquee text on mobile */
+  .mpMarqueeRun {
+    font-size: clamp(3rem, 18vw, 6rem);
   }
   /* On mobile, show a slightly taller portrait window */
   .mpIntroWrap:not(.mp-zoomed) {

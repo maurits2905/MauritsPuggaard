@@ -633,18 +633,15 @@ body[data-theme="light"] .abtTag:hover {
         </section>
       </div>
 
-      <!-- Rolling text (not a nav stop) -->
-      <div class="mpRollSection" aria-hidden="true">
-        <div class="mpRollSticky">
-          <div class="mpRollTrack" id="mpRollTrack">
-            <div class="mpRollLine">SAP CONSULTANT</div>
-            <div class="mpRollLine mpRollLine--dim">FULL STACK DEVELOPER</div>
-            <div class="mpRollLine">AI TOOLING</div>
-            <div class="mpRollLine mpRollLine--dim">BUILDER</div>
-            <div class="mpRollLine">PROBLEM SOLVER</div>
-            <div class="mpRollLine mpRollLine--dim">INNOVATOR</div>
-          </div>
+      <!-- Horizontal keyword marquee (airport-terminal style) -->
+      <div class="mpMarqueeSection" aria-hidden="true">
+        <!-- Sharp text layer -->
+        <div class="mpMarqueeTrack">
+          <span class="mpMarqueeRun">SAP CONSULTANT&ensp;&middot;&ensp;FULL STACK DEVELOPER&ensp;&middot;&ensp;AI TOOLING&ensp;&middot;&ensp;BUILDER&ensp;&middot;&ensp;PROBLEM SOLVER&ensp;&middot;&ensp;INNOVATOR&emsp;&emsp;&emsp;</span>
+          <span class="mpMarqueeRun" aria-hidden="true">SAP CONSULTANT&ensp;&middot;&ensp;FULL STACK DEVELOPER&ensp;&middot;&ensp;AI TOOLING&ensp;&middot;&ensp;BUILDER&ensp;&middot;&ensp;PROBLEM SOLVER&ensp;&middot;&ensp;INNOVATOR&emsp;&emsp;&emsp;</span>
         </div>
+        <!-- Blur overlay — transparent left, progressively blurred right -->
+        <div class="mpMarqueeBlur" aria-hidden="true"></div>
       </div>
 
       <!-- 3) ABOUT — Space Dossier layout -->

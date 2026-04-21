@@ -4157,8 +4157,8 @@ function initMpHero() {
   const heroSub    = document.getElementById("mpHeroSub");
   const scrollCue  = document.getElementById("mpScrollCue");
   const heroWrap   = document.getElementById("hero");
-  const rollSection = document.querySelector(".mpRollSection");
-  const rollTrack   = document.getElementById("mpRollTrack");
+  const rollSection = null; // marquee is now CSS-animated, no JS needed
+  const rollTrack   = null;
 
   const introPhotos = Array.from(introWrap.querySelectorAll(".mpIntroPhoto"));
   const vidA = document.getElementById("mpVidA");
