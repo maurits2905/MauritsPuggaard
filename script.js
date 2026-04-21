@@ -1754,8 +1754,8 @@ function initMpCareer() {
     // Translate track so active card stays centred in the *usable* area
     // (right of the left-panel overlay, left of the sidebar).
     // Stage now starts at left:0, so we offset by the left-panel width.
-    const cardW       = cards[0]?.offsetWidth || 300;
-    const gap         = 48;
+    const cardW       = cards[0]?.offsetWidth || 360;
+    const gap         = 200;  // matches CSS gap — one card visible at centre
     const stageW      = (track.parentElement || wrap).offsetWidth;
     const leftPanelEl = wrap.querySelector(".mpCareerLeft");
     const leftPanelW  = (leftPanelEl && window.innerWidth > 700)
