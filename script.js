@@ -1751,12 +1751,18 @@ function initMpCareer() {
     const newIdx   = Math.min(N - 1, Math.max(0, Math.round(cardFrac)));
     if (newIdx !== activeIdx) setActive(newIdx);
 
-    // Translate track so active card stays centred in stage
-    const cardW  = cards[0]?.offsetWidth || 240;
-    const gap    = 22;
-    const stageW = (track.parentElement || wrap).offsetWidth;
-    const baseX  = stageW / 2 - cardW / 2;       // centres card-0 at start
-    const trackX = baseX - cardFrac * (cardW + gap);
+    // Translate track so active card stays centred in the *usable* area
+    // (right of the left-panel overlay, left of the sidebar).
+    // Stage now starts at left:0, so we offset by the left-panel width.
+    const cardW       = cards[0]?.offsetWidth || 300;
+    const gap         = 48;
+    const stageW      = (track.parentElement || wrap).offsetWidth;
+    const leftPanelEl = wrap.querySelector(".mpCareerLeft");
+    const leftPanelW  = (leftPanelEl && window.innerWidth > 700)
+      ? leftPanelEl.offsetWidth : 0;
+    const usableW = stageW - leftPanelW;
+    const baseX   = leftPanelW + usableW / 2 - cardW / 2;  // centres card-0
+    const trackX  = baseX - cardFrac * (cardW + gap);
     track.style.transform = `translateX(${Math.round(trackX)}px)`;
 
     // Progress bar

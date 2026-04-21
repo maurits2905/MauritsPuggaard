@@ -3590,10 +3590,10 @@ html.noReveal .r,
 .mpCareerStage {
   position: absolute;
   top: 0;
-  left: 28%;
+  left: 0;          /* full width — left panel overlays on top via z-index */
   right: 10%;
   height: 100%;
-  z-index: 10;
+  z-index: 5;       /* below left panel (z-index: 10) so text stays on top */
   display: flex;
   align-items: center;
   overflow: hidden;
@@ -3601,7 +3601,7 @@ html.noReveal .r,
 
 .mpCareerTrack {
   display: flex;
-  gap: 22px;
+  gap: 48px;        /* generous breathing room between cards */
   align-items: center;
   flex-shrink: 0;
   will-change: transform;
@@ -3609,8 +3609,8 @@ html.noReveal .r,
 
 /* ── Portrait card ── */
 .mpCareerCard {
-  flex: 0 0 240px;
-  height: min(70svh, 430px);
+  flex: 0 0 300px;
+  height: min(72svh, 490px);
   border-radius: 14px;
   overflow: hidden;
   position: relative;
@@ -3765,8 +3765,8 @@ html.noReveal .r,
     right: 9%;
   }
   .mpCareerCard {
-    flex: 0 0 200px;
-    height: min(65svh, 360px);
+    flex: 0 0 220px;
+    height: min(66svh, 400px);
   }
   .mpCareerSidebar {
     width: 9%;
