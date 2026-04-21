@@ -9583,7 +9583,8 @@ body[data-theme="light"] .abtTag:hover {
   background: transparent !important;
   /* Our own layout */
   position: relative !important;
-  height: 200vh;
+  height: 200vh;   /* fallback */
+  height: 200svh;  /* svh = small viewport height, consistent with window.innerHeight on mobile */
 }
 
 /* Kill the old grain and bottom-fade pseudo-elements on the wrapper */
@@ -9597,7 +9598,8 @@ body[data-theme="light"] .abtTag:hover {
 .mpHeroSticky {
   position: sticky;
   top: 0;
-  height: 100vh;
+  height: 100vh;   /* fallback */
+  height: 100svh;  /* never taller than the visible viewport on mobile */
   overflow: hidden;
   background: #000;
   will-change: transform; /* promote to own layer for perf */
@@ -9857,14 +9859,16 @@ body[data-theme="light"] .abtTag:hover {
    ═══════════════════════════════════════════════════════════ */
 .mpRollSection {
   position: relative;
-  height: 250vh;
+  height: 250vh;   /* fallback */
+  height: 250svh;
   background: #000;
 }
 
 .mpRollSticky {
   position: sticky;
   top: 0;
-  height: 100vh;
+  height: 100vh;   /* fallback */
+  height: 100svh;
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -9874,7 +9878,7 @@ body[data-theme="light"] .abtTag:hover {
   position: absolute;
   left: 0;
   right: 0;
-  transform: translateY(115vh);
+  transform: translateY(115svh);
   will-change: transform;
   padding: 0 6vw;
 }

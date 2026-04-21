@@ -4332,9 +4332,10 @@ function initMpHero() {
       const rollProgress   = Math.max(0, Math.min(1,
         -rollSection.getBoundingClientRect().top / rollScrollable
       ));
-      // Track travels from +115 vh (below) to –115 vh (above)
-      const yVh = 115 - rollProgress * 230;
-      rollTrack.style.transform = `translateY(${yVh}vh)`;
+      // Track travels from +115svh (below) to –115svh (above).
+      // Use px so it stays consistent with svh-based layout on mobile.
+      const yPx = (115 - rollProgress * 230) / 100 * window.innerHeight;
+      rollTrack.style.transform = `translateY(${yPx}px)`;
     }
   }
 
