@@ -3444,6 +3444,141 @@ async function getIconMarkup(slug) {
 }
 
 /* ----------------------------------------------------------
+   Tech Stack — Heatmap canvas background
+   Grid of code glyphs whose brightness flows with sine-wave
+   heat patterns, creating a live heat-map of symbols.
+   ---------------------------------------------------------- */
+function initTechHeatmap() {
+  const canvas  = document.getElementById("techHeatCanvas");
+  const section = document.getElementById("tech");
+  if (!canvas || !section) return;
+
+  const ctx = canvas.getContext("2d");
+
+  // Code-symbol charset
+  const CHARS = "01{}[]<>/\\|;:.#@!$%^&*()=+-_~`";
+
+  const CELL = 18;   // px per glyph cell
+  let cols, rows, grid;
+  let t = 0;
+  let rafId = null;
+  let running = false;
+
+  // ── Build / rebuild glyph grid ──
+  function resize() {
+    canvas.width  = section.offsetWidth;
+    canvas.height = section.offsetHeight;
+    cols = Math.ceil(canvas.width  / CELL) + 1;
+    rows = Math.ceil(canvas.height / CELL) + 1;
+    grid = [];
+    for (let r = 0; r < rows; r++) {
+      grid[r] = [];
+      for (let c = 0; c < cols; c++) {
+        grid[r][c] = {
+          ch:    CHARS[Math.floor(Math.random() * CHARS.length)],
+          phase: Math.random() * Math.PI * 2,
+          speed: 0.4 + Math.random() * 0.8,
+          tick:  Math.random() * 3,
+        };
+      }
+    }
+  }
+
+  // ── Heat value for a cell: multi-frequency sine sum → −1..1 ──
+  function heat(c, r, time) {
+    const nx = c / cols;
+    const ny = r / rows;
+    return (
+      Math.sin(nx * 3.2 + time * 0.38 + Math.sin(ny * 2.5 + time * 0.22)) * 0.5 +
+      Math.cos(ny * 2.8 + time * 0.28 + Math.cos(nx * 4.2 - time * 0.18)) * 0.5 +
+      Math.sin((nx + ny) * 1.9 + time * 0.52) * 0.25
+    ) / 1.25;
+  }
+
+  // ── Map heat (−1..1) to a CSS colour string ──
+  function colour(h) {
+    const v = (h + 1) * 0.5;          // 0..1
+    if (v < 0.18) return null;         // invisible — skip draw
+    if (v < 0.42) {
+      // cool: very dim purple
+      return `rgba(155,140,255,${((v - 0.18) / 0.24 * 0.13).toFixed(3)})`;
+    }
+    if (v < 0.68) {
+      // warm: dim → mid purple
+      const f = (v - 0.42) / 0.26;
+      return `rgba(155,140,255,${(0.13 + f * 0.38).toFixed(3)})`;
+    }
+    if (v < 0.88) {
+      // hot: purple → teal blend
+      const f = (v - 0.68) / 0.20;
+      const r = Math.round(155 + (68  - 155) * f);
+      const g = Math.round(140 + (240 - 140) * f);
+      const b = Math.round(255 + (177 - 255) * f);
+      return `rgba(${r},${g},${b},${(0.51 + f * 0.32).toFixed(3)})`;
+    }
+    // very hot: near-white teal
+    const f = (v - 0.88) / 0.12;
+    return `rgba(${Math.round(68 + f * 187)},${Math.round(240 + f * 15)},${Math.round(177 + f * 78)},${(0.83 + f * 0.17).toFixed(3)})`;
+  }
+
+  // ── Draw one frame ──
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.font = `${CELL - 4}px "JetBrains Mono", ui-monospace, "Courier New", monospace`;
+    ctx.textBaseline = "top";
+
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const cell = grid[r][c];
+        const h    = heat(c, r, t + cell.phase * 0.25);
+        const col  = colour(h);
+        if (!col) continue;
+
+        // Hotter cells cycle glyphs faster
+        const v = (h + 1) * 0.5;
+        cell.tick += 0.016 * cell.speed;
+        if (v > 0.55 && cell.tick > (2.4 - v * 1.6)) {
+          cell.ch   = CHARS[Math.floor(Math.random() * CHARS.length)];
+          cell.tick = 0;
+        }
+
+        ctx.fillStyle = col;
+        ctx.fillText(cell.ch, c * CELL, r * CELL);
+      }
+    }
+
+    t += 0.013;
+  }
+
+  function loop() { draw(); rafId = requestAnimationFrame(loop); }
+
+  function start() {
+    if (running) return;
+    running = true;
+    resize();
+    loop();
+  }
+  function stop() {
+    if (!running) return;
+    running = false;
+    cancelAnimationFrame(rafId);
+    rafId = null;
+  }
+
+  // Start / stop with visibility
+  const obs = new IntersectionObserver(
+    (entries) => entries.forEach(e => e.isIntersecting ? start() : stop()),
+    { threshold: 0.05 }
+  );
+  obs.observe(section);
+
+  window.addEventListener("resize", () => { if (running) resize(); });
+}
+
+// Kick off heatmap immediately (canvas is cheap until visible)
+initTechHeatmap();
+
+/* ----------------------------------------------------------
    Tech Stack — Terminal editor renderer
    ---------------------------------------------------------- */
 async function renderTechStack() {

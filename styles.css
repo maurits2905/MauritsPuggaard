@@ -3782,9 +3782,27 @@ html.noReveal .r,
 
 .section.tech {
   position: relative;
-  /* Top tightened so the section content arrives sooner after the bridge.
-     Bottom kept generous for the category strips. */
+  overflow: hidden;
+  background: #06070f;  /* single dark base colour the heatmap sits on */
   padding: clamp(40px, 5.5vw, 72px) 20px clamp(64px, 8vw, 110px);
+}
+
+/* Heatmap canvas — fills the section, sits behind all content */
+#techHeatCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  display: block;
+}
+
+/* Lift section content above canvas */
+#tech .techHead,
+#tech #techGrid {
+  position: relative;
+  z-index: 1;
 }
 
 .section-head {
