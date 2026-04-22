@@ -315,9 +315,9 @@ html[data-theme="light"] body[data-bg="stars"] .bgDeep {
     #ffffff;
 }
 
-/* Stars canvas: dark dots in light mode (handled by JS), opacity kept normal */
+/* Stars canvas: disabled */
 [data-theme="light"] .bgStars {
-  opacity: 0.55;
+  display: none;
 }
 
 /* --- Header / Nav --- */
@@ -874,17 +874,10 @@ html[data-theme=”light”] body[data-bg=”stars”] .bgDeep {
   border-color: rgba(75, 105, 255, 0.30);
 }
 
-/* Global stars canvas (behind everything) */
+/* Global stars canvas — disabled */
 
 .bgStars {
-  position: fixed;
-  inset: 0;
-  z-index: -2;
-  width: 100%;
-  height: 100%;
-  opacity: 0.9;
-  pointer-events: none;
-  will-change: transform; /* promote to own GPU compositor layer */
+  display: none;
 }
 
 /* =========================
@@ -4300,7 +4293,7 @@ html.noReveal .r,
   width: 100vw;
   margin-left: calc(50% - 50vw);
   background: #06070f;
-  padding: clamp(80px, 11svh, 128px) 0 clamp(80px, 10svh, 120px);
+  padding: clamp(80px, 11svh, 128px) 0 0;
 }
 
 /* Canvas sits behind all content */
@@ -5166,8 +5159,7 @@ html.noReveal .r,
   align-items: center;
   gap: 14px;
   margin-top: 22px;
-  padding: 16px 6px 10px;
-  padding-top: 18px;
+  padding: 18px 6px 24px;
   font-size: 13px;
   color: var(--muted);
   border-top: 1px solid color-mix(in srgb, var(--stroke) 75%, transparent);
