@@ -4293,7 +4293,7 @@ html.noReveal .r,
   width: 100vw;
   margin-left: calc(50% - 50vw);
   background: #06070f;
-  padding: clamp(80px, 11svh, 128px) 0 clamp(24px, 4vh, 48px);
+  padding: clamp(80px, 11svh, 128px) 0 0;
 }
 
 /* Canvas sits behind all content */
@@ -8418,7 +8418,7 @@ html.noReveal .r,
   content: '';
   position: absolute;
   top: -200px;
-  bottom: -200px;
+  bottom: 0;
   left: 50%;
   transform: translateX(-50%);
   width: 140%;
