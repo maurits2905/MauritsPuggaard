@@ -8474,6 +8474,37 @@ html.noReveal .r,
   50%       { opacity: 1; }
 }
 
+/* ─── Contact: seamless dark-bg continuation from AI section ─── */
+#contact {
+  position: relative;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  background: #06070f;
+  padding: clamp(50px, 7vh, 80px) clamp(18px, 4vw, 80px) 0;
+}
+
+/* Strip the floating-card look so the panel blends into the dark bg */
+#contact .contactPanel {
+  max-width: 1280px;
+  margin: 0 auto;
+  background: transparent;
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+#contact .contactPanelInner {
+  padding: clamp(28px, 3.5vh, 44px) 0 0;
+}
+
+/* Keep footer bar aligned with content column */
+#contact .footerBar {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
 /* Ask Me → Contact: interface handing off to human channel */
 #contact::before {
   content: '';
@@ -8818,9 +8849,12 @@ html.noReveal .r,
    LIGHT MODE — COLOR & VISIBILITY PASS 2
    ============================================================ */
 
-/* ── 1. FOOTER — keep white text inside the always-dark panel ── */
+/* ── 1. FOOTER — always-dark section, force dark bg in light mode too ── */
+[data-theme="light"] #contact {
+  background: #06070f;
+}
 [data-theme="light"] .contactPanel {
-  background: rgba(10, 10, 18, 0.96);
+  background: transparent;
 }
 [data-theme="light"] .contactBrandText {
   color: rgba(255, 255, 255, 0.52);
