@@ -4,7 +4,7 @@
 
 :root {
   /* Base colors */
-  --bg: #060711;
+  --bg: #06070f;
   --deep: 0;
   --deepBg: #05060b;
   --glass: rgba(255, 255, 255, 0.08);
@@ -5212,7 +5212,7 @@ html.noReveal .r,
 .wrap {
   max-width: 1280px;
   margin: 0 auto;
-  padding: calc(var(--navH) + 26px) 18px 40px;
+  padding: calc(var(--navH) + 26px) 18px 0;
   padding-top: 0 !important;
   overflow: visible !important;
 }
