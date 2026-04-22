@@ -2576,7 +2576,6 @@ async function init() {
   initBackground();
   //initDeepFade();
   initHeaderPillNav();
-  initAboutTabs();
 
   // Fonts can be one of the slowest first-paint items (Google Fonts)
   try {
