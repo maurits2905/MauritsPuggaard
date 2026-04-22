@@ -1466,12 +1466,9 @@ function initMpCareer() {
     card.className = "mpCareerCard";
     card.setAttribute("aria-label", `${item.year} — ${item.role}`);
     const skills     = item.skills || [];
-    const shown      = skills.slice(0, 4);
-    const extra      = skills.length - shown.length;
     const skillsHtml = skills.length
       ? `<div class="mpCareerCardSkills">` +
-          shown.map(s => `<span class="mpCareerCardSkill">${escapeHtml(s)}</span>`).join("") +
-          (extra > 0 ? `<span class="mpCareerCardSkillMore">+${extra}</span>` : "") +
+          skills.map(s => `<span class="mpCareerCardSkill">${escapeHtml(s)}</span>`).join("") +
         `</div>`
       : "";
 

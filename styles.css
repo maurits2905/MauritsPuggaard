@@ -3267,18 +3267,6 @@ html.noReveal .r,
   line-height: 1;
 }
 
-.mpCareerCardSkillMore {
-  font-size: 8px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  color: rgba(155, 140, 255, 0.85);
-  background: rgba(155, 140, 255, 0.08);
-  border: 1px solid rgba(155, 140, 255, 0.20);
-  border-radius: 4px;
-  padding: 3px 8px;
-  white-space: nowrap;
-  line-height: 1;
-}
 
 .mpCareerCardMeta {
   display: flex;
