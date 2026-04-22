@@ -1563,6 +1563,216 @@ function forceTopAndRefresh() {
   if (window.ScrollTrigger) ScrollTrigger.refresh();
 }
 
+/* ── Ask Me — circuit-line background canvas ─────────────────────────────
+   Draws PCB-style traces from the top edge of the section (the boundary
+   with the Tech section) down to the top of the AI interface panel.
+   Moving light pulses flow along each trace to suggest data transfer.
+────────────────────────────────────────────────────────────────────────── */
+function initAskBg() {
+  const section = document.getElementById('ask');
+  const canvas  = document.getElementById('askBgCanvas');
+  if (!canvas || !section) return;
+
+  const ctx = canvas.getContext('2d');
+
+  // Brand accent — matches --hot (#4b69ff)
+  const C_TRACE = [75, 105, 255];
+  const C_PULSE = [155, 195, 255];
+  const C_NODE  = [110, 160, 255];
+  const rgba    = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a.toFixed(3)})`;
+
+  let W = 0, H = 0;
+  let pX = 0, pY = 300, pW = 800;   // panel rect, relative to section
+  let traces  = [];
+  let animId  = null;
+  let tGlow   = 0;                  // for breathing glow
+
+  /* ── Measure canvas + panel position ── */
+  function measure() {
+    cancelAnimationFrame(animId);
+
+    const sr = section.getBoundingClientRect();
+    W = Math.round(sr.width);
+    H = Math.round(sr.height);
+    canvas.width  = W;
+    canvas.height = H;
+
+    const panel = section.querySelector('.askPanel');
+    if (panel) {
+      const pr = panel.getBoundingClientRect();
+      pX = pr.left - sr.left;
+      pY = pr.top  - sr.top;
+      pW = pr.width;
+    } else {
+      pX = Math.max(0, (W - Math.min(960, W - 40)) / 2);
+      pW = Math.min(960, W - 40);
+      pY = H * 0.38;
+    }
+
+    buildTraces();
+    animId = requestAnimationFrame(draw);
+  }
+
+  /* ── Precompute segment data for efficient point-lookup ── */
+  function buildSeg(pts) {
+    const segs = [];
+    let total = 0;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const dx = pts[i + 1].x - pts[i].x;
+      const dy = pts[i + 1].y - pts[i].y;
+      const len = Math.hypot(dx, dy);
+      segs.push({ dx, dy, len });
+      total += len;
+    }
+    return { pts, segs, total };
+  }
+
+  function ptAt(tr, t) {
+    let rem = Math.max(0, Math.min(1, t)) * tr.total;
+    for (let i = 0; i < tr.segs.length; i++) {
+      const s = tr.segs[i];
+      if (rem <= s.len || i === tr.segs.length - 1) {
+        const f = s.len > 0 ? Math.min(1, rem / s.len) : 0;
+        return { x: tr.pts[i].x + s.dx * f, y: tr.pts[i].y + s.dy * f };
+      }
+      rem -= s.len;
+    }
+    return tr.pts[tr.pts.length - 1];
+  }
+
+  /* ── Build PCB traces from top edge → panel top edge ── */
+  function buildTraces() {
+    traces = [];
+
+    const N = 14;
+    const entryL = pX + 18;               // leftmost entry point on panel
+    const entryR = pX + pW - 18;          // rightmost entry point on panel
+
+    // Routing levels — horizontal jog heights, interleaved so they don't stack
+    const lvls = [
+      pY * 0.22,
+      pY * 0.36,
+      pY * 0.50,
+      pY * 0.64,
+    ];
+
+    for (let i = 0; i < N; i++) {
+      const frac = i / (N - 1);
+
+      // Start: spread across full section width with small margin
+      const sx = W * 0.04 + frac * (W * 0.92);
+
+      // End: evenly distributed along the panel's top edge
+      const ex = entryL + frac * (entryR - entryL);
+      const ey = pY;
+
+      // Routing level cycles through 4 heights
+      const lvl = lvls[i % lvls.length];
+
+      let pts;
+      if (Math.abs(sx - ex) < 6) {
+        // Already aligned — straight vertical
+        pts = [{ x: sx, y: 0 }, { x: ex, y: ey }];
+      } else {
+        // Orthogonal L-route: down → horizontal jog → down to panel
+        pts = [
+          { x: sx, y: 0    },
+          { x: sx, y: lvl  },
+          { x: ex, y: lvl  },
+          { x: ex, y: ey   },
+        ];
+      }
+
+      const tr      = buildSeg(pts);
+      tr.baseAlpha  = 0.09 + Math.random() * 0.07;
+
+      // 1-2 pulses per trace, offset so they don't all start together
+      const nPulse = 1 + (i % 4 === 0 ? 1 : 0);
+      tr.pulses = [];
+      for (let p = 0; p < nPulse; p++) {
+        tr.pulses.push({
+          t:     (p / nPulse) + Math.random() * 0.25,
+          speed: 0.0032 + Math.random() * 0.0028,
+          r:     1.6 + Math.random() * 1.2,
+        });
+      }
+
+      traces.push(tr);
+    }
+  }
+
+  /* ── Render frame ── */
+  function draw() {
+    if (!W || !H) { animId = requestAnimationFrame(draw); return; }
+
+    ctx.clearRect(0, 0, W, H);
+    tGlow += 0.012;
+
+    /* Breathing convergence glow near panel-top-centre */
+    const gIntensity = 0.08 + 0.04 * Math.sin(tGlow);
+    const gx = pX + pW * 0.5;
+    const gr = ctx.createRadialGradient(gx, pY, 0, gx, pY, pW * 0.52);
+    gr.addColorStop(0, rgba(C_TRACE, gIntensity));
+    gr.addColorStop(1, rgba(C_TRACE, 0));
+    ctx.fillStyle = gr;
+    ctx.fillRect(0, 0, W, H);
+
+    /* Static traces + corner nodes */
+    ctx.shadowBlur = 0;
+    ctx.lineWidth  = 1;
+
+    traces.forEach(tr => {
+      ctx.beginPath();
+      tr.pts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+      ctx.strokeStyle = rgba(C_TRACE, tr.baseAlpha);
+      ctx.stroke();
+
+      // Dot at each bend point (skips first and last)
+      for (let i = 1; i < tr.pts.length - 1; i++) {
+        const p = tr.pts[i];
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 2.2, 0, Math.PI * 2);
+        ctx.fillStyle = rgba(C_NODE, tr.baseAlpha * 2.8);
+        ctx.fill();
+      }
+    });
+
+    /* Moving pulse dots */
+    traces.forEach(tr => {
+      tr.pulses.forEach(pulse => {
+        pulse.t += pulse.speed;
+        if (pulse.t > 1) pulse.t -= 1;
+
+        const pt = ptAt(tr, pulse.t);
+
+        ctx.save();
+        ctx.shadowColor = rgba(C_PULSE, 0.9);
+        ctx.shadowBlur  = 14;
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, pulse.r, 0, Math.PI * 2);
+        ctx.fillStyle = rgba(C_PULSE, 0.88);
+        ctx.fill();
+        ctx.restore();
+      });
+    });
+
+    animId = requestAnimationFrame(draw);
+  }
+
+  /* ── Init: wait two frames so section has its final layout ── */
+  requestAnimationFrame(() => requestAnimationFrame(measure));
+
+  /* ── Resize ── */
+  const ro = new ResizeObserver(() => measure());
+  ro.observe(section);
+
+  /* ── Pause when tab hidden ── */
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) cancelAnimationFrame(animId);
+    else { animId = requestAnimationFrame(draw); }
+  });
+}
+
 function initAskMe() {
   const form = document.getElementById("askForm");
   const input = document.getElementById("askInput");
@@ -2791,6 +3001,7 @@ async function init() {
   }
 
   initAskMe();
+  initAskBg();
 
   /* ── Signal title scroll-reveal ── */
   const sigTitles = document.querySelectorAll('.sectionTitle, .techTitle, .careerTitle');

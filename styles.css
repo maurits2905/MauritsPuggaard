@@ -4299,32 +4299,19 @@ html.noReveal .r,
   position: relative;
   width: 100vw;
   margin-left: calc(50% - 50vw);
-  background-image: url('https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1800&q=80');
-  background-size: cover;
-  background-position: center 30%;
-  background-attachment: fixed;        /* parallax: photo stays, content scrolls */
+  background: #06070f;
   padding: clamp(80px, 11svh, 128px) 0 clamp(80px, 10svh, 120px);
 }
 
-/* fixed-attachment doesn't work on iOS — fall back to normal scroll */
-@media (hover: none) {
-  .ask-reveal { background-attachment: scroll; }
-}
-
-/* Dark overlay */
-.ask-reveal::before {
-  content: '';
+/* Canvas sits behind all content */
+#askBgCanvas {
   position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
   z-index: 0;
-  background: linear-gradient(
-    180deg,
-    rgba(4, 5, 14, 0.55)  0%,
-    rgba(4, 5, 14, 0.62) 22%,
-    rgba(4, 5, 14, 0.88) 42%,
-    rgba(4, 5, 14, 0.94) 100%
-  );
   pointer-events: none;
+  display: block;
 }
 
 .ask-reveal > * {
