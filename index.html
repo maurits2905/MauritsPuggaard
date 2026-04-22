@@ -61,8 +61,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  line-height: 0.86;
-  gap: 6px;
+  line-height: 0.85;
+  gap: 4px;
   pointer-events: none;
   user-select: none;
   z-index: 0;
@@ -71,11 +71,11 @@
 .abt2GhostLine {
   display: block;
   font-family: 'Inter', sans-serif;
-  font-size: clamp(80px, 14vw, 240px);
+  font-size: clamp(90px, 17vw, 280px);
   font-weight: 900;
-  letter-spacing: -0.04em;
-  color: transparent;
-  -webkit-text-stroke: 1px rgba(122, 107, 255, 0.065);
+  letter-spacing: -0.05em;
+  color: rgba(200, 200, 255, 0.045);
+  -webkit-text-stroke: 1px rgba(122, 107, 255, 0.10);
   white-space: nowrap;
 }
 
@@ -192,28 +192,29 @@
 .abt2Portal {
   position: relative;
   width: 340px;
-  height: 560px;
+  height: 480px;
 }
 
-/* Radial glow behind ring */
+/* Outer diffuse glow — atmospheric halo around ring */
 .abt2PortalGlow {
   position: absolute;
-  top: 200px;
+  top: 138px;
   left: 50%;
   transform: translateX(-50%);
   width: 380px;
   height: 380px;
   border-radius: 50%;
-  background: radial-gradient(circle at center,
-    rgba(122, 107, 255, 0.22) 0%,
-    rgba(122, 107, 255, 0.08) 45%,
-    transparent 70%
+  background: radial-gradient(circle at 50% 30%,
+    rgba(122, 107, 255, 0.32) 0%,
+    rgba(122, 107, 255, 0.14) 35%,
+    rgba(80, 60, 200, 0.04) 60%,
+    transparent 76%
   );
   pointer-events: none;
   z-index: 1;
 }
 
-/* Cutout photo — emerges from the ring */
+/* Cutout photo — full face above ring, body fades inside ring */
 .abt2Photo {
   position: absolute;
   top: 0;
@@ -222,27 +223,31 @@
   width: 310px;
   height: auto;
   object-fit: contain;
-  -webkit-mask-image: linear-gradient(to bottom, black 68%, transparent 91%);
-  mask-image: linear-gradient(to bottom, black 68%, transparent 91%);
+  /* Fade starts at ~53% (collar/shoulder), transparent by 78% (chest) */
+  -webkit-mask-image: linear-gradient(to bottom, black 53%, rgba(0,0,0,0.42) 67%, transparent 80%);
+  mask-image: linear-gradient(to bottom, black 53%, rgba(0,0,0,0.42) 67%, transparent 80%);
   z-index: 2;
   pointer-events: none;
 }
 
-/* Ring — glowing portal circle, sits above photo's lower portion */
+/* Ring — at shoulder level; bottom arc fades so it doesn't float empty */
 .abt2PortalRing {
   position: absolute;
-  top: 210px;
+  top: 168px;
   left: 50%;
   transform: translateX(-50%);
-  width: 300px;
-  height: 300px;
+  width: 292px;
+  height: 292px;
   border-radius: 50%;
-  border: 1.5px solid rgba(122, 107, 255, 0.55);
+  border: 1.5px solid rgba(122, 107, 255, 0.65);
   box-shadow:
-    0 0 0 1px rgba(122, 107, 255, 0.07),
-    0 0 28px rgba(122, 107, 255, 0.18),
-    0 0 60px rgba(122, 107, 255, 0.09),
-    inset 0 0 24px rgba(122, 107, 255, 0.04);
+    0 0 0 3px rgba(122, 107, 255, 0.05),
+    0 0 24px rgba(122, 107, 255, 0.28),
+    0 0 54px rgba(122, 107, 255, 0.13),
+    inset 0 0 28px rgba(122, 107, 255, 0.07);
+  /* Bottom arc fades so no empty floating ring */
+  -webkit-mask-image: linear-gradient(to bottom, black 48%, rgba(0,0,0,0.5) 68%, transparent 88%);
+  mask-image: linear-gradient(to bottom, black 48%, rgba(0,0,0,0.5) 68%, transparent 88%);
   z-index: 3;
   pointer-events: none;
 }
@@ -331,10 +336,10 @@ body[data-theme="light"] .abt2BadgeLoc {
 
   .abt2CenterCol { order: -1; }
 
-  .abt2Portal { width: 280px; height: 460px; }
+  .abt2Portal { width: 280px; height: 390px; }
   .abt2Photo { width: 256px; }
-  .abt2PortalRing { width: 248px; height: 248px; top: 176px; }
-  .abt2PortalGlow { width: 300px; height: 300px; top: 160px; }
+  .abt2PortalRing { width: 240px; height: 240px; top: 138px; }
+  .abt2PortalGlow { width: 300px; height: 300px; top: 112px; }
 
   .abt2RightCol {
     flex-direction: row;
@@ -355,11 +360,11 @@ body[data-theme="light"] .abt2BadgeLoc {
 }
 
 @media (max-width: 560px) {
-  .abt2Ghost { opacity: 0.7; }
-  .abt2Portal { width: 240px; height: 400px; }
+  .abt2Ghost { opacity: 0.65; }
+  .abt2Portal { width: 240px; height: 340px; }
   .abt2Photo { width: 218px; }
-  .abt2PortalRing { width: 210px; height: 210px; top: 150px; }
-  .abt2PortalGlow { width: 250px; height: 250px; top: 135px; }
+  .abt2PortalRing { width: 206px; height: 206px; top: 118px; }
+  .abt2PortalGlow { width: 250px; height: 250px; top: 95px; }
 }
 
     </style>
