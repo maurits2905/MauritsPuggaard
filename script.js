@@ -428,7 +428,7 @@ function initReveals() {
   }
 
   const els = Array.from(
-    document.querySelectorAll(".section .r, .careerHead.r, .workHead .r"),
+    document.querySelectorAll(".section .r, .ask-reveal .r, .careerHead.r, .workHead .r"),
   );
   if (!els.length) return;
 
