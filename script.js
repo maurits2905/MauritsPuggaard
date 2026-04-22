@@ -3501,8 +3501,6 @@ async function renderTechStack() {
   }
 }
 
-}
-
 // Run when ready (single guard — mount.dataset.rendered prevents double run)
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", renderTechStack);
