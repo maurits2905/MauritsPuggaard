@@ -1378,7 +1378,8 @@ const careerData = [
     location: "Livjægergade 17, 2100 København",
     skills: ["SAP BTP", "SAPUI5", "OData", "CDS Views", "SAP Gateway", "REST APIs", "SAP Integration", "JavaScript"],
     desc: "Currently working at SOA People, where I develop and contribute to SAP-based digital solutions in a professional consulting environment. This chapter reflects how I combine technical development with business understanding to build solutions that are practical, scalable, and aligned with real user and process needs.",
-    img: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&q=80",
+    img:   "assets/SOA1.jpeg",
+    bgImg: "assets/SOA2.jpg",
   },
   {
     role: "SOA People Academy",
@@ -1388,7 +1389,8 @@ const careerData = [
     location: "Meentwal 9, 3432 GL Nieuwegein, Nederlandene",
     skills: ["SAP S/4HANA", "SAP MM", "SAP SD", "Consulting Skills", "Supply Chain Management", "Business Process Understanding", "Analytical Thinking", "Communication"],
     desc: "The academy experience strengthened my understanding of business processes, consulting, and how SAP supports real organisational needs. It added a broader commercial and practical perspective to my technical background and helped sharpen the way I communicate, analyse, and work with business-oriented problem solving.",
-    img: "https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=1200&q=80",
+    img:   "assets/ACA1.jpeg",
+    bgImg: "assets/ACA2.jpg",
   },
   {
     role: "Master's Degree in Computer Science",
@@ -1398,7 +1400,8 @@ const careerData = [
     location: "Universitetsvej 1, 4000 Roskilde",
     skills: ["Python", "JavaScript", "SQL", "React.js", "Cloud Computing", "Internet of Things", "Software Development", "Data Analysis"],
     desc: "My master's degree in computer science built a strong technical foundation across software, systems, and applied development. It was a period shaped by experimentation, prototyping, and interdisciplinary work, where I developed solutions that had to function beyond theory and perform in real environments.",
-    img: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=1200&q=80",
+    img:   "assets/UNI1.jpg",
+    bgImg: "assets/UNI2.jpg",
   },
   {
     role: "Jam Together",
@@ -1408,7 +1411,8 @@ const careerData = [
     location: "Roskilde Festival, Denmark",
     skills: ["Interactive Design", "Prototyping", "Internet of Things", "User Experience", "Teamwork", "Problem Solving"],
     desc: "This project focused on developing an interactive installation for Roskilde Festival, where technology, design, and physical interaction had to work together in a live public setting. It strengthened my interest in creating solutions that are not only functional, but also intuitive, engaging, and memorable to the people using them.",
-    img: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1200&q=80",
+    img:   "assets/JAM1.jpg",
+    bgImg: "assets/JAM2.jpg",
   },
   {
     role: "Light News",
@@ -1418,7 +1422,8 @@ const careerData = [
     location: "Roskilde Festival, Denmark",
     skills: ["Interface Design", "Concept Development", "Prototyping", "Digital Interaction", "Communication", "Experience Design"],
     desc: "This earlier Roskilde Festival project explored how digital interaction can shape live experiences in subtle but meaningful ways. Working with interface, concept, and implementation helped deepen my understanding of how technology can connect people, environment, and interaction in a more human-centered way.",
-    img: "https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?w=1200&q=80",
+    img:   "assets/NEW1.jpg",
+    bgImg: "assets/NEW2.jpeg",
   },
 ];
 
@@ -1440,11 +1445,11 @@ function initMpCareer() {
   setHeight();
   window.addEventListener("resize", setHeight);
 
-  // ── Build background slides ──
+  // ── Build background slides (bgImg = full-bleed background photo) ──
   careerData.forEach((item) => {
     const slide = document.createElement("div");
     slide.className = "mpCareerBgSlide";
-    slide.style.backgroundImage = `url('${item.img}')`;
+    slide.style.backgroundImage = `url('${item.bgImg || item.img}')`;
     bgEl.appendChild(slide);
   });
   const bgSlides = Array.from(bgEl.querySelectorAll(".mpCareerBgSlide"));
