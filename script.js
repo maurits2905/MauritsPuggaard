@@ -4257,6 +4257,25 @@ function initMpHero() {
   const vidB = document.getElementById("mpVidB");
   const blinds = Array.from(document.querySelectorAll(".mpBlind"));
 
+  // Position blinds at exact integer-pixel boundaries with 2px right overhang.
+  // CSS percentages can't guarantee subpixel-gap-free coverage; integer pixels can.
+  // Each blind overlaps the next by 2px (all black → invisible). The container's
+  // overflow:hidden clips the cumulative overhang on the right.
+  function positionBlinds() {
+    const container = document.getElementById("mpBlinds");
+    if (!container || !blinds.length) return;
+    const W = container.offsetWidth;
+    const n = blinds.length;
+    blinds.forEach((blind, i) => {
+      const left  = Math.floor(i * W / n);
+      const right = i === n - 1 ? W : Math.floor((i + 1) * W / n);
+      blind.style.left  = left + "px";
+      blind.style.width = (right - left + 2) + "px"; // +2px overlap into next
+    });
+  }
+  positionBlinds();
+  window.addEventListener("resize", positionBlinds);
+
   // Ordered list of intro videos — Intro_1 is the zoom target,
   // rest cycle after the zoom completes, looping back to Intro_1.
   const VIDEO_LIST = [
