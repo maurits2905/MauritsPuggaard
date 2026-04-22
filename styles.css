@@ -8474,19 +8474,10 @@ html.noReveal .r,
   50%       { opacity: 1; }
 }
 
-/* ─── Contact: seamless dark-bg continuation from AI section ─── */
-#contact {
-  position: relative;
-  width: 100vw;
-  margin-left: calc(50% - 50vw);
-  background: #06070f;
-  padding: clamp(50px, 7vh, 80px) clamp(18px, 4vw, 80px) 0;
-}
-
-/* Strip the floating-card look so the panel blends into the dark bg */
-#contact .contactPanel {
+/* Footer panel now lives inside #ask.ask-reveal — blend with dark canvas bg */
+.contactPanel {
   max-width: 1280px;
-  margin: 0 auto;
+  margin: clamp(60px, 8vh, 100px) auto 0;
   background: transparent;
   border: none;
   border-top: 1px solid rgba(255, 255, 255, 0.07);
@@ -8495,33 +8486,17 @@ html.noReveal .r,
   backdrop-filter: none;
 }
 
-#contact .contactPanelInner {
+.contactPanelInner {
   padding: clamp(28px, 3.5vh, 44px) 0 0;
 }
 
-/* Keep footer bar aligned with content column */
-#contact .footerBar {
+/* Footer bar centred within the full-width ask section */
+.footerBar {
   max-width: 1280px;
   margin: 0 auto;
 }
 
-/* Ask Me → Contact: interface handing off to human channel */
-#contact::before {
-  content: '';
-  position: absolute;
-  top: -200px;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 140%;
-  max-width: 1400px;
-  background: radial-gradient(ellipse 80% 50% at 50% 40%,
-    rgba(155, 140, 255, 0.05) 0%,
-    transparent               65%
-  );
-  pointer-events: none;
-  z-index: 0;
-}
+/* #contact is now a zero-height anchor inside #ask — no ::before needed */
 
 /* ============================================================
    CHAPTER RAIL — persistent narrative progress indicator
@@ -8849,10 +8824,7 @@ html.noReveal .r,
    LIGHT MODE — COLOR & VISIBILITY PASS 2
    ============================================================ */
 
-/* ── 1. FOOTER — always-dark section, force dark bg in light mode too ── */
-[data-theme="light"] #contact {
-  background: #06070f;
-}
+/* ── 1. FOOTER — always-dark, contactPanel is transparent on canvas bg ── */
 [data-theme="light"] .contactPanel {
   background: transparent;
 }
