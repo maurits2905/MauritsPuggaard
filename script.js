@@ -1564,23 +1564,23 @@ function forceTopAndRefresh() {
 }
 
 
-/* ── Ask Me — atmospheric glow canvas ───────────────────────────────────
-   Pure darkness with the AI panel as a pulsing light source.
-   Three layered radial gradients breathe at different rates, creating a
-   living glow that bleeds upward to blend seamlessly into the Tech section.
-────────────────────────────────────────────────────────────────────────── */
+
+/* ── Ask Me — flowing-curves + heartbeat canvas ────────────────────────────
+   Smooth cubic-bezier streams flow from the full top edge down to the panel.
+   A lub-dub heartbeat pulses the glow and line brightness on every beat.
+──────────────────────────────────────────────────────────────────────────── */
 function initAskBg() {
   const section = document.getElementById('ask');
   const canvas  = document.getElementById('askBgCanvas');
   if (!canvas || !section) return;
-
   const ctx = canvas.getContext('2d');
 
   let W = 0, H = 0;
   let pX = 0, pY = 300, pW = 800, pH = 480;
   let animId = null;
-  let t = 0;
+  let curves  = [];
 
+  /* ── Measure ── */
   function measure() {
     cancelAnimationFrame(animId);
     const sr = section.getBoundingClientRect();
@@ -1603,41 +1603,126 @@ function initAskBg() {
       pH = H * 0.50;
     }
 
+    buildCurves();
     animId = requestAnimationFrame(draw);
   }
 
-  function radialGlow(cx, cy, r, color, alpha) {
-    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
-    g.addColorStop(0,   'rgba(' + color + ',' + alpha.toFixed(3) + ')');
-    g.addColorStop(0.5, 'rgba(' + color + ',' + (alpha * 0.35).toFixed(3) + ')');
-    g.addColorStop(1,   'rgba(' + color + ',0)');
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, W, H);
+  /* ── Build smooth bezier streams ── */
+  function buildCurves() {
+    curves = [];
+    const N = 13;
+    const entryL = pX + 16;
+    const entryR = pX + pW - 16;
+
+    for (let i = 0; i < N; i++) {
+      const frac = i / (N - 1);
+
+      // Start spread across full section width
+      const sx = W * 0.03 + frac * (W * 0.94);
+
+      // End distributed along panel top edge
+      const ex = entryL + frac * (entryR - entryL);
+
+      // Cubic bezier: first CP drops straight down, second CP approaches panel x
+      const cp1 = { x: sx,       y: pY * 0.28 };
+      const cp2 = { x: ex,       y: pY * 0.72 };
+
+      const nPulse = 1 + (i % 4 === 0 ? 1 : 0);
+      const pulses = [];
+      for (let p = 0; p < nPulse; p++) {
+        pulses.push({
+          t:     (p / nPulse + Math.random() * 0.3) % 1,
+          speed: 0.0028 + Math.random() * 0.0024,
+          size:  1.5 + Math.random() * 1.1,
+        });
+      }
+
+      curves.push({
+        p0: { x: sx, y: 0 },
+        p1: cp1,
+        p2: cp2,
+        p3: { x: ex, y: pY },
+        baseAlpha: 0.07 + Math.random() * 0.06,
+        pulses,
+      });
+    }
   }
 
+  /* ── Cubic bezier point at t ── */
+  function cbPt(c, t) {
+    const mt = 1 - t, mt2 = mt * mt, mt3 = mt2 * mt, t2 = t * t, t3 = t2 * t;
+    return {
+      x: mt3*c.p0.x + 3*mt2*t*c.p1.x + 3*mt*t2*c.p2.x + t3*c.p3.x,
+      y: mt3*c.p0.y + 3*mt2*t*c.p1.y + 3*mt*t2*c.p2.y + t3*c.p3.y,
+    };
+  }
+
+  /* ── Heartbeat shape: lub-dub then rest (65 bpm) ── */
+  const BEAT = 60 / 65;   // seconds per beat
+  function heartbeat(sec) {
+    const ph = (sec % BEAT) / BEAT;   // 0..1 within one beat
+    if (ph < 0.07)  return ph / 0.07;
+    if (ph < 0.14)  return 1 - (ph - 0.07) / 0.07;
+    if (ph < 0.20)  return (ph - 0.14) / 0.06 * 0.55;
+    if (ph < 0.26)  return 0.55 - (ph - 0.20) / 0.06 * 0.55;
+    return 0;
+  }
+
+  /* ── Render ── */
   function draw() {
     if (!W || !H) { animId = requestAnimationFrame(draw); return; }
     ctx.clearRect(0, 0, W, H);
-    t += 0.007;
+
+    const now = performance.now() * 0.001;
+    const hb  = heartbeat(now);          // 0..1 pulse value
 
     const cx = pX + pW * 0.5;
     const cy = pY + pH * 0.5;
 
-    // Layer 1: wide bleed — rises up into Tech section, connects them
-    const bleedY = pY - pH * 0.1;
-    const bleedR = Math.max(W, H) * 0.90;
-    const bleedA = 0.055 + 0.018 * Math.sin(t * 0.55);
-    radialGlow(cx, bleedY, bleedR, '75,105,255', bleedA);
+    /* Wide atmospheric bleed upward into Tech section */
+    const bleedA = 0.038 + 0.012 * Math.sin(now * 0.38) + hb * 0.07;
+    const bg = ctx.createRadialGradient(cx, pY, 0, cx, pY, Math.max(W, H) * 0.85);
+    bg.addColorStop(0,   'rgba(75,105,255,' + bleedA.toFixed(3) + ')');
+    bg.addColorStop(0.55,'rgba(75,105,255,' + (bleedA * 0.28).toFixed(3) + ')');
+    bg.addColorStop(1,   'rgba(75,105,255,0)');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
 
-    // Layer 2: mid glow — warm core centred on the panel
-    const midR = Math.max(pW, pH) * 0.85;
-    const midA = 0.10 + 0.04 * Math.sin(t * 0.90 + 1.0);
-    radialGlow(cx, cy, midR, '90,120,255', midA);
+    /* Panel core heartbeat flash */
+    const coreA = 0.10 + hb * 0.28;
+    const cg = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.min(pW, pH) * 0.55);
+    cg.addColorStop(0, 'rgba(140,170,255,' + coreA.toFixed(3) + ')');
+    cg.addColorStop(1, 'rgba(75,105,255,0)');
+    ctx.fillStyle = cg;
+    ctx.fillRect(0, 0, W, H);
 
-    // Layer 3: tight hot core — sharp pulse at panel centre
-    const coreR = Math.min(pW, pH) * 0.40;
-    const coreA = 0.18 + 0.08 * Math.sin(t * 1.4 + 2.1);
-    radialGlow(cx, cy, coreR, '130,160,255', coreA);
+    /* Bezier stream lines */
+    ctx.lineWidth = 1;
+    curves.forEach(c => {
+      const lineA = c.baseAlpha + hb * 0.07;
+      ctx.beginPath();
+      ctx.moveTo(c.p0.x, c.p0.y);
+      ctx.bezierCurveTo(c.p1.x, c.p1.y, c.p2.x, c.p2.y, c.p3.x, c.p3.y);
+      ctx.strokeStyle = 'rgba(75,105,255,' + lineA.toFixed(3) + ')';
+      ctx.shadowBlur = 0;
+      ctx.stroke();
+
+      /* Moving pulse dots */
+      c.pulses.forEach(pulse => {
+        pulse.t += pulse.speed;
+        if (pulse.t > 1) pulse.t -= 1;
+        const pt = cbPt(c, pulse.t);
+
+        ctx.save();
+        ctx.shadowColor = 'rgba(160,200,255,0.95)';
+        ctx.shadowBlur  = 14;
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, pulse.size + hb * 0.8, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(160,200,255,' + (0.75 + hb * 0.25).toFixed(3) + ')';
+        ctx.fill();
+        ctx.restore();
+      });
+    });
 
     animId = requestAnimationFrame(draw);
   }
