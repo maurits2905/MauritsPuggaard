@@ -1563,10 +1563,11 @@ function forceTopAndRefresh() {
   if (window.ScrollTrigger) ScrollTrigger.refresh();
 }
 
-/* ── Ask Me — circuit-line background canvas ─────────────────────────────
-   Draws PCB-style traces from the top edge of the section (the boundary
-   with the Tech section) down to the top of the AI interface panel.
-   Moving light pulses flow along each trace to suggest data transfer.
+
+/* ── Ask Me — atmospheric glow canvas ───────────────────────────────────
+   Pure darkness with the AI panel as a pulsing light source.
+   Three layered radial gradients breathe at different rates, creating a
+   living glow that bleeds upward to blend seamlessly into the Tech section.
 ────────────────────────────────────────────────────────────────────────── */
 function initAskBg() {
   const section = document.getElementById('ask');
@@ -1575,22 +1576,13 @@ function initAskBg() {
 
   const ctx = canvas.getContext('2d');
 
-  // Brand accent — matches --hot (#4b69ff)
-  const C_TRACE = [75, 105, 255];
-  const C_PULSE = [155, 195, 255];
-  const C_NODE  = [110, 160, 255];
-  const rgba    = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a.toFixed(3)})`;
-
   let W = 0, H = 0;
-  let pX = 0, pY = 300, pW = 800;   // panel rect, relative to section
-  let traces  = [];
-  let animId  = null;
-  let tGlow   = 0;                  // for breathing glow
+  let pX = 0, pY = 300, pW = 800, pH = 480;
+  let animId = null;
+  let t = 0;
 
-  /* ── Measure canvas + panel position ── */
   function measure() {
     cancelAnimationFrame(animId);
-
     const sr = section.getBoundingClientRect();
     W = Math.round(sr.width);
     H = Math.round(sr.height);
@@ -1603,173 +1595,61 @@ function initAskBg() {
       pX = pr.left - sr.left;
       pY = pr.top  - sr.top;
       pW = pr.width;
+      pH = pr.height;
     } else {
       pX = Math.max(0, (W - Math.min(960, W - 40)) / 2);
       pW = Math.min(960, W - 40);
       pY = H * 0.38;
+      pH = H * 0.50;
     }
 
-    buildTraces();
     animId = requestAnimationFrame(draw);
   }
 
-  /* ── Precompute segment data for efficient point-lookup ── */
-  function buildSeg(pts) {
-    const segs = [];
-    let total = 0;
-    for (let i = 0; i < pts.length - 1; i++) {
-      const dx = pts[i + 1].x - pts[i].x;
-      const dy = pts[i + 1].y - pts[i].y;
-      const len = Math.hypot(dx, dy);
-      segs.push({ dx, dy, len });
-      total += len;
-    }
-    return { pts, segs, total };
+  function radialGlow(cx, cy, r, color, alpha) {
+    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+    g.addColorStop(0,   'rgba(' + color + ',' + alpha.toFixed(3) + ')');
+    g.addColorStop(0.5, 'rgba(' + color + ',' + (alpha * 0.35).toFixed(3) + ')');
+    g.addColorStop(1,   'rgba(' + color + ',0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
   }
 
-  function ptAt(tr, t) {
-    let rem = Math.max(0, Math.min(1, t)) * tr.total;
-    for (let i = 0; i < tr.segs.length; i++) {
-      const s = tr.segs[i];
-      if (rem <= s.len || i === tr.segs.length - 1) {
-        const f = s.len > 0 ? Math.min(1, rem / s.len) : 0;
-        return { x: tr.pts[i].x + s.dx * f, y: tr.pts[i].y + s.dy * f };
-      }
-      rem -= s.len;
-    }
-    return tr.pts[tr.pts.length - 1];
-  }
-
-  /* ── Build PCB traces from top edge → panel top edge ── */
-  function buildTraces() {
-    traces = [];
-
-    const N = 14;
-    const entryL = pX + 18;               // leftmost entry point on panel
-    const entryR = pX + pW - 18;          // rightmost entry point on panel
-
-    // Routing levels — horizontal jog heights, interleaved so they don't stack
-    const lvls = [
-      pY * 0.22,
-      pY * 0.36,
-      pY * 0.50,
-      pY * 0.64,
-    ];
-
-    for (let i = 0; i < N; i++) {
-      const frac = i / (N - 1);
-
-      // Start: spread across full section width with small margin
-      const sx = W * 0.04 + frac * (W * 0.92);
-
-      // End: evenly distributed along the panel's top edge
-      const ex = entryL + frac * (entryR - entryL);
-      const ey = pY;
-
-      // Routing level cycles through 4 heights
-      const lvl = lvls[i % lvls.length];
-
-      let pts;
-      if (Math.abs(sx - ex) < 6) {
-        // Already aligned — straight vertical
-        pts = [{ x: sx, y: 0 }, { x: ex, y: ey }];
-      } else {
-        // Orthogonal L-route: down → horizontal jog → down to panel
-        pts = [
-          { x: sx, y: 0    },
-          { x: sx, y: lvl  },
-          { x: ex, y: lvl  },
-          { x: ex, y: ey   },
-        ];
-      }
-
-      const tr      = buildSeg(pts);
-      tr.baseAlpha  = 0.09 + Math.random() * 0.07;
-
-      // 1-2 pulses per trace, offset so they don't all start together
-      const nPulse = 1 + (i % 4 === 0 ? 1 : 0);
-      tr.pulses = [];
-      for (let p = 0; p < nPulse; p++) {
-        tr.pulses.push({
-          t:     (p / nPulse) + Math.random() * 0.25,
-          speed: 0.0032 + Math.random() * 0.0028,
-          r:     1.6 + Math.random() * 1.2,
-        });
-      }
-
-      traces.push(tr);
-    }
-  }
-
-  /* ── Render frame ── */
   function draw() {
     if (!W || !H) { animId = requestAnimationFrame(draw); return; }
-
     ctx.clearRect(0, 0, W, H);
-    tGlow += 0.012;
+    t += 0.007;
 
-    /* Breathing convergence glow near panel-top-centre */
-    const gIntensity = 0.08 + 0.04 * Math.sin(tGlow);
-    const gx = pX + pW * 0.5;
-    const gr = ctx.createRadialGradient(gx, pY, 0, gx, pY, pW * 0.52);
-    gr.addColorStop(0, rgba(C_TRACE, gIntensity));
-    gr.addColorStop(1, rgba(C_TRACE, 0));
-    ctx.fillStyle = gr;
-    ctx.fillRect(0, 0, W, H);
+    const cx = pX + pW * 0.5;
+    const cy = pY + pH * 0.5;
 
-    /* Static traces + corner nodes */
-    ctx.shadowBlur = 0;
-    ctx.lineWidth  = 1;
+    // Layer 1: wide bleed — rises up into Tech section, connects them
+    const bleedY = pY - pH * 0.1;
+    const bleedR = Math.max(W, H) * 0.90;
+    const bleedA = 0.055 + 0.018 * Math.sin(t * 0.55);
+    radialGlow(cx, bleedY, bleedR, '75,105,255', bleedA);
 
-    traces.forEach(tr => {
-      ctx.beginPath();
-      tr.pts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
-      ctx.strokeStyle = rgba(C_TRACE, tr.baseAlpha);
-      ctx.stroke();
+    // Layer 2: mid glow — warm core centred on the panel
+    const midR = Math.max(pW, pH) * 0.85;
+    const midA = 0.10 + 0.04 * Math.sin(t * 0.90 + 1.0);
+    radialGlow(cx, cy, midR, '90,120,255', midA);
 
-      // Dot at each bend point (skips first and last)
-      for (let i = 1; i < tr.pts.length - 1; i++) {
-        const p = tr.pts[i];
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, 2.2, 0, Math.PI * 2);
-        ctx.fillStyle = rgba(C_NODE, tr.baseAlpha * 2.8);
-        ctx.fill();
-      }
-    });
-
-    /* Moving pulse dots */
-    traces.forEach(tr => {
-      tr.pulses.forEach(pulse => {
-        pulse.t += pulse.speed;
-        if (pulse.t > 1) pulse.t -= 1;
-
-        const pt = ptAt(tr, pulse.t);
-
-        ctx.save();
-        ctx.shadowColor = rgba(C_PULSE, 0.9);
-        ctx.shadowBlur  = 14;
-        ctx.beginPath();
-        ctx.arc(pt.x, pt.y, pulse.r, 0, Math.PI * 2);
-        ctx.fillStyle = rgba(C_PULSE, 0.88);
-        ctx.fill();
-        ctx.restore();
-      });
-    });
+    // Layer 3: tight hot core — sharp pulse at panel centre
+    const coreR = Math.min(pW, pH) * 0.40;
+    const coreA = 0.18 + 0.08 * Math.sin(t * 1.4 + 2.1);
+    radialGlow(cx, cy, coreR, '130,160,255', coreA);
 
     animId = requestAnimationFrame(draw);
   }
 
-  /* ── Init: wait two frames so section has its final layout ── */
   requestAnimationFrame(() => requestAnimationFrame(measure));
 
-  /* ── Resize ── */
   const ro = new ResizeObserver(() => measure());
   ro.observe(section);
 
-  /* ── Pause when tab hidden ── */
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) cancelAnimationFrame(animId);
-    else { animId = requestAnimationFrame(draw); }
+    else animId = requestAnimationFrame(draw);
   });
 }
 
