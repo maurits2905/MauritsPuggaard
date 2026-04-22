@@ -3450,8 +3450,7 @@ async function getIconMarkup(slug) {
    ---------------------------------------------------------- */
 function initTechHeatmap() {
   const canvas  = document.getElementById("techHeatCanvas");
-  // #tech is now the tall sticky shell — the visible card is .techStickyInner
-  const section = document.querySelector(".techStickyInner") || document.getElementById("tech");
+  const section = document.getElementById("tech");
   if (!canvas || !section) return;
 
   const ctx = canvas.getContext("2d");
@@ -3580,36 +3579,30 @@ function initTechHeatmap() {
 initTechHeatmap();
 
 /* ----------------------------------------------------------
-   Tech shell height — must be set via JS so the browser's
-   sticky constraint rectangle (content-box only) has room
-   for the inner sticky card to pin.
-   Formula: inner card height  +  linger distance (55svh)
-   Also syncs #ask margin-top so the peel overlap is correct.
+   Ask sticky shell — sets margin-top and height on .askStickyShell
+   so #ask (position:sticky inside it) overlaps tech and peels away.
+
+   Diagram:  tech slides off top  →  AI photo revealed underneath.
+
+   margin-top = -techH  →  shell starts at tech's document top,
+                            so AI is already "behind" tech from page load.
+   height = techH + vh * 1.5  →  sticky lasts for the full peel
+                                   (techH) + dwell time (1.5vh).
    ---------------------------------------------------------- */
-function setTechShellHeight() {
-  const shell = document.getElementById("tech");
-  const inner = document.querySelector(".techStickyInner");
-  const ask   = document.getElementById("ask");
-  if (!shell || !inner) return;
+function setAskStickyShell() {
+  const shell = document.querySelector(".askStickyShell");
+  const tech  = document.getElementById("tech");
+  if (!shell || !tech) return;
 
-  const vh     = window.innerHeight;
-  const innerH = inner.offsetHeight;
+  const techH = tech.offsetHeight;
+  const vh    = window.innerHeight;
 
-  // Shell height = tech content height  +  one full viewport for the peel.
-  // The extra vh is the sticky linger range.  During that range, #ask (which
-  // starts exactly at shell-end in document flow) rises from viewport-bottom
-  // to viewport-top.  Because #ask has z-index:2 and the sticky inner has
-  // z-index:auto, the photo gradually covers the heatmap from the bottom —
-  // the "peel off" curtain illusion.
-  shell.style.height = (innerH + vh) + "px";
-
-  // No negative margin needed — #ask starts at natural document position
-  // (shell end) which is exactly viewport-bottom when linger begins.
-  if (ask) ask.style.marginTop = "0px";
+  shell.style.marginTop = "-" + techH + "px";
+  shell.style.height    = (techH + Math.round(vh * 1.5)) + "px";
 }
 
-setTechShellHeight();
-window.addEventListener("resize", setTechShellHeight);
+setAskStickyShell();
+window.addEventListener("resize", setAskStickyShell);
 
 /* ----------------------------------------------------------
    Tech Stack — Terminal editor renderer
@@ -3775,6 +3768,10 @@ async function renderTechStack() {
     }, { root: mainEl, threshold: 0.35 });
     blocks.forEach(b => scrollIO.observe(b));
   }
+}
+
+  // Tech grid height changed — update the AI sticky shell geometry
+  setAskStickyShell();
 }
 
 // Run when ready (single guard — mount.dataset.rendered prevents double run)

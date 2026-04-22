@@ -3782,54 +3782,35 @@ html.noReveal .r,
    TECH STACK (your tiles)
 ========================= */
 
-/* ── Tech sticky shell & pin ───────────────────────────────────────
-   Mirrors the proven career section pattern:
-     #tech (.techStickyShell)  = tall outer container, position:relative
-     .techStickyInner          = viewport-pinned card, position:sticky
-
-   z-index: 1 on the shell puts it below #ask (z-index: 2), so the AI
-   section can rise from beneath and "peel" the tech layer off.
-   padding-bottom on the shell = linger distance (how far AI rises
-   from the bottom before tech finally unsticks and flies off).
+/* ── Tech Stack section ────────────────────────────────────────────
+   Plain section in normal document flow — no sticky needed here.
+   z-index:2 keeps it visually in front of the AI section beneath it
+   during the peel transition (AI has z-index:1).
 ─────────────────────────────────────────────────────────────────── */
-#tech.techStickyShell {
+.section.tech {
   position: relative;
-  /* NO z-index here — setting z-index + position:relative creates a stacking
-     context that traps position:sticky children and prevents them from sticking.
-     Career section works because its wrapper has z-index:auto (unset).
-     #ask has z-index:2 and comes later in HTML, so it stacks above this shell
-     naturally even without an explicit z-index on the shell. */
-  /* Full-width breakout */
+  z-index: 2;                          /* sits in front of AI during peel */
+  overflow: hidden;
   width: 100vw;
   margin-left: calc(50% - 50vw);
-  /* padding-bottom alone doesn't extend the sticky constraint rectangle
-     (browsers use content-box height for sticky, not padding-box).
-     Height is set by JS (setTechShellHeight) = inner height + 55svh linger.
-     This matches how the career section sets its wrapper height via JS. */
-  padding-bottom: 0;
-  padding-top: 0;
-  contain: none;
-  background: transparent;
-}
-
-.techStickyInner {
-  position: sticky;
-  top: 0;
-  /* z-index:auto — no stacking context; avoids the sticky-in-stacking-context trap */
-  z-index: auto;
-  /* Fill viewport height so the peel covers the full screen */
-  min-height: 100svh;
-  overflow: hidden;
-  /* Solid base colour sits under the glyph canvas, isolating the section */
   background: #06070f;
   padding: clamp(40px, 5.5vw, 72px) 20px clamp(64px, 8vw, 110px);
-  contain: none;
 }
 
-/* .section.tech still targets the inner div (class="techStickyInner section tech")
-   for any rules that reference that selector — keep the old rule as a no-op fallback */
-.section.tech {
-  /* intentionally empty — specifics handled by .techStickyInner above */
+/* ── AI / Ask sticky shell ─────────────────────────────────────────
+   .askStickyShell is pulled up behind tech via JS (margin-top = -techH)
+   so its top aligns with tech's top in document flow.
+   Shell height (set by JS) = techH + dwell time — giving #ask room to
+   stay sticky while tech slides off, then remain for reading.
+
+   NO z-index on the shell — a z-index + position:relative combination
+   creates a stacking context that traps sticky children (confirmed bug).
+─────────────────────────────────────────────────────────────────── */
+.askStickyShell {
+  position: relative;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  /* margin-top and height driven by JS (setAskStickyShell) */
 }
 
 /* Heatmap canvas — fills the section, sits behind all content */
@@ -4762,38 +4743,30 @@ html.noReveal .r,
   z-index: 1;
 }
 
-/* ── AI / Ask Me peel reveal ───────────────────────────────────────
-   #ask sits at z-index:2 — above .techStickyShell (z-index:1).
-   negative margin-top = same value as shell padding-bottom (55svh),
-   pulling the section up so it overlaps the shell's linger zone.
-   As the user scrolls through those 55svh, #ask rises from the bottom
-   of the viewport, covering the sticky tech section from below — the
-   classic “curtain peel” illusion without any JS.
+/* ── AI / Ask reveal — sticky peel ────────────────────────────────
+   #ask is position:sticky inside .askStickyShell.
+   z-index:1 keeps it behind tech (z-index:2) during the overlap.
+   As tech scrolls off the top, #ask is progressively revealed —
+   first the top of the photo, then the full panel.
+   Shell margin-top and height are set by JS (setAskStickyShell).
 ─────────────────────────────────────────────────────────────────── */
 .ask-reveal {
-  position: relative;
-  z-index: 2;                          /* sits above the sticky shell */
-  contain: none;                       /* override base .section contain */
-
-  /* Full-width breakout */
-  width: 100vw;
-  margin-left: calc(50% - 50vw);
-
-  /* Pull-up is set by JS (setTechShellHeight) to exactly match linger distance */
-  margin-top: 0;
+  position: sticky;
+  top: 0;
+  z-index: 1;                          /* behind tech (z-index:2) */
+  contain: none;                       /* override any inherited contain */
+  min-height: 100svh;
 
   /* Photo background */
   background-image: url('https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1800&q=80');
   background-size: cover;
   background-position: center 30%;
-  background-attachment: scroll;
 
-  /* Standard section top padding; bottom gives the panel room to breathe */
+  /* Top padding creates space for the heading/photo hero area */
   padding: clamp(80px, 11svh, 128px) 0 clamp(80px, 10svh, 120px);
 }
 
-/* Dark overlay — lighter in the hero strip so the galaxy shows through,
-   then deepens around the panel for legibility */
+/* Dark overlay — lighter at the top so stars/photo show through the hero strip */
 .ask-reveal::before {
   content: '';
   position: absolute;
@@ -8879,8 +8852,7 @@ html.noReveal .r,
 /* Projects → Skills: proof decomposing into underlying system.
    Purple-teal carried from the project tag pill colors so the glow
    feels like the same palette arriving in a new layer. */
-/* Glow lives on the sticky inner card (the visible element), not the outer shell */
-.techStickyInner::before {
+#tech::before {
   content: '';
   position: absolute;
   top: -200px;
