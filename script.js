@@ -1378,7 +1378,7 @@ const careerData = [
     location: "Livjægergade 17, 2100 København",
     skills: ["SAP BTP", "SAPUI5", "OData", "CDS Views", "SAP Gateway", "REST APIs", "SAP Integration", "JavaScript"],
     desc: "Currently working at SOA People, where I develop and contribute to SAP-based digital solutions in a professional consulting environment. This chapter reflects how I combine technical development with business understanding to build solutions that are practical, scalable, and aligned with real user and process needs.",
-    img:   "assets/SOA1.jpeg",
+    img:   "assets/SOA1.jpg",
     bgImg: "assets/SOA2.jpg",
   },
   {
@@ -1389,7 +1389,7 @@ const careerData = [
     location: "Meentwal 9, 3432 GL Nieuwegein, Nederlandene",
     skills: ["SAP S/4HANA", "SAP MM", "SAP SD", "Consulting Skills", "Supply Chain Management", "Business Process Understanding", "Analytical Thinking", "Communication"],
     desc: "The academy experience strengthened my understanding of business processes, consulting, and how SAP supports real organisational needs. It added a broader commercial and practical perspective to my technical background and helped sharpen the way I communicate, analyse, and work with business-oriented problem solving.",
-    img:   "assets/ACA1.jpeg",
+    img:   "assets/ACA1.jpg",
     bgImg: "assets/ACA2.jpg",
   },
   {
@@ -1423,11 +1423,16 @@ const careerData = [
     skills: ["Interface Design", "Concept Development", "Prototyping", "Digital Interaction", "Communication", "Experience Design"],
     desc: "This earlier Roskilde Festival project explored how digital interaction can shape live experiences in subtle but meaningful ways. Working with interface, concept, and implementation helped deepen my understanding of how technology can connect people, environment, and interaction in a more human-centered way.",
     img:   "assets/NEW1.jpg",
-    bgImg: "assets/NEW2.jpeg",
+    bgImg: "assets/NEW2.jpg",
   },
 ];
 
 function initMpCareer() {
+  // Preload all images immediately so transitions don't wait on network
+  careerData.forEach(item => {
+    [item.img, item.bgImg].forEach(src => { if (src) { new Image().src = src; } });
+  });
+
   const wrap    = document.getElementById("career");
   const track   = document.getElementById("mpCareerTrack");
   const descEl  = document.getElementById("mpCareerDesc");
