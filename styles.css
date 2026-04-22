@@ -9304,10 +9304,14 @@ html.noReveal .r,
   z-index: 15;
   display: flex;
   pointer-events: none;
+  overflow: hidden;           /* clips the small overhang from each blind */
 }
 
 .mpBlind {
-  flex: 1;
+  /* 2px wider than the equal share — overlaps into the next blind so
+     subpixel rounding on any screen width can never leave a visible gap.
+     The total overhang (6 × 2px = 12px) is clipped by overflow:hidden above. */
+  flex: 0 0 calc(16.6667% + 2px);
   background: #000;
   transform-origin: left center;
   transform: scaleX(0);
