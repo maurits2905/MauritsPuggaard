@@ -3579,32 +3579,6 @@ function initTechHeatmap() {
 initTechHeatmap();
 
 /* ----------------------------------------------------------
-   Ask sticky shell — sets margin-top and height on .askStickyShell
-   so #ask (position:sticky inside it) overlaps tech and peels away.
-
-   Diagram:  tech slides off top  →  AI photo revealed underneath.
-
-   margin-top = -techH  →  shell starts at tech's document top,
-                            so AI is already "behind" tech from page load.
-   height = techH + vh * 1.5  →  sticky lasts for the full peel
-                                   (techH) + dwell time (1.5vh).
-   ---------------------------------------------------------- */
-function setAskStickyShell() {
-  const shell = document.querySelector(".askStickyShell");
-  const tech  = document.getElementById("tech");
-  if (!shell || !tech) return;
-
-  const techH = tech.offsetHeight;
-  const vh    = window.innerHeight;
-
-  shell.style.marginTop = "-" + techH + "px";
-  shell.style.height    = (techH + Math.round(vh * 1.5)) + "px";
-}
-
-setAskStickyShell();
-window.addEventListener("resize", setAskStickyShell);
-
-/* ----------------------------------------------------------
    Tech Stack — Terminal editor renderer
    ---------------------------------------------------------- */
 async function renderTechStack() {
@@ -3770,8 +3744,6 @@ async function renderTechStack() {
   }
 }
 
-  // Tech grid height changed — update the AI sticky shell geometry
-  setAskStickyShell();
 }
 
 // Run when ready (single guard — mount.dataset.rendered prevents double run)

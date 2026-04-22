@@ -3782,35 +3782,14 @@ html.noReveal .r,
    TECH STACK (your tiles)
 ========================= */
 
-/* ── Tech Stack section ────────────────────────────────────────────
-   Plain section in normal document flow — no sticky needed here.
-   z-index:2 keeps it visually in front of the AI section beneath it
-   during the peel transition (AI has z-index:1).
-─────────────────────────────────────────────────────────────────── */
+/* ── Tech Stack section ───────────────────────────────────────────── */
 .section.tech {
   position: relative;
-  z-index: 2;                          /* sits in front of AI during peel */
   overflow: hidden;
   width: 100vw;
   margin-left: calc(50% - 50vw);
   background: #06070f;
   padding: clamp(40px, 5.5vw, 72px) 20px clamp(64px, 8vw, 110px);
-}
-
-/* ── AI / Ask sticky shell ─────────────────────────────────────────
-   .askStickyShell is pulled up behind tech via JS (margin-top = -techH)
-   so its top aligns with tech's top in document flow.
-   Shell height (set by JS) = techH + dwell time — giving #ask room to
-   stay sticky while tech slides off, then remain for reading.
-
-   NO z-index on the shell — a z-index + position:relative combination
-   creates a stacking context that traps sticky children (confirmed bug).
-─────────────────────────────────────────────────────────────────── */
-.askStickyShell {
-  position: relative;
-  width: 100vw;
-  margin-left: calc(50% - 50vw);
-  /* margin-top and height driven by JS (setAskStickyShell) */
 }
 
 /* Heatmap canvas — fills the section, sits behind all content */
@@ -4743,30 +4722,26 @@ html.noReveal .r,
   z-index: 1;
 }
 
-/* ── AI / Ask reveal — sticky peel ────────────────────────────────
-   #ask is position:sticky inside .askStickyShell.
-   z-index:1 keeps it behind tech (z-index:2) during the overlap.
-   As tech scrolls off the top, #ask is progressively revealed —
-   first the top of the photo, then the full panel.
-   Shell margin-top and height are set by JS (setAskStickyShell).
+/* ── AI / Ask section ──────────────────────────────────────────────
+   background-attachment:fixed keeps the photo stationary while
+   everything else scrolls.  As tech slides off the top, the photo
+   appears to rise from beneath — no JS, no sticky, no locking.
 ─────────────────────────────────────────────────────────────────── */
 .ask-reveal {
-  position: sticky;
-  top: 0;
-  z-index: 1;                          /* behind tech (z-index:2) */
-  contain: none;                       /* override any inherited contain */
-  min-height: 100svh;
-
-  /* Photo background */
+  position: relative;
   background-image: url('https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1800&q=80');
   background-size: cover;
   background-position: center 30%;
-
-  /* Top padding creates space for the heading/photo hero area */
+  background-attachment: fixed;        /* parallax: photo stays, content scrolls */
   padding: clamp(80px, 11svh, 128px) 0 clamp(80px, 10svh, 120px);
 }
 
-/* Dark overlay — lighter at the top so stars/photo show through the hero strip */
+/* fixed-attachment doesn't work on iOS — fall back to normal scroll */
+@media (hover: none) {
+  .ask-reveal { background-attachment: scroll; }
+}
+
+/* Dark overlay */
 .ask-reveal::before {
   content: '';
   position: absolute;
@@ -4782,7 +4757,6 @@ html.noReveal .r,
   pointer-events: none;
 }
 
-/* Lift all direct children above the overlay */
 .ask-reveal > * {
   position: relative;
   z-index: 1;
