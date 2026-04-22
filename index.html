@@ -464,66 +464,7 @@ body[data-theme="light"] .abtTag:hover {
     </style>
   </head>
 
-  <body data-bg="stars" class="isLoading">
-    <!-- Preloader (shown on first paint) -->
-    <div
-      id="preloader"
-      class="preloader"
-      role="status"
-      aria-live="polite"
-      aria-label="Loading"
-    >
-      <!-- Scan line sweep -->
-      <div class="ldr-scanline" aria-hidden="true"></div>
-
-      <!-- Corner brackets -->
-      <div class="ldr-corner ldr-tl" aria-hidden="true"></div>
-      <div class="ldr-corner ldr-tr" aria-hidden="true"></div>
-      <div class="ldr-corner ldr-bl" aria-hidden="true"></div>
-      <div class="ldr-corner ldr-br" aria-hidden="true"></div>
-
-      <!-- Top label -->
-      <div class="ldr-top-label" aria-hidden="true">
-        <span class="ldr-blink-dot"></span>PORTFOLIO — 2025
-      </div>
-
-      <!-- Center content -->
-      <div class="ldr-body">
-
-        <!-- SVG progress ring with counter inside -->
-        <div class="ldr-ring-wrap">
-          <svg class="ldr-ring-svg" viewBox="0 0 220 220" aria-hidden="true">
-            <defs>
-              <linearGradient id="ldrGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#9b8cff"/>
-                <stop offset="100%" stop-color="#44f0b1"/>
-              </linearGradient>
-            </defs>
-            <circle class="ldr-ring-bg" cx="110" cy="110" r="96" fill="none"/>
-            <circle class="ldr-ring-arc" id="preRingFill" cx="110" cy="110" r="96" fill="none"/>
-          </svg>
-          <div class="ldr-ring-inner">
-            <span id="prePct">00</span><sup class="ldr-sup">%</sup>
-          </div>
-        </div>
-
-        <!-- Name (JS fills this with staggered letters) -->
-        <div class="ldr-name" id="preName" aria-hidden="true"></div>
-
-        <!-- Divider line -->
-        <div class="ldr-div" aria-hidden="true"></div>
-
-        <!-- Status text (JS updates dynamically) -->
-        <p class="ldr-status" id="ldrStatus" aria-hidden="true">Initializing</p>
-
-      </div>
-
-      <!-- Legacy compat elements (hidden, referenced by JS) -->
-      <div style="display:none" aria-hidden="true">
-        <div id="preBarFill"></div>
-        <div id="preBottomLine"></div>
-      </div>
-    </div>
+  <body data-bg="stars">
 
     <!-- Background -->
     <div id="bg"></div>
