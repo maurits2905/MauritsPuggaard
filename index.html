@@ -182,7 +182,7 @@
   border-radius: 999px;
 }
 
-/* ── Center column — portal photo ──────────────────── */
+/* ── Center column — floating portrait ─────────────── */
 .abt2CenterCol {
   display: flex;
   justify-content: center;
@@ -192,63 +192,43 @@
 .abt2Portal {
   position: relative;
   width: 340px;
-  height: 480px;
+  height: 380px;
 }
 
-/* Outer diffuse glow — atmospheric halo around ring */
+/* Floor glow — elliptical, acts like a spotlight from below */
 .abt2PortalGlow {
   position: absolute;
-  top: 138px;
+  bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 380px;
-  height: 380px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 50% 30%,
-    rgba(122, 107, 255, 0.32) 0%,
-    rgba(122, 107, 255, 0.14) 35%,
-    rgba(80, 60, 200, 0.04) 60%,
-    transparent 76%
+  width: 320px;
+  height: 160px;
+  background: radial-gradient(ellipse at 50% 100%,
+    rgba(122, 107, 255, 0.38) 0%,
+    rgba(122, 107, 255, 0.16) 42%,
+    transparent 72%
   );
   pointer-events: none;
   z-index: 1;
 }
 
-/* Cutout photo — full face above ring, body fades inside ring */
+/* Portrait — transparent cutout, fades at the bottom */
 .abt2Photo {
   position: absolute;
   top: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 310px;
+  width: 330px;
   height: auto;
   object-fit: contain;
-  /* Fade starts at ~53% (collar/shoulder), transparent by 78% (chest) */
-  -webkit-mask-image: linear-gradient(to bottom, black 53%, rgba(0,0,0,0.42) 67%, transparent 80%);
-  mask-image: linear-gradient(to bottom, black 53%, rgba(0,0,0,0.42) 67%, transparent 80%);
+  /* Subtle silhouette glow around the person */
+  filter:
+    drop-shadow(0 0 22px rgba(122, 107, 255, 0.18))
+    drop-shadow(0 6px 32px rgba(100, 80, 220, 0.12));
+  /* Body fades into the floor glow naturally */
+  -webkit-mask-image: linear-gradient(to bottom, black 58%, rgba(0,0,0,0.38) 78%, transparent 96%);
+  mask-image: linear-gradient(to bottom, black 58%, rgba(0,0,0,0.38) 78%, transparent 96%);
   z-index: 2;
-  pointer-events: none;
-}
-
-/* Ring — at shoulder level; bottom arc fades so it doesn't float empty */
-.abt2PortalRing {
-  position: absolute;
-  top: 168px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 292px;
-  height: 292px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(122, 107, 255, 0.65);
-  box-shadow:
-    0 0 0 3px rgba(122, 107, 255, 0.05),
-    0 0 24px rgba(122, 107, 255, 0.28),
-    0 0 54px rgba(122, 107, 255, 0.13),
-    inset 0 0 28px rgba(122, 107, 255, 0.07);
-  /* Bottom arc fades so no empty floating ring */
-  -webkit-mask-image: linear-gradient(to bottom, black 48%, rgba(0,0,0,0.5) 68%, transparent 88%);
-  mask-image: linear-gradient(to bottom, black 48%, rgba(0,0,0,0.5) 68%, transparent 88%);
-  z-index: 3;
   pointer-events: none;
 }
 
@@ -336,10 +316,9 @@ body[data-theme="light"] .abt2BadgeLoc {
 
   .abt2CenterCol { order: -1; }
 
-  .abt2Portal { width: 280px; height: 390px; }
-  .abt2Photo { width: 256px; }
-  .abt2PortalRing { width: 240px; height: 240px; top: 138px; }
-  .abt2PortalGlow { width: 300px; height: 300px; top: 112px; }
+  .abt2Portal { width: 280px; height: 320px; }
+  .abt2Photo { width: 270px; }
+  .abt2PortalGlow { width: 260px; height: 130px; }
 
   .abt2RightCol {
     flex-direction: row;
@@ -361,10 +340,9 @@ body[data-theme="light"] .abt2BadgeLoc {
 
 @media (max-width: 560px) {
   .abt2Ghost { opacity: 0.65; }
-  .abt2Portal { width: 240px; height: 340px; }
-  .abt2Photo { width: 218px; }
-  .abt2PortalRing { width: 206px; height: 206px; top: 118px; }
-  .abt2PortalGlow { width: 250px; height: 250px; top: 95px; }
+  .abt2Portal { width: 240px; height: 280px; }
+  .abt2Photo { width: 228px; }
+  .abt2PortalGlow { width: 220px; height: 110px; }
 }
 
     </style>
@@ -528,7 +506,6 @@ body[data-theme="light"] .abt2BadgeLoc {
             <div class="abt2Portal">
               <div class="abt2PortalGlow" aria-hidden="true"></div>
               <img class="abt2Photo" src="assets/me-cutout.webp" alt="Maurits Puggaard" loading="eager" decoding="async" />
-              <div class="abt2PortalRing" aria-hidden="true"></div>
             </div>
           </div>
 
