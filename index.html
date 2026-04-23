@@ -135,9 +135,9 @@
   position: relative;
   z-index: 2;
   display: grid;
-  grid-template-columns: 1fr 480px;
+  grid-template-columns: 1fr 420px;
   align-items: center;
-  min-height: min(760px, 92vh);
+  min-height: min(680px, 90vh);
 }
 
 /* ── Left: text column ── */
@@ -300,7 +300,7 @@
 .abt3PhotoCol {
   position: relative;
   height: 100%;
-  min-height: 660px;
+  min-height: 540px;
   align-self: stretch;
   display: flex;
   align-items: flex-end;
@@ -315,7 +315,7 @@
   position: absolute;
   bottom: 14px;
   left: 50%; transform: translateX(-50%);
-  width: min(380px, 54vh); height: min(380px, 54vh);
+  width: min(300px, 44vh); height: min(300px, 44vh);
   border-radius: 50%;
   border: 1px dashed rgba(122,107,255,0.22);
   animation: abt3Spin 28s linear infinite;
@@ -339,7 +339,7 @@
   position: absolute;
   bottom: 46px;
   left: 50%; transform: translateX(-50%);
-  width: min(280px, 40vh); height: min(280px, 40vh);
+  width: min(220px, 32vh); height: min(220px, 32vh);
   border-radius: 50%;
   border: 1px solid rgba(122,107,255,0.08);
   animation: abt3SpinRev 20s linear infinite;
@@ -352,13 +352,13 @@
   position: absolute;
   bottom: 30px;
   left: 50%; transform: translateX(-50%);
-  width: min(340px, 48vh); height: min(340px, 48vh);
+  width: min(260px, 38vh); height: min(260px, 38vh);
   border-radius: 50%;
   background: linear-gradient(148deg, #3d2fa0 0%, #1e1860 100%);
   box-shadow:
-    0 0 0 1px rgba(100,85,200,0.25),
-    0 16px 110px rgba(60,40,170,0.65),
-    0 0 220px rgba(55,38,155,0.25);
+    0 0 0 1px rgba(100,85,200,0.2),
+    0 12px 80px rgba(60,40,170,0.55),
+    0 0 160px rgba(55,38,155,0.18);
   z-index: 2;
   pointer-events: none;
 }
@@ -368,7 +368,7 @@
   position: absolute;
   bottom: 30px;
   left: 50%; transform: translateX(-50%);
-  height: min(520px, 72vh);
+  height: min(400px, 58vh);
   width: auto;
   object-fit: contain;
   object-position: bottom center;
@@ -377,13 +377,13 @@
 /* Top layer: head + upper shoulders above the circle */
 .abt3PhotoTop {
   z-index: 4;
-  clip-path: inset(0 0 min(290px, 41vh) 0);
+  clip-path: inset(0 0 min(210px, 30vh) 0);
   filter: drop-shadow(0 -10px 40px rgba(48,35,160,0.4));
 }
 /* Body layer: circular crop inside the circle */
 .abt3PhotoBody {
   z-index: 3;
-  clip-path: circle(min(155px, 22vh) at 50% calc(100% - min(170px, 24vh)));
+  clip-path: circle(min(118px, 17vh) at 50% calc(100% - min(100px, 14vh)));
   filter: drop-shadow(0 0 50px rgba(48,35,160,0.6));
 }
 
@@ -471,7 +471,7 @@
 }
 
 /* ── Responsive ── */
-@media (max-width: 960px) {
+@media (max-width: 900px) {
   .abt3Inner {
     grid-template-columns: 1fr;
     min-height: auto;
