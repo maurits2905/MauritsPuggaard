@@ -13,7 +13,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;900&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;900&family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap"
       rel="stylesheet"
     />
 
@@ -41,308 +41,468 @@
 
     <style id="about-css">
 /* ═══════════════════════════════════════════════════
-   ABOUT v2 — Editorial / Portal  (redesign)
+   ABOUT v3 — User's design
    ═══════════════════════════════════════════════════ */
 
-.abt2Section {
+/* ── Section ── */
+.abt3Sec {
   position: relative;
   overflow: hidden;
-  padding: clamp(80px, 11vh, 128px) 0;
+  padding: 0;
   scroll-margin-top: 90px;
+  isolation: isolate;
 }
 
-/* ── Ghost name — full-bleed behind everything ─────── */
-.abt2Ghost {
+/* Bottom page-blend fade */
+.abt3BottomFade {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 100vw;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  line-height: 0.85;
-  gap: 4px;
+  bottom: 0; left: 0; right: 0;
+  height: 60px;
+  background: linear-gradient(to top, var(--bg, #09090f) 0%, transparent 100%);
   pointer-events: none;
-  user-select: none;
+  z-index: 10;
+}
+
+/* ── Scrolling text background ── */
+.abt3TextBg {
+  position: absolute;
+  inset: -20px;
+  overflow: hidden;
+  pointer-events: none;
   z-index: 0;
-}
-
-.abt2GhostLine {
-  display: block;
-  font-family: 'Inter', sans-serif;
-  font-size: clamp(90px, 17vw, 280px);
-  font-weight: 900;
-  letter-spacing: -0.05em;
-  color: rgba(200, 200, 255, 0.045);
-  -webkit-text-stroke: 1px rgba(122, 107, 255, 0.10);
-  white-space: nowrap;
-}
-
-/* ── Three-column grid ─────────────────────────────── */
-.abt2Layout {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  grid-template-columns: 1fr 360px 1fr;
-  gap: clamp(40px, 5vw, 80px);
-  align-items: center;
-}
-
-/* ── Left column — identity text ───────────────────── */
-.abt2LeftCol {
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  justify-content: flex-start;
+  mask-image: linear-gradient(to right, transparent 0%, transparent 52%, rgba(0,0,0,0.6) 62%, black 72%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, transparent 52%, rgba(0,0,0,0.6) 62%, black 72%);
 }
 
-.abt2Tag {
+.abt3TbRow {
+  display: flex;
+  white-space: nowrap;
+  font-family: 'DM Mono', 'Courier New', monospace;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.09);
+  line-height: 2.5;
+  user-select: none;
+}
+
+.abt3TbInner {
+  display: flex;
+  white-space: nowrap;
+  animation: abt3ScrollL 30s linear infinite;
+}
+
+.abt3TbRow:nth-child(even) .abt3TbInner { animation: abt3ScrollR 35s linear infinite; }
+.abt3TbRow:nth-child(3)    .abt3TbInner { animation-duration: 28s; }
+.abt3TbRow:nth-child(5)    .abt3TbInner { animation-duration: 38s; }
+
+.abt3TbAccent { color: rgba(122,107,255,0.35); }
+
+@keyframes abt3ScrollL {
+  from { transform: translateX(0);    }
+  to   { transform: translateX(-50%); }
+}
+@keyframes abt3ScrollR {
+  from { transform: translateX(-50%); }
+  to   { transform: translateX(0);    }
+}
+
+/* ── Ambient glows ── */
+.abt3GlowR {
+  position: absolute;
+  right: 50px; top: 50%;
+  transform: translateY(-50%);
+  width: 560px; height: 560px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(88,62,210,0.16) 0%, transparent 65%);
+  pointer-events: none; z-index: 0;
+}
+.abt3GlowL {
+  position: absolute;
+  left: -80px; bottom: -80px;
+  width: 320px; height: 320px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(88,62,210,0.06) 0%, transparent 70%);
+  pointer-events: none; z-index: 0;
+}
+
+/* ── Inner grid (left text | right photo) ── */
+.abt3Inner {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  align-items: center;
+  min-height: min(680px, 90vh);
+}
+
+/* ── Left: text column ── */
+.abt3Text {
+  padding: clamp(48px, 7vh, 88px) 40px clamp(48px, 7vh, 88px) clamp(40px, 5vw, 64px);
+  min-width: 0;
+}
+
+.abt3Label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: 'DM Mono', 'Courier New', monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent, #7a6bff);
+  margin-bottom: 18px;
+}
+.abt3Label::before {
+  content: '';
+  display: block;
+  width: 30px; height: 1px;
+  background: var(--accent, #7a6bff);
+  opacity: 0.7;
+}
+
+.abt3Greeting {
+  font-family: 'DM Sans', 'Inter', sans-serif;
+  font-size: 17px;
+  font-weight: 300;
+  color: var(--muted, rgba(240,239,248,0.4));
+  margin-bottom: 5px;
+  letter-spacing: 0.02em;
+}
+
+.abt3Name {
+  font-family: 'Syne', 'Inter', sans-serif;
+  font-size: clamp(38px, 4.8vw, 56px);
+  font-weight: 800;
+  color: var(--text, #f0eff8);
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+}
+.abt3NameL2 { color: var(--accent, #7a6bff); }
+
+.abt3Role {
+  font-family: 'DM Sans', 'Inter', sans-serif;
+  font-size: 14.5px;
+  color: var(--muted, rgba(240,239,248,0.4));
+  font-weight: 300;
+  letter-spacing: 0.04em;
+  margin-bottom: 28px;
+}
+
+.abt3Bio {
+  font-size: 14px;
+  line-height: 1.78;
+  color: rgba(240,239,248,0.52);
+  max-width: 400px;
+  padding-left: 16px;
+  border-left: 2px solid rgba(122,107,255,0.28);
+  margin-bottom: 28px;
+}
+
+/* Stats */
+.abt3Stats {
+  display: flex;
+  gap: 0;
+  margin-bottom: 28px;
+}
+.abt3Stat {
+  padding-right: 28px;
+  margin-right: 28px;
+  border-right: 1px solid rgba(240,239,248,0.12);
+}
+.abt3Stat:last-child { border-right: none; padding-right: 0; margin-right: 0; }
+
+.abt3StatNum {
+  font-family: 'Syne', 'Inter', sans-serif;
+  font-size: clamp(26px, 3vw, 32px);
+  font-weight: 800;
+  color: var(--text, #f0eff8);
+  line-height: 1;
+  letter-spacing: -0.025em;
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+}
+/* JS animation hook — inherits Syne from parent */
+.abt3StatN {
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  color: inherit;
+  font-variant-numeric: tabular-nums;
+}
+.abt3StatSup {
+  font-size: 18px;
+  color: var(--accent, #7a6bff);
+  font-weight: 700;
+  margin-left: 1px;
+}
+.abt3StatLbl {
+  font-family: 'DM Mono', 'Courier New', monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted, rgba(240,239,248,0.4));
+  margin-top: 6px;
+  opacity: 0.7;
+}
+
+/* Badges */
+.abt3Badges {
   display: flex;
   align-items: center;
   gap: 14px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: rgba(122, 107, 255, 0.75);
-}
-
-.abt2TagLine {
-  display: inline-block;
-  width: 36px;
-  height: 1px;
-  background: rgba(122, 107, 255, 0.4);
-  flex-shrink: 0;
-}
-
-.abt2Title {
-  margin: 0;
-  font-size: clamp(28px, 3.6vw, 50px);
-  font-weight: 900;
-  letter-spacing: -0.03em;
-  line-height: 1.09;
-  color: var(--text);
-}
-
-.abt2Body {
-  margin: 0;
-  font-size: clamp(14px, 1.35vw, 16px);
-  line-height: 1.72;
-  color: var(--muted);
-  max-width: 360px;
-}
-
-.abt2Badges {
-  display: flex;
   flex-wrap: wrap;
-  gap: 10px;
 }
-
-.abt2BadgeAvail {
+.abt3BadgeAvail {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 18px;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: rgba(62, 232, 181, 0.9);
-  background: rgba(62, 232, 181, 0.06);
-  border: 1px solid rgba(62, 232, 181, 0.22);
+  background: rgba(122,107,255,0.12);
+  border: 1px solid rgba(122,107,255,0.28);
   border-radius: 999px;
+  padding: 8px 20px;
+  font-family: 'DM Sans', 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(188,178,255,0.9);
+  cursor: default;
+  transition: background 0.2s;
 }
-
-.abt2BadgeDot {
-  width: 6px;
-  height: 6px;
+.abt3BadgeAvail:hover { background: rgba(122,107,255,0.2); }
+.abt3AvailDot {
+  width: 6px; height: 6px;
   border-radius: 50%;
-  background: #3ee8b5;
-  box-shadow: 0 0 8px rgba(62, 232, 181, 0.6);
-  animation: abt2Pulse 2s ease-in-out infinite;
+  background: rgba(188,178,255,0.9);
+  box-shadow: 0 0 8px rgba(122,107,255,0.7);
+  animation: abt3Pulse 2s ease-in-out infinite;
   flex-shrink: 0;
 }
-
-@keyframes abt2Pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50%       { opacity: 0.4; transform: scale(0.75); }
+.abt3BadgeLoc {
+  font-family: 'DM Mono', 'Courier New', monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted, rgba(240,239,248,0.4));
+  opacity: 0.7;
 }
 
-.abt2BadgeLoc {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 18px;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  color: rgba(180, 185, 220, 0.55);
-  background: rgba(122, 107, 255, 0.05);
-  border: 1px solid rgba(122, 107, 255, 0.14);
-  border-radius: 999px;
-}
-
-/* ── Center column — floating portrait ─────────────── */
-.abt2CenterCol {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.abt2Portal {
+/* ── Right: photo column ── */
+.abt3PhotoCol {
   position: relative;
-  width: 340px;
-  height: 380px;
+  height: 100%;
+  min-height: 540px;
+  align-self: stretch;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 2;
+  overflow: visible;
+  clip-path: inset(-120px 0 0 0);
 }
 
-/* Floor glow — elliptical, acts like a spotlight from below */
-.abt2PortalGlow {
+/* Outer spinning dashed ring */
+.abt3RingOuter {
   position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 320px;
-  height: 160px;
-  background: radial-gradient(ellipse at 50% 100%,
-    rgba(122, 107, 255, 0.38) 0%,
-    rgba(122, 107, 255, 0.16) 42%,
-    transparent 72%
-  );
+  bottom: 14px;
+  left: 50%; transform: translateX(-50%);
+  width: min(300px, 44vh); height: min(300px, 44vh);
+  border-radius: 50%;
+  border: 1px dashed rgba(122,107,255,0.22);
+  animation: abt3Spin 28s linear infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+.abt3RingOuter::before,
+.abt3RingOuter::after {
+  content: '';
+  position: absolute;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--accent, #7a6bff);
+  box-shadow: 0 0 12px rgba(122,107,255,0.6);
+}
+.abt3RingOuter::before { top: -4px;    left: 50%; transform: translateX(-50%); }
+.abt3RingOuter::after  { bottom: -4px; left: 50%; transform: translateX(-50%); }
+
+/* Inner counter-spinning ring */
+.abt3RingInner {
+  position: absolute;
+  bottom: 46px;
+  left: 50%; transform: translateX(-50%);
+  width: min(220px, 32vh); height: min(220px, 32vh);
+  border-radius: 50%;
+  border: 1px solid rgba(122,107,255,0.08);
+  animation: abt3SpinRev 20s linear infinite;
   pointer-events: none;
   z-index: 1;
 }
 
-/* Portrait — transparent cutout, fades at the bottom */
-.abt2Photo {
+/* Purple gradient "platform" circle */
+.abt3PhotoCircle {
   position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 330px;
-  height: auto;
-  object-fit: contain;
-  /* Subtle silhouette glow around the person */
-  filter:
-    drop-shadow(0 0 22px rgba(122, 107, 255, 0.18))
-    drop-shadow(0 6px 32px rgba(100, 80, 220, 0.12));
-  /* Body fades into the floor glow naturally */
-  -webkit-mask-image: linear-gradient(to bottom, black 58%, rgba(0,0,0,0.38) 78%, transparent 96%);
-  mask-image: linear-gradient(to bottom, black 58%, rgba(0,0,0,0.38) 78%, transparent 96%);
+  bottom: 30px;
+  left: 50%; transform: translateX(-50%);
+  width: min(260px, 38vh); height: min(260px, 38vh);
+  border-radius: 50%;
+  background: linear-gradient(148deg, #3d2fa0 0%, #1e1860 100%);
+  box-shadow:
+    0 0 0 1px rgba(100,85,200,0.2),
+    0 12px 80px rgba(60,40,170,0.55),
+    0 0 160px rgba(55,38,155,0.18);
   z-index: 2;
   pointer-events: none;
 }
 
-/* ── Right column — stats ──────────────────────────── */
-.abt2RightCol {
+/* Photo images — split into two layers for pop-out effect */
+.abt3PhotoImg {
+  position: absolute;
+  bottom: 30px;
+  left: 50%; transform: translateX(-50%);
+  height: min(400px, 58vh);
+  width: auto;
+  object-fit: contain;
+  object-position: bottom center;
+  pointer-events: none;
+}
+/* Top layer: head + upper shoulders above the circle */
+.abt3PhotoTop {
+  z-index: 4;
+  clip-path: inset(0 0 min(210px, 30vh) 0);
+  filter: drop-shadow(0 -10px 40px rgba(48,35,160,0.4));
+}
+/* Body layer: circular crop inside the circle */
+.abt3PhotoBody {
+  z-index: 3;
+  clip-path: circle(min(118px, 17vh) at 50% calc(100% - min(100px, 14vh)));
+  filter: drop-shadow(0 0 50px rgba(48,35,160,0.6));
+}
+
+/* Floating glass cards */
+.abt3FCard {
+  position: absolute;
+  z-index: 5;
+  background: rgba(9,9,15,0.78);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+}
+
+.abt3FCardLoc {
+  top: 130px; right: 0;
+  padding: 11px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: abt3FloatB 5s ease-in-out infinite;
+}
+.abt3LocDot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--accent, #7a6bff);
+  box-shadow: 0 0 10px rgba(122,107,255,0.6);
+  flex-shrink: 0;
+  animation: abt3Pulse 2s ease-in-out infinite;
+}
+.abt3LocText {
+  font-family: 'DM Sans', 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(240,239,248,0.72);
+  white-space: nowrap;
+}
+
+.abt3FCardTags {
+  top: 215px; right: -8px;
+  padding: 11px 15px;
+  animation: abt3FloatA 6s ease-in-out 0.8s infinite;
   display: flex;
   flex-direction: column;
+  gap: 5px;
 }
-
-.abt2Stat {
-  padding: 28px 0;
-}
-.abt2Stat:first-child { padding-top: 0; }
-.abt2Stat:last-child  { padding-bottom: 0; }
-
-.abt2StatVal {
+.abt3TagRow {
   display: flex;
-  align-items: baseline;
-  gap: 4px;
-  line-height: 1;
+  align-items: center;
+  gap: 6px;
+  font-family: 'DM Mono', 'Courier New', monospace;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  color: rgba(170,155,255,0.85);
+}
+.abt3TagRow::before {
+  content: '';
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: var(--accent, #7a6bff);
+  opacity: 0.7;
+  flex-shrink: 0;
 }
 
-/* Keep .abtStatN for the counter JS animation hook */
-.abt2StatN {
-  font-size: clamp(44px, 5.5vw, 72px);
-  font-weight: 900;
-  letter-spacing: -0.04em;
-  color: var(--text);
-  font-variant-numeric: tabular-nums;
+/* ── Animations ── */
+@keyframes abt3Pulse {
+  0%, 100% { opacity: 1;   }
+  50%       { opacity: 0.3; }
+}
+@keyframes abt3Spin {
+  from { transform: translateX(-50%) rotate(0deg);   }
+  to   { transform: translateX(-50%) rotate(360deg); }
+}
+@keyframes abt3SpinRev {
+  from { transform: translateX(-50%) rotate(0deg);    }
+  to   { transform: translateX(-50%) rotate(-360deg); }
+}
+@keyframes abt3FloatA {
+  0%, 100% { transform: translateY(0);    }
+  50%       { transform: translateY(-8px); }
+}
+@keyframes abt3FloatB {
+  0%, 100% { transform: translateY(0);   }
+  50%       { transform: translateY(7px); }
 }
 
-.abt2StatSuf {
-  font-size: clamp(24px, 3vw, 40px);
-  font-weight: 900;
-  color: rgba(122, 107, 255, 0.85);
-  line-height: 1;
-}
-
-.abt2StatLbl {
-  margin-top: 6px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: rgba(180, 185, 220, 0.38);
-}
-
-.abt2StatDivider {
-  height: 1px;
-  background: linear-gradient(to right, rgba(122, 107, 255, 0.16) 0%, transparent 80%);
-}
-
-/* ── Light mode overrides ──────────────────────────── */
-body[data-theme="light"] .abt2GhostLine {
-  -webkit-text-stroke: 1px rgba(80, 70, 180, 0.055);
-}
-body[data-theme="light"] .abt2BadgeAvail {
-  background: rgba(0, 160, 110, 0.06);
-  border-color: rgba(0, 160, 110, 0.22);
-  color: rgba(0, 120, 80, 0.9);
-}
-body[data-theme="light"] .abt2BadgeDot {
-  background: #00a870;
-  box-shadow: 0 0 8px rgba(0, 168, 112, 0.5);
-}
-body[data-theme="light"] .abt2BadgeLoc {
-  background: rgba(80, 70, 180, 0.05);
-  border-color: rgba(80, 70, 180, 0.14);
-  color: rgba(40, 35, 90, 0.6);
-}
-
-/* ── Responsive ────────────────────────────────────── */
-@media (max-width: 940px) {
-  .abt2Layout {
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .abt3Inner {
     grid-template-columns: 1fr;
-    gap: 52px;
+    min-height: auto;
   }
-  .abt2LeftCol {
-    align-items: center;
+  .abt3PhotoCol {
+    order: -1;
+    min-height: 360px;
+    clip-path: none;
+    overflow: hidden;
+  }
+  .abt3FCardLoc,
+  .abt3FCardTags { display: none; }
+  .abt3Text {
+    padding: 36px 24px 48px;
     text-align: center;
   }
-  .abt2Tag { justify-content: center; }
-  .abt2Body { max-width: 480px; }
-  .abt2Badges { justify-content: center; }
-
-  .abt2CenterCol { order: -1; }
-
-  .abt2Portal { width: 280px; height: 320px; }
-  .abt2Photo { width: 270px; }
-  .abt2PortalGlow { width: 260px; height: 130px; }
-
-  .abt2RightCol {
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    gap: 0;
-    width: 100%;
+  .abt3Label   { justify-content: center; }
+  .abt3Name    { align-items: center; }
+  .abt3Bio     { margin-left: auto; margin-right: auto; }
+  .abt3Stats   { justify-content: center; }
+  .abt3Badges  { justify-content: center; }
+  .abt3TextBg  {
+    mask-image: none;
+    -webkit-mask-image: none;
   }
-  .abt2Stat {
-    flex: 1;
-    text-align: center;
-    padding: 20px 16px;
-    border-right: 1px solid rgba(122, 107, 255, 0.1);
-  }
-  .abt2Stat:last-child { border-right: none; }
-  .abt2StatDivider { display: none; }
-  .abt2StatLbl { font-size: 10px; }
 }
 
-@media (max-width: 560px) {
-  .abt2Ghost { opacity: 0.65; }
-  .abt2Portal { width: 240px; height: 280px; }
-  .abt2Photo { width: 228px; }
-  .abt2PortalGlow { width: 220px; height: 110px; }
+@media (max-width: 540px) {
+  .abt3Name   { font-size: 34px; }
+  .abt3Stat   { padding-right: 16px; margin-right: 16px; }
+  .abt3PhotoCol { min-height: 300px; }
 }
 
     </style>
@@ -469,73 +629,108 @@ body[data-theme="light"] .abt2BadgeLoc {
         <div class="mpMarqueeBlur" aria-hidden="true"></div>
       </div>
 
-      <!-- 3) ABOUT — Editorial / Portal layout -->
-      <section id="about" class="section abt2Section">
+      <!-- 3) ABOUT -->
+      <section id="about" class="section abt3Sec">
 
-        <!-- Ghost name text (full viewport width, behind everything) -->
-        <div class="abt2Ghost" aria-hidden="true">
-          <span class="abt2GhostLine">MAURITS</span>
-          <span class="abt2GhostLine">PUGGAARD</span>
+        <!-- Scrolling text background (right half only, behind photo) -->
+        <div class="abt3TextBg" aria-hidden="true">
+          <div class="abt3TbRow"><div class="abt3TbInner">MAURITS -- <span class="abt3TbAccent">PUGGAARD</span> ------ SAP -- <span class="abt3TbAccent">BTP</span> -- FIORI ------ DEVELOPER -- <span class="abt3TbAccent">ODATA</span> -- CDS VIEWS ------ AI -- DENMARK -- MAURITS -- <span class="abt3TbAccent">PUGGAARD</span> ------ SAP -- <span class="abt3TbAccent">BTP</span> -- FIORI ------ DEVELOPER -- <span class="abt3TbAccent">ODATA</span> -- CDS VIEWS ------ AI -- DENMARK --</div></div>
+          <div class="abt3TbRow"><div class="abt3TbInner">SAP CONSULTANT ------ <span class="abt3TbAccent">FULL STACK</span> -- AI TOOLING ------ BUILDER -- <span class="abt3TbAccent">PROBLEM SOLVER</span> -- INNOVATOR ------ SAP CONSULTANT ------ <span class="abt3TbAccent">FULL STACK</span> -- AI TOOLING ------ BUILDER -- <span class="abt3TbAccent">PROBLEM SOLVER</span> -- INNOVATOR ------</div></div>
+          <div class="abt3TbRow"><div class="abt3TbInner">MAURITS -- FIORI ------ <span class="abt3TbAccent">SAP BTP</span> -- DEVELOPER ------ <span class="abt3TbAccent">CDS VIEWS</span> -- ODATA -- AI ------ PRECISION -- <span class="abt3TbAccent">DENMARK</span> -- MAURITS -- FIORI ------ <span class="abt3TbAccent">SAP BTP</span> -- DEVELOPER ------ <span class="abt3TbAccent">CDS VIEWS</span> -- ODATA -- AI ------ PRECISION -- <span class="abt3TbAccent">DENMARK</span> --</div></div>
+          <div class="abt3TbRow"><div class="abt3TbInner"><span class="abt3TbAccent">INNOVATOR</span> -- FULL STACK ------ SAP -- <span class="abt3TbAccent">AI TOOLING</span> -- BUILDER ------ CONSULTANT -- PROBLEM SOLVER -- <span class="abt3TbAccent">INNOVATOR</span> -- FULL STACK ------ SAP -- <span class="abt3TbAccent">AI TOOLING</span> -- BUILDER ------ CONSULTANT -- PROBLEM SOLVER --</div></div>
+          <div class="abt3TbRow"><div class="abt3TbInner">MAURITS -- <span class="abt3TbAccent">PUGGAARD</span> ------ SAP -- <span class="abt3TbAccent">BTP</span> -- FIORI ------ DEVELOPER -- <span class="abt3TbAccent">ODATA</span> -- CDS VIEWS ------ AI -- DENMARK -- MAURITS -- <span class="abt3TbAccent">PUGGAARD</span> ------ SAP -- <span class="abt3TbAccent">BTP</span> -- FIORI ------ DEVELOPER -- <span class="abt3TbAccent">ODATA</span> -- CDS VIEWS ------ AI -- DENMARK --</div></div>
+          <div class="abt3TbRow"><div class="abt3TbInner">SAP CONSULTANT ------ <span class="abt3TbAccent">FULL STACK</span> -- AI TOOLING ------ BUILDER -- <span class="abt3TbAccent">PROBLEM SOLVER</span> -- INNOVATOR ------ SAP CONSULTANT ------ <span class="abt3TbAccent">FULL STACK</span> -- AI TOOLING ------ BUILDER -- <span class="abt3TbAccent">PROBLEM SOLVER</span> -- INNOVATOR ------</div></div>
+          <div class="abt3TbRow"><div class="abt3TbInner">MAURITS -- FIORI ------ <span class="abt3TbAccent">SAP BTP</span> -- DEVELOPER ------ <span class="abt3TbAccent">CDS VIEWS</span> -- ODATA -- AI ------ PRECISION -- <span class="abt3TbAccent">DENMARK</span> -- MAURITS -- FIORI ------ <span class="abt3TbAccent">SAP BTP</span> -- DEVELOPER ------ <span class="abt3TbAccent">CDS VIEWS</span> -- ODATA -- AI ------ PRECISION -- <span class="abt3TbAccent">DENMARK</span> --</div></div>
+          <div class="abt3TbRow"><div class="abt3TbInner"><span class="abt3TbAccent">INNOVATOR</span> -- FULL STACK ------ SAP -- <span class="abt3TbAccent">AI TOOLING</span> -- BUILDER ------ CONSULTANT -- PROBLEM SOLVER -- <span class="abt3TbAccent">INNOVATOR</span> -- FULL STACK ------ SAP -- <span class="abt3TbAccent">AI TOOLING</span> -- BUILDER ------ CONSULTANT -- PROBLEM SOLVER --</div></div>
+          <div class="abt3TbRow"><div class="abt3TbInner">MAURITS -- <span class="abt3TbAccent">PUGGAARD</span> ------ SAP -- <span class="abt3TbAccent">BTP</span> -- FIORI ------ DEVELOPER -- <span class="abt3TbAccent">ODATA</span> -- CDS VIEWS ------ AI -- DENMARK -- MAURITS -- <span class="abt3TbAccent">PUGGAARD</span> ------ SAP -- <span class="abt3TbAccent">BTP</span> -- FIORI ------ DEVELOPER -- <span class="abt3TbAccent">ODATA</span> -- CDS VIEWS ------ AI -- DENMARK --</div></div>
+          <div class="abt3TbRow"><div class="abt3TbInner">SAP CONSULTANT ------ <span class="abt3TbAccent">FULL STACK</span> -- AI TOOLING ------ BUILDER -- <span class="abt3TbAccent">PROBLEM SOLVER</span> -- INNOVATOR ------ SAP CONSULTANT ------ <span class="abt3TbAccent">FULL STACK</span> -- AI TOOLING ------ BUILDER -- <span class="abt3TbAccent">PROBLEM SOLVER</span> -- INNOVATOR ------</div></div>
+          <div class="abt3TbRow"><div class="abt3TbInner">MAURITS &nbsp;·&nbsp; FIORI &nbsp;·&nbsp; <span class="abt3TbAccent">SAP BTP</span> &nbsp;·&nbsp; DEVELOPER &nbsp;·&nbsp; <span class="abt3TbAccent">CDS VIEWS</span> &nbsp;·&nbsp; ODATA &nbsp;·&nbsp; AI &nbsp;·&nbsp; PRECISION &nbsp;·&nbsp; <span class="abt3TbAccent">DENMARK</span> &nbsp;·&nbsp; MAURITS &nbsp;·&nbsp; FIORI &nbsp;·&nbsp; <span class="abt3TbAccent">SAP BTP</span> &nbsp;·&nbsp; DEVELOPER &nbsp;·&nbsp; <span class="abt3TbAccent">CDS VIEWS</span> &nbsp;·&nbsp; ODATA &nbsp;·&nbsp; AI &nbsp;·&nbsp; PRECISION &nbsp;·&nbsp; <span class="abt3TbAccent">DENMARK</span> &nbsp;·&nbsp;</div></div>
         </div>
 
-        <!-- Three-column layout -->
-        <div class="abt2Layout">
+        <!-- Ambient glows -->
+        <div class="abt3GlowR" aria-hidden="true"></div>
+        <div class="abt3GlowL" aria-hidden="true"></div>
 
-          <!-- Col 1 — identity -->
-          <div class="abt2LeftCol">
-            <div class="abt2Tag">
-              <span class="abt2TagLine"></span>
-              About
+        <!-- Inner grid -->
+        <div class="abt3Inner">
+
+          <!-- LEFT: Text -->
+          <div class="abt3Text">
+            <div class="abt3Label">About</div>
+            <div class="abt3Greeting">Hi, I'm</div>
+            <h2 class="abt3Name">
+              Maurits
+              <span class="abt3NameL2">Puggaard.</span>
+            </h2>
+            <div class="abt3Role">SAP Technical Consultant &amp; Developer</div>
+
+            <p class="abt3Bio">
+              I connect business needs with technology — building practical digital solutions using SAP BTP, Fiori, OData, and CDS Views. Genuinely excited about AI-driven tooling and user-focused solutions that create real, lasting value.
+            </p>
+
+            <div class="abt3Stats">
+              <div class="abt3Stat">
+                <div class="abt3StatNum">
+                  <span class="abt3StatN abtStatN" data-to="2">0</span>
+                  <span class="abt3StatSup">+</span>
+                </div>
+                <div class="abt3StatLbl">Years SAP</div>
+              </div>
+              <div class="abt3Stat">
+                <div class="abt3StatNum">
+                  <span class="abt3StatN abtStatN" data-to="15">0</span>
+                  <span class="abt3StatSup">+</span>
+                </div>
+                <div class="abt3StatLbl">Projects</div>
+              </div>
+              <div class="abt3Stat">
+                <div class="abt3StatNum">
+                  <span class="abt3StatN abtStatN" data-to="3">0</span>
+                </div>
+                <div class="abt3StatLbl">Domains</div>
+              </div>
             </div>
-            <h2 class="abt2Title">SAP<br>Consultant<br>&amp; Developer</h2>
-            <p class="abt2Body">Building things that actually work — from enterprise SAP systems to modern web tools. Precision, clarity, and solutions that last.</p>
-            <div class="abt2Badges">
-              <span class="abt2BadgeAvail">
-                <span class="abt2BadgeDot"></span>
+
+            <div class="abt3Badges">
+              <div class="abt3BadgeAvail">
+                <span class="abt3AvailDot"></span>
                 Available
-              </span>
-              <span class="abt2BadgeLoc">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                Denmark
-              </span>
+              </div>
+              <div class="abt3BadgeLoc">🇩🇰 Denmark</div>
             </div>
           </div>
 
-          <!-- Col 2 — portal photo -->
-          <div class="abt2CenterCol">
-            <div class="abt2Portal">
-              <div class="abt2PortalGlow" aria-hidden="true"></div>
-              <img class="abt2Photo" src="assets/me-cutout.webp" alt="Maurits Puggaard" loading="eager" decoding="async" />
+          <!-- RIGHT: Photo pop-out -->
+          <div class="abt3PhotoCol">
+            <div class="abt3RingOuter" aria-hidden="true"></div>
+            <div class="abt3RingInner" aria-hidden="true"></div>
+            <div class="abt3PhotoCircle" aria-hidden="true"></div>
+
+            <!-- Head + upper body above the circle -->
+            <img class="abt3PhotoImg abt3PhotoTop"
+              src="assets/me-cutout.webp"
+              alt="Maurits Puggaard"
+              loading="eager" decoding="async" />
+            <!-- Body within the circle -->
+            <img class="abt3PhotoImg abt3PhotoBody"
+              src="assets/me-cutout.webp"
+              alt="" aria-hidden="true"
+              loading="eager" decoding="async" />
+
+            <!-- Floating info cards -->
+            <div class="abt3FCard abt3FCardLoc">
+              <span class="abt3LocDot"></span>
+              <span class="abt3LocText">Denmark</span>
+            </div>
+            <div class="abt3FCard abt3FCardTags">
+              <div class="abt3TagRow">SAP BTP · Fiori</div>
+              <div class="abt3TagRow">OData · CDS Views</div>
             </div>
           </div>
 
-          <!-- Col 3 — stats -->
-          <div class="abt2RightCol">
-            <div class="abt2Stat">
-              <div class="abt2StatVal">
-                <span class="abt2StatN abtStatN" data-to="2">0</span>
-                <span class="abt2StatSuf">+</span>
-              </div>
-              <div class="abt2StatLbl">Years SAP</div>
-            </div>
-            <div class="abt2StatDivider"></div>
-            <div class="abt2Stat">
-              <div class="abt2StatVal">
-                <span class="abt2StatN abtStatN" data-to="15">0</span>
-                <span class="abt2StatSuf">+</span>
-              </div>
-              <div class="abt2StatLbl">Projects</div>
-            </div>
-            <div class="abt2StatDivider"></div>
-            <div class="abt2Stat">
-              <div class="abt2StatVal">
-                <span class="abt2StatN abtStatN" data-to="3">0</span>
-              </div>
-              <div class="abt2StatLbl">Domains</div>
-            </div>
-          </div>
+        </div><!-- /.abt3Inner -->
 
-        </div><!-- /.abt2Layout -->
+        <div class="abt3BottomFade" aria-hidden="true"></div>
       </section>
 
 
