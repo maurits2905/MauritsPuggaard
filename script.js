@@ -2545,6 +2545,15 @@ function initAboutTabs() {
 }
 
 function initAboutStats() {
+  // Auto-compute years for any stat with data-since="YYYY-MM"
+  document.querySelectorAll('.abtStatN[data-since]').forEach(el => {
+    const [y, m] = el.dataset.since.split('-').map(Number);
+    const yrs = Math.max(1, Math.floor(
+      (Date.now() - new Date(y, m - 1, 1)) / (365.25 * 24 * 3600 * 1e3)
+    ));
+    el.dataset.to = yrs;
+  });
+
   const nums = document.querySelectorAll('.abtStatN');
   if (!nums.length) return;
 
