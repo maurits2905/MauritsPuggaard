@@ -3414,28 +3414,57 @@ function initCodeAiBridge() {
 
   /* ── Config ── */
   const CHARS     = "01{}[]<>/\\|;:.#@!$%^&*()=+-_~`";
-  const COL_GAP   = 22;    // px between column centers
-  const CHAR_H    = 17;    // vertical step per trail char
+  const HC        = 18;    // heat-map cell size (matches tech section exactly)
+  const COL_GAP   = 22;    // matrix-rain column spacing
+  const CHAR_H    = 17;    // vertical step per rain char
   const TRAIL_MAX = 18;    // trail length in characters
 
   let W = 0, H = 0;
-  let columns = [];
-  let streams  = [];
+  let heatGrid = [];        // ambient heat-map (top zone — matches tech section)
+  let heatCols = 0, heatRows = 0;
+  let columns  = [];        // matrix-rain columns (blend zone + lower top)
+  let streams  = [];        // fan-out bezier streams (bottom half)
   let t        = 0;
   let rafId    = null;
   let running  = false;
 
   /* Compile scanline: exactly halfway down */
   const cy = () => H * 0.50;
+  /* Heat map covers the top 48 % — matrix rain blends in from 0 % to 42 % */
+  const HEAT_ZONE = 0.48;
+  const RAIN_FADE_END = 0.42;   // matrix rain reaches full alpha by this yFrac
+
+  /* ── Heat-map grid (identical formula to initTechHeatmap) ── */
+  function buildHeatGrid() {
+    const topH = Math.round(H * HEAT_ZONE);
+    heatCols = Math.ceil(W / HC) + 1;
+    heatRows = Math.ceil(topH / HC) + 1;
+    heatGrid = [];
+    for (let r = 0; r < heatRows; r++) {
+      heatGrid[r] = [];
+      for (let c = 0; c < heatCols; c++) {
+        heatGrid[r][c] = {
+          ch:    CHARS[Math.floor(Math.random() * CHARS.length)],
+          phase: Math.random() * Math.PI * 2,
+          speed: 0.4 + Math.random() * 0.8,
+          tick:  Math.random() * 3,
+        };
+      }
+    }
+  }
 
   /* ── Matrix-rain columns ── */
   function buildColumns() {
     columns = [];
+    const compY = cy();
     const nCols = Math.ceil(W / COL_GAP) + 2;
     for (let i = 0; i < nCols; i++) {
       const startX = i * COL_GAP;
-      /* Stagger initial Y so columns arrive at different times */
-      const headY  = -(Math.random() * H * 0.8 + TRAIL_MAX * CHAR_H);
+      /* FIX: distribute heads throughout the visible zone so bridge is
+         populated immediately when scrolled into view.
+         Range: -(TRAIL_MAX*CHAR_H) to +compY — covers from "all-trail-above-canvas"
+         to "head already halfway down".                                        */
+      const headY  = -TRAIL_MAX * CHAR_H + Math.random() * (TRAIL_MAX * CHAR_H + compY);
       const trail  = Array.from({ length: TRAIL_MAX },
                        () => CHARS[Math.floor(Math.random() * CHARS.length)]);
       columns.push({
@@ -3494,6 +3523,7 @@ function initCodeAiBridge() {
     H = bridge.offsetHeight;
     canvas.width  = W;
     canvas.height = H;
+    buildHeatGrid();
     buildColumns();
     buildStreams();
   }
@@ -3511,28 +3541,87 @@ function initCodeAiBridge() {
     const compY = cy();
 
     /* ═══════════════════════════════════════════════
-       1.  MATRIX RAIN  (top half, funnel toward centre)
-       Each column falls independently.  As chars descend
-       they shift X toward W/2 (convergence) and edge
-       columns fade out (funnel silhouette).
+       1.  AMBIENT HEAT-MAP  (top zone, 0 → HEAT_ZONE)
+       Identical formula and colour-map to initTechHeatmap().
+       Starts at full alpha at y=0 (matching tech section),
+       fades to zero by y = HEAT_ZONE * H.
+       Creates visual continuity with the section above.
     ═══════════════════════════════════════════════ */
-    ctx.font         = `${CHAR_H - 2}px "JetBrains Mono", ui-monospace, monospace`;
+    ctx.font         = `${HC - 4}px "JetBrains Mono", ui-monospace, monospace`;
     ctx.textBaseline = 'top';
 
+    for (let r = 0; r < heatRows; r++) {
+      for (let c = 0; c < heatCols; c++) {
+        const cell = heatGrid[r][c];
+        const nx   = c / heatCols;
+        const ny   = r / heatRows;
+
+        /* Same heat formula as tech section */
+        const h = (
+          Math.sin(nx * 3.2 + t * 0.38 + Math.sin(ny * 2.5 + t * 0.22)) * 0.5 +
+          Math.cos(ny * 2.8 + t * 0.28 + Math.cos(nx * 4.2 - t * 0.18)) * 0.5 +
+          Math.sin((nx + ny) * 1.9 + t * 0.52) * 0.25
+        ) / 1.25;
+
+        const v = (h + 1) * 0.5;
+        if (v < 0.18) continue;
+
+        const baseY  = r * HC;
+        const yFrac  = baseY / (H * HEAT_ZONE);  // 0 at top → 1 at HEAT_ZONE*H
+
+        /* Fade out toward the bottom of the heat zone */
+        const heatFade = Math.max(0, 1 - yFrac * yFrac);   // ease-out
+        if (heatFade < 0.01) continue;
+
+        let rC, gC, bC, baseAlpha;
+        if (v < 0.42) {
+          baseAlpha = (v - 0.18) / 0.24 * 0.13;
+          rC = 155; gC = 140; bC = 255;
+        } else if (v < 0.68) {
+          const f = (v - 0.42) / 0.26;
+          baseAlpha = 0.13 + f * 0.38;
+          rC = 155; gC = 140; bC = 255;
+        } else {
+          const f  = (v - 0.68) / 0.32;
+          baseAlpha = 0.51 + f * 0.32;
+          rC = Math.round(155 + (68  - 155) * f);
+          gC = Math.round(140 + (240 - 140) * f);
+          bC = Math.round(255 + (177 - 255) * f);
+        }
+
+        const alpha = baseAlpha * heatFade;
+        if (alpha < 0.005) continue;
+        ctx.fillStyle = `rgba(${rC},${gC},${bC},${alpha.toFixed(3)})`;
+        ctx.fillText(cell.ch, c * HC, baseY);
+
+        cell.tick += 0.016 * cell.speed;
+        if (v > 0.55 && cell.tick > (2.4 - v * 1.6)) {
+          cell.ch  = CHARS[Math.floor(Math.random() * CHARS.length)];
+          cell.tick = 0;
+        }
+      }
+    }
+
+    /* ═══════════════════════════════════════════════
+       2.  MATRIX RAIN  (blends in over top zone, then full)
+       Columns are always moving; alpha ramps from 0 at y=0
+       to full at y = RAIN_FADE_END * H, then convergence
+       funnel takes effect in the last stretch to compY.
+    ═══════════════════════════════════════════════ */
+    ctx.font = `${CHAR_H - 2}px "JetBrains Mono", ui-monospace, monospace`;
+
     for (const col of columns) {
-      /* Advance head */
       col.headY    += col.speed;
       col.frameIdx += 1;
 
-      /* Cycle head character */
       if (col.frameIdx >= col.cycleEvery) {
         col.trail[0] = CHARS[Math.floor(Math.random() * CHARS.length)];
         col.frameIdx = 0;
       }
 
-      /* Reset column when head clears past compile line */
+      /* Reset: spread new head over a wide range so density is maintained */
       if (col.headY > compY + CHAR_H * 2) {
-        col.headY    = -(TRAIL_MAX * CHAR_H + Math.random() * H * 0.5);
+        col.headY    = -(TRAIL_MAX * CHAR_H + Math.random() * H * 0.3);
         col.speed    = 1.2 + Math.random() * 1.8;
         col.cycleEvery = 4 + Math.floor(Math.random() * 7);
         for (let j = 0; j < TRAIL_MAX; j++) {
@@ -3540,36 +3629,30 @@ function initCodeAiBridge() {
         }
       }
 
-      /* Draw trail (i=0 is head, i=TRAIL_MAX−1 is oldest) */
       for (let i = 0; i < TRAIL_MAX; i++) {
         const charY = col.headY - i * CHAR_H;
-
-        /* Skip chars outside the top-half zone */
         if (charY < -CHAR_H || charY > compY + 2) continue;
 
         const yFrac = Math.max(0, Math.min(1, charY / compY));
 
-        /* ─ Convergence ─
-           Ease-in: columns drift toward W/2 as they approach the line.
-           Max shift: 45% of the distance to centre. */
-        const convFrac = yFrac * yFrac;                                // ease-in
+        /* Rain fades IN over the top zone (blending with heat map) */
+        const rainFadeIn = Math.min(1, yFrac / RAIN_FADE_END);
+
+        /* Convergence toward compile line */
+        const convFrac = yFrac * yFrac;
         const displayX = col.startX + (W / 2 - col.startX) * convFrac * 0.45;
 
-        /* ─ Edge fade ─
-           Columns far from centre ghost out as they converge,
-           creating a funnel silhouette. */
-        const xNorm    = Math.abs(col.startX / W - 0.5) * 2;          // 0=centre, 1=edge
-        const edgeFade = Math.max(0, 1 - xNorm * convFrac * 0.90);
+        /* Edge fade creates funnel silhouette */
+        const xNorm    = Math.abs(col.startX / W - 0.5) * 2;
+        const edgeFade = Math.max(0, 1 - xNorm * convFrac * 0.88);
         if (edgeFade < 0.01) continue;
 
-        /* Trail alpha: head is bright, tail fades */
-        const trailAlpha = (1 - i / TRAIL_MAX) * 0.72;
-        const finalAlpha = trailAlpha * edgeFade;
+        const trailAlpha = (1 - i / TRAIL_MAX) * 0.70;
+        const finalAlpha = trailAlpha * edgeFade * rainFadeIn;
         if (finalAlpha < 0.015) continue;
 
-        /* Colour: head = bright teal-white, near-head = teal, trail = purple */
         if (i === 0) {
-          ctx.fillStyle = `rgba(210,255,245,${Math.min(1, finalAlpha * 1.35).toFixed(3)})`;
+          ctx.fillStyle = `rgba(215,255,248,${Math.min(1, finalAlpha * 1.4).toFixed(3)})`;
         } else if (i < 4) {
           ctx.fillStyle = `rgba(100,220,200,${finalAlpha.toFixed(3)})`;
         } else {

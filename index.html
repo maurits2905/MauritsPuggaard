@@ -500,22 +500,24 @@
    TECH → AI COMPILE BRIDGE  (v2)
    ═══════════════════════════════════════════════════ */
 
-/* Fade the bottom of the tech section so glyphs dissolve cleanly */
+/* Fade the VERY bottom of the tech section — keep it short so the
+   bridge heat-map picks up with minimal dark gap */
 .techBottomFade {
   position: absolute;
   bottom: 0; left: 0; right: 0;
-  height: 90px;
+  height: 60px;
   background: linear-gradient(to bottom, transparent 0%, #06070f 100%);
   pointer-events: none;
   z-index: 2;
 }
 
-/* Bridge container: 360px gives room for the funnel narrative */
+/* Bridge container: 400px — top half morphs from heat-map → rain,
+   bottom half fans out bezier streams toward AI panel */
 .codeAiBridge {
   position: relative;
   width: 100vw;
   margin-left: calc(50% - 50vw);
-  height: 360px;
+  height: 400px;
   background: #06070f;
   overflow: hidden;
 }
