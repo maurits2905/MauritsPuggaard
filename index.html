@@ -165,27 +165,16 @@
   opacity: 0.7;
 }
 
-.abt3Greeting {
-  font-family: 'DM Sans', 'Inter', sans-serif;
-  font-size: 17px;
-  font-weight: 300;
-  color: var(--muted, rgba(240,239,248,0.4));
-  margin-bottom: 5px;
-  letter-spacing: 0.02em;
-}
-
-.abt3Name {
+.abt3Headline {
   font-family: 'Syne', 'Inter', sans-serif;
-  font-size: clamp(38px, 4.8vw, 56px);
+  font-size: clamp(28px, 3.5vw, 48px);
   font-weight: 800;
   color: var(--text, #f0eff8);
-  line-height: 0.95;
+  line-height: 1.1;
   letter-spacing: -0.03em;
-  margin-bottom: 10px;
-  display: flex;
-  flex-direction: column;
+  margin-bottom: 14px;
 }
-.abt3NameL2 { color: var(--accent, #7a6bff); }
+.abt3HeadlineAccent { color: var(--accent, #7a6bff); }
 
 .abt3Role {
   font-family: 'DM Sans', 'Inter', sans-serif;
@@ -489,7 +478,7 @@
     text-align: center;
   }
   .abt3Label   { justify-content: center; }
-  .abt3Name    { align-items: center; }
+  .abt3Headline { text-align: center; }
   .abt3Bio     { margin-left: auto; margin-right: auto; }
   .abt3Stats   { justify-content: center; }
   .abt3Badges  { justify-content: center; }
@@ -500,7 +489,7 @@
 }
 
 @media (max-width: 540px) {
-  .abt3Name   { font-size: 34px; }
+  .abt3Headline { font-size: 26px; }
   .abt3Stat   { padding-right: 16px; margin-right: 16px; }
   .abt3PhotoCol { min-height: 300px; }
 }
@@ -657,10 +646,10 @@
           <!-- LEFT: Text -->
           <div class="abt3Text">
             <div class="abt3Label">About</div>
-            <div class="abt3Greeting">Hi, I'm</div>
-            <h2 class="abt3Name">
-              Maurits
-              <span class="abt3NameL2">Puggaard.</span>
+            <h2 class="abt3Headline">
+              Building bridges<br>
+              between business<br>
+              <span class="abt3HeadlineAccent">and technology.</span>
             </h2>
             <div class="abt3Role">SAP Technical Consultant &amp; Developer</div>
 
