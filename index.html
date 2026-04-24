@@ -511,13 +511,13 @@
   z-index: 2;
 }
 
-/* Bridge container: 400px — top half morphs from heat-map → rain,
-   bottom half fans out bezier streams toward AI panel */
+/* Bridge container: 310px — tight enough to feel intentional,
+   tall enough for the heat-map → rain → compile → streams sequence */
 .codeAiBridge {
   position: relative;
   width: 100vw;
   margin-left: calc(50% - 50vw);
-  height: 400px;
+  height: 310px;
   background: #06070f;
   overflow: hidden;
 }
@@ -602,7 +602,7 @@
 
 /* Compensate for the bridge adding vertical space */
 .ask-reveal {
-  padding-top: clamp(48px, 6svh, 80px) !important;
+  padding-top: clamp(32px, 4svh, 52px) !important;
 }
 
     </style>

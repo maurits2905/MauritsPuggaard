@@ -3431,8 +3431,8 @@ function initCodeAiBridge() {
   /* Compile scanline: exactly halfway down */
   const cy = () => H * 0.50;
   /* Heat map covers the top 48 % — matrix rain blends in from 0 % to 42 % */
-  const HEAT_ZONE = 0.48;
-  const RAIN_FADE_END = 0.42;   // matrix rain reaches full alpha by this yFrac
+  const HEAT_ZONE     = 0.50;   // heat-map covers top 50% of bridge
+  const RAIN_FADE_END = 0.48;   // matrix rain only reaches full alpha just before compile line
 
   /* ── Heat-map grid (identical formula to initTechHeatmap) ── */
   function buildHeatGrid() {
@@ -3470,7 +3470,7 @@ function initCodeAiBridge() {
       columns.push({
         startX,
         headY,
-        speed:        1.2 + Math.random() * 1.8,   // px per frame
+        speed:        0.9 + Math.random() * 1.4,   // px per frame — slower = more ambient
         trail,
         cycleTimer:   0,
         cycleEvery:   4 + Math.floor(Math.random() * 7),  // frames between char swap
@@ -3573,17 +3573,20 @@ function initCodeAiBridge() {
         const heatFade = Math.max(0, 1 - yFrac * yFrac);   // ease-out
         if (heatFade < 0.01) continue;
 
+        /* Boost alphas ~25% vs raw tech-section values so the bridge
+           heat map matches the perceived brightness of the tech canvas
+           (which sits on a slightly lighter rendered background). */
         let rC, gC, bC, baseAlpha;
         if (v < 0.42) {
-          baseAlpha = (v - 0.18) / 0.24 * 0.13;
+          baseAlpha = (v - 0.18) / 0.24 * 0.17;
           rC = 155; gC = 140; bC = 255;
         } else if (v < 0.68) {
           const f = (v - 0.42) / 0.26;
-          baseAlpha = 0.13 + f * 0.38;
+          baseAlpha = 0.17 + f * 0.44;
           rC = 155; gC = 140; bC = 255;
         } else {
           const f  = (v - 0.68) / 0.32;
-          baseAlpha = 0.51 + f * 0.32;
+          baseAlpha = 0.61 + f * 0.35;
           rC = Math.round(155 + (68  - 155) * f);
           gC = Math.round(140 + (240 - 140) * f);
           bC = Math.round(255 + (177 - 255) * f);
@@ -3622,7 +3625,7 @@ function initCodeAiBridge() {
       /* Reset: spread new head over a wide range so density is maintained */
       if (col.headY > compY + CHAR_H * 2) {
         col.headY    = -(TRAIL_MAX * CHAR_H + Math.random() * H * 0.3);
-        col.speed    = 1.2 + Math.random() * 1.8;
+        col.speed    = 0.9 + Math.random() * 1.4;
         col.cycleEvery = 4 + Math.floor(Math.random() * 7);
         for (let j = 0; j < TRAIL_MAX; j++) {
           col.trail[j] = CHARS[Math.floor(Math.random() * CHARS.length)];
@@ -3647,7 +3650,8 @@ function initCodeAiBridge() {
         const edgeFade = Math.max(0, 1 - xNorm * convFrac * 0.88);
         if (edgeFade < 0.01) continue;
 
-        const trailAlpha = (1 - i / TRAIL_MAX) * 0.70;
+        /* Slightly softer trail so rain doesn't overpower heat map in the blend zone */
+        const trailAlpha = (1 - i / TRAIL_MAX) * 0.62;
         const finalAlpha = trailAlpha * edgeFade * rainFadeIn;
         if (finalAlpha < 0.015) continue;
 
