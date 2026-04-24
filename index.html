@@ -173,53 +173,50 @@
 .abt3HLWord {
   display: block;
   font-family: 'Syne', 'Inter', sans-serif;
-  font-size: clamp(42px, 5.8vw, 76px);
+  font-size: clamp(44px, 5.8vw, 72px);
   font-weight: 800;
   color: var(--text, #f0eff8);
   letter-spacing: -0.04em;
   line-height: 1;
 }
-/* "business" — Playfair Display italic, slightly muted */
+/* "business" — Playfair Display italic, optically matched to Syne */
 .abt3HLItalic {
   display: block;
   font-family: 'Playfair Display', Georgia, serif;
-  font-size: clamp(38px, 5.3vw, 70px);
+  font-size: clamp(46px, 6.1vw, 78px);
   font-weight: 400;
   font-style: italic;
-  color: rgba(240,239,248,0.65);
+  color: rgba(240,239,248,0.72);
   letter-spacing: -0.01em;
-  line-height: 1.1;
+  line-height: 1.05;
 }
-/* "meets [code_]" row — flex so the badge aligns */
+/* "meets [code_]" row */
 .abt3HLMeets {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
   font-family: 'Syne', 'Inter', sans-serif;
-  font-size: clamp(42px, 5.8vw, 76px);
+  font-size: clamp(44px, 5.8vw, 72px);
   font-weight: 800;
   color: var(--text, #f0eff8);
   letter-spacing: -0.04em;
   line-height: 1.15;
 }
-/* Code chip */
+/* Code chip — proportional to line height */
 .abt3HLCode {
   display: inline-flex;
   align-items: center;
   font-family: 'DM Mono', 'Courier New', monospace;
-  font-size: clamp(15px, 1.9vw, 26px);
+  font-size: clamp(20px, 2.6vw, 36px);
   font-weight: 400;
   font-style: normal;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   color: var(--accent, #7a6bff);
   background: rgba(122,107,255,0.1);
-  border: 1px solid rgba(122,107,255,0.3);
-  border-radius: 6px;
-  padding: 5px 14px 5px 12px;
+  border: 1px solid rgba(122,107,255,0.32);
+  border-radius: 8px;
+  padding: 8px 18px;
   line-height: 1;
-  vertical-align: middle;
-  position: relative;
-  top: -2px;
 }
 /* Blinking cursor */
 .abt3HLCursor {
@@ -545,9 +542,10 @@
 }
 
 @media (max-width: 540px) {
-  .abt3HLWord   { font-size: 36px; }
-  .abt3HLItalic { font-size: 33px; }
-  .abt3HLMeets  { font-size: 36px; }
+  .abt3HLWord   { font-size: 38px; }
+  .abt3HLItalic { font-size: 40px; }
+  .abt3HLMeets  { font-size: 38px; gap: 12px; }
+  .abt3HLCode   { font-size: 18px; padding: 6px 14px; }
   .abt3Stat   { padding-right: 16px; margin-right: 16px; }
   .abt3PhotoCol { min-height: 300px; }
 }
