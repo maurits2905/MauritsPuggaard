@@ -359,29 +359,24 @@
   clip-path: inset(-160px -12px 0 0);
 }
 
-/* Outer spinning dashed ring */
-.abt3RingOuter {
+/* Outer ring — slow-spinning SVG keyword arc */
+.abt3ArcText {
   position: absolute;
   bottom: 14px;
-  left: 50%; transform: translateX(-50%);
-  width: min(300px, 44vh); height: min(300px, 44vh);
-  border-radius: 50%;
-  border: 1px dashed rgba(122,107,255,0.22);
-  animation: abt3Spin 28s linear infinite;
+  left: 50%;
+  width: min(308px, 45vh);
+  height: min(308px, 45vh);
+  overflow: visible;
   pointer-events: none;
   z-index: 1;
+  animation: abt3Spin 50s linear infinite;
 }
-.abt3RingOuter::before,
-.abt3RingOuter::after {
-  content: '';
-  position: absolute;
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: var(--accent, #7a6bff);
-  box-shadow: 0 0 12px rgba(122,107,255,0.6);
+.abt3ArcText text {
+  fill: rgba(122,107,255,0.45);
+  font-family: 'DM Mono', 'Courier New', monospace;
+  font-size: 11px;
+  letter-spacing: 0.18em;
 }
-.abt3RingOuter::before { top: -4px;    left: 50%; transform: translateX(-50%); }
-.abt3RingOuter::after  { bottom: -4px; left: 50%; transform: translateX(-50%); }
 
 /* Inner counter-spinning ring */
 .abt3RingInner {
@@ -436,66 +431,6 @@
   filter: drop-shadow(0 0 50px rgba(48,35,160,0.6));
 }
 
-/* Floating glass cards */
-.abt3FCard {
-  position: absolute;
-  z-index: 5;
-  background: rgba(9,9,15,0.78);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 14px;
-}
-
-.abt3FCardLoc {
-  top: 130px; right: 0;
-  padding: 11px 16px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  animation: abt3FloatB 5s ease-in-out infinite;
-}
-.abt3LocDot {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: var(--accent, #7a6bff);
-  box-shadow: 0 0 10px rgba(122,107,255,0.6);
-  flex-shrink: 0;
-  animation: abt3Pulse 2s ease-in-out infinite;
-}
-.abt3LocText {
-  font-family: 'DM Sans', 'Inter', sans-serif;
-  font-size: 13px;
-  font-weight: 500;
-  color: rgba(240,239,248,0.72);
-  white-space: nowrap;
-}
-
-.abt3FCardTags {
-  top: 215px; right: -8px;
-  padding: 11px 15px;
-  animation: abt3FloatA 6s ease-in-out 0.8s infinite;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-.abt3TagRow {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-family: 'DM Mono', 'Courier New', monospace;
-  font-size: 10px;
-  letter-spacing: 0.05em;
-  color: rgba(170,155,255,0.85);
-}
-.abt3TagRow::before {
-  content: '';
-  width: 4px; height: 4px;
-  border-radius: 50%;
-  background: var(--accent, #7a6bff);
-  opacity: 0.7;
-  flex-shrink: 0;
-}
 
 /* ── Animations ── */
 @keyframes abt3Pulse {
@@ -535,8 +470,6 @@
     height: 400px;
     clip-path: none;
   }
-  .abt3FCardLoc,
-  .abt3FCardTags { display: none; }
   .abt3Text {
     padding: 36px 24px 48px;
     text-align: center;
@@ -764,7 +697,16 @@
           <div class="abt3PhotoCol">
             <!-- Fixed-size wrapper keeps composition centred in the column -->
             <div class="abt3PhotoWrap">
-              <div class="abt3RingOuter" aria-hidden="true"></div>
+              <!-- Orbiting keyword ring — replaces dashed ring + floating cards -->
+              <svg class="abt3ArcText" viewBox="0 0 308 308" aria-hidden="true">
+                <defs>
+                  <path id="abt3ArcPath"
+                    d="M 154 154 m -148 0 a 148 148 0 1 1 296 0 a 148 148 0 1 1 -296 0"/>
+                </defs>
+                <text>
+                  <textPath href="#abt3ArcPath" startOffset="0%">SAP BTP · FIORI · ODATA · CDS VIEWS · DENMARK · SAP BTP · FIORI · ODATA · CDS VIEWS · DENMARK · SAP BTP · FIORI · ODATA ·</textPath>
+                </text>
+              </svg>
               <div class="abt3RingInner" aria-hidden="true"></div>
               <div class="abt3PhotoCircle" aria-hidden="true"></div>
 
@@ -779,15 +721,6 @@
                 alt="" aria-hidden="true"
                 loading="eager" decoding="async" />
 
-              <!-- Floating info cards -->
-              <div class="abt3FCard abt3FCardLoc">
-                <span class="abt3LocDot"></span>
-                <span class="abt3LocText">Denmark</span>
-              </div>
-              <div class="abt3FCard abt3FCardTags">
-                <div class="abt3TagRow">SAP BTP · Fiori</div>
-                <div class="abt3TagRow">OData · CDS Views</div>
-              </div>
             </div><!-- /.abt3PhotoWrap -->
           </div>
 
