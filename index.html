@@ -338,17 +338,25 @@
 }
 
 /* ── Right: photo column ── */
+/* Column: pure flex centerer — no positioning logic here */
 .abt3PhotoCol {
-  position: relative;
-  height: 100%;
-  min-height: 540px;
   align-self: stretch;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
   z-index: 2;
   overflow: visible;
-  clip-path: inset(-120px 0 0 0);
+}
+
+/* Fixed-size wrapper: the coordinate system for all photo elements.
+   Center it inside the column → composition stays vertically centered
+   at any section height. clip-path lets the photo pop above. */
+.abt3PhotoWrap {
+  position: relative;
+  width: 360px;
+  height: 500px;
+  flex-shrink: 0;
+  clip-path: inset(-160px -12px 0 0);
 }
 
 /* Outer spinning dashed ring */
@@ -519,9 +527,13 @@
   }
   .abt3PhotoCol {
     order: -1;
-    min-height: 360px;
-    clip-path: none;
+    min-height: 420px;
     overflow: hidden;
+  }
+  .abt3PhotoWrap {
+    width: 300px;
+    height: 400px;
+    clip-path: none;
   }
   .abt3FCardLoc,
   .abt3FCardTags { display: none; }
@@ -547,7 +559,8 @@
   .abt3HLMeets  { font-size: 38px; gap: 12px; }
   .abt3HLCode   { font-size: 18px; padding: 6px 14px; }
   .abt3Stat   { padding-right: 16px; margin-right: 16px; }
-  .abt3PhotoCol { min-height: 300px; }
+  .abt3PhotoCol { min-height: 340px; }
+  .abt3PhotoWrap { width: 260px; height: 340px; }
 }
 
     </style>
@@ -749,30 +762,33 @@
 
           <!-- RIGHT: Photo pop-out -->
           <div class="abt3PhotoCol">
-            <div class="abt3RingOuter" aria-hidden="true"></div>
-            <div class="abt3RingInner" aria-hidden="true"></div>
-            <div class="abt3PhotoCircle" aria-hidden="true"></div>
+            <!-- Fixed-size wrapper keeps composition centred in the column -->
+            <div class="abt3PhotoWrap">
+              <div class="abt3RingOuter" aria-hidden="true"></div>
+              <div class="abt3RingInner" aria-hidden="true"></div>
+              <div class="abt3PhotoCircle" aria-hidden="true"></div>
 
-            <!-- Head + upper body above the circle -->
-            <img class="abt3PhotoImg abt3PhotoTop"
-              src="assets/me-cutout.webp"
-              alt="Maurits Puggaard"
-              loading="eager" decoding="async" />
-            <!-- Body within the circle -->
-            <img class="abt3PhotoImg abt3PhotoBody"
-              src="assets/me-cutout.webp"
-              alt="" aria-hidden="true"
-              loading="eager" decoding="async" />
+              <!-- Head + upper body above the circle -->
+              <img class="abt3PhotoImg abt3PhotoTop"
+                src="assets/me-cutout.webp"
+                alt="Maurits Puggaard"
+                loading="eager" decoding="async" />
+              <!-- Body within the circle -->
+              <img class="abt3PhotoImg abt3PhotoBody"
+                src="assets/me-cutout.webp"
+                alt="" aria-hidden="true"
+                loading="eager" decoding="async" />
 
-            <!-- Floating info cards -->
-            <div class="abt3FCard abt3FCardLoc">
-              <span class="abt3LocDot"></span>
-              <span class="abt3LocText">Denmark</span>
-            </div>
-            <div class="abt3FCard abt3FCardTags">
-              <div class="abt3TagRow">SAP BTP · Fiori</div>
-              <div class="abt3TagRow">OData · CDS Views</div>
-            </div>
+              <!-- Floating info cards -->
+              <div class="abt3FCard abt3FCardLoc">
+                <span class="abt3LocDot"></span>
+                <span class="abt3LocText">Denmark</span>
+              </div>
+              <div class="abt3FCard abt3FCardTags">
+                <div class="abt3TagRow">SAP BTP · Fiori</div>
+                <div class="abt3TagRow">OData · CDS Views</div>
+              </div>
+            </div><!-- /.abt3PhotoWrap -->
           </div>
 
         </div><!-- /.abt3Inner -->
