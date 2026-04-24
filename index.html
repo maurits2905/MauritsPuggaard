@@ -166,15 +166,30 @@
 }
 
 .abt3Headline {
+  margin-bottom: 16px;
+  line-height: 1;
+}
+/* Light lines — step back */
+.abt3HLLight {
+  display: block;
+  font-family: 'DM Sans', 'Inter', sans-serif;
+  font-size: clamp(26px, 3.3vw, 44px);
+  font-weight: 300;
+  color: rgba(240,239,248,0.38);
+  letter-spacing: 0.01em;
+  line-height: 1.25;
+}
+/* Bold line — steps forward */
+.abt3HLBold {
+  display: block;
   font-family: 'Syne', 'Inter', sans-serif;
-  font-size: clamp(28px, 3.5vw, 48px);
+  font-size: clamp(28px, 3.6vw, 50px);
   font-weight: 800;
   color: var(--text, #f0eff8);
-  line-height: 1.1;
   letter-spacing: -0.03em;
-  margin-bottom: 14px;
+  line-height: 1.05;
+  margin-top: 2px;
 }
-.abt3HeadlineAccent { color: var(--accent, #7a6bff); }
 
 .abt3Role {
   font-family: 'DM Sans', 'Inter', sans-serif;
@@ -479,6 +494,7 @@
   }
   .abt3Label   { justify-content: center; }
   .abt3Headline { text-align: center; }
+  .abt3HLLight, .abt3HLBold { display: block; }
   .abt3Bio     { margin-left: auto; margin-right: auto; }
   .abt3Stats   { justify-content: center; }
   .abt3Badges  { justify-content: center; }
@@ -489,7 +505,8 @@
 }
 
 @media (max-width: 540px) {
-  .abt3Headline { font-size: 26px; }
+  .abt3HLLight { font-size: 22px; }
+  .abt3HLBold  { font-size: 24px; }
   .abt3Stat   { padding-right: 16px; margin-right: 16px; }
   .abt3PhotoCol { min-height: 300px; }
 }
@@ -647,9 +664,8 @@
           <div class="abt3Text">
             <div class="abt3Label">About</div>
             <h2 class="abt3Headline">
-              Building bridges<br>
-              between business<br>
-              <span class="abt3HeadlineAccent">and technology.</span>
+              <span class="abt3HLLight">Building bridges<br>between business</span>
+              <span class="abt3HLBold">and technology.</span>
             </h2>
             <div class="abt3Role">SAP Technical Consultant &amp; Developer</div>
 
