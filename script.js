@@ -3400,6 +3400,267 @@ async function getIconMarkup(slug) {
   `;
 }
 
+/* ──────────────────────────────────────────────────────────────────────
+   Tech → AI Compile Bridge
+   Narrative:  code glyphs drain into a pulsing scanline (the "compile"
+   moment), then bezier data-streams emerge below — flowing straight
+   into the AI panel.  Visually bridges the two section backgrounds.
+   ────────────────────────────────────────────────────────────────────── */
+function initCodeAiBridge() {
+  const bridge = document.getElementById('codeAiBridge');
+  const canvas = document.getElementById('codeAiCanvas');
+  if (!bridge || !canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  const CHARS = "01{}[]<>/\\|;:.#@!$%^&*()=+-_~`";
+  const CELL  = 18;
+
+  let W = 0, H = 0;
+  let cols, rows, grid = [];
+  let streams = [];
+  let t       = 0;
+  let rafId   = null;
+  let running = false;
+
+  /* Compile line lives exactly at 50% height */
+  const getCompileY = () => H * 0.50;
+
+  /* ── Build code-glyph grid for the top half ── */
+  function buildGrid() {
+    const topH = Math.round(getCompileY());
+    cols = Math.ceil(W / CELL) + 1;
+    rows = Math.ceil(topH / CELL) + 1;
+    grid = [];
+    for (let r = 0; r < rows; r++) {
+      grid[r] = [];
+      for (let c = 0; c < cols; c++) {
+        grid[r][c] = {
+          ch:    CHARS[Math.floor(Math.random() * CHARS.length)],
+          phase: Math.random() * Math.PI * 2,
+          speed: 0.3 + Math.random() * 0.6,
+          tick:  Math.random() * 3,
+        };
+      }
+    }
+  }
+
+  /* ── Build bezier data-streams for the bottom half ── */
+  function buildStreams() {
+    streams = [];
+    const N  = 13;
+    const my = getCompileY();
+
+    for (let i = 0; i < N; i++) {
+      const frac = i / (N - 1);
+      /* Start: spread full width at the compile line */
+      const sx = W * 0.04 + frac * (W * 0.92);
+      /* End: slightly more centred (converging toward AI panel) */
+      const ex = W * 0.13 + frac * (W * 0.74);
+
+      const nP = 1 + (i % 3 === 0 ? 1 : 0);
+      const pulses = [];
+      for (let p = 0; p < nP; p++) {
+        pulses.push({
+          t:     (p / nP + Math.random() * 0.4) % 1,
+          speed: 0.0025 + Math.random() * 0.002,
+          size:  1.5 + Math.random() * 1.2,
+        });
+      }
+      streams.push({
+        p0: { x: sx, y: my },
+        p1: { x: sx, y: my + (H - my) * 0.32 },
+        p2: { x: ex, y: my + (H - my) * 0.68 },
+        p3: { x: ex, y: H  },
+        baseAlpha: 0.05 + Math.random() * 0.07,
+        pulses,
+      });
+    }
+  }
+
+  function resize() {
+    W = bridge.offsetWidth;
+    H = bridge.offsetHeight;
+    canvas.width  = W;
+    canvas.height = H;
+    buildGrid();
+    buildStreams();
+  }
+
+  /* Evaluate a cubic bezier at parameter u */
+  function cbPt(s, u) {
+    const mu = 1 - u, mu2 = mu * mu, mu3 = mu2 * mu, u2 = u * u, u3 = u2 * u;
+    return {
+      x: mu3*s.p0.x + 3*mu2*u*s.p1.x + 3*mu*u2*s.p2.x + u3*s.p3.x,
+      y: mu3*s.p0.y + 3*mu2*u*s.p1.y + 3*mu*u2*s.p2.y + u3*s.p3.y,
+    };
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    const my = getCompileY();
+
+    /* ──────────────────────────────────────
+       1. Code-glyph heat map  (top half)
+       Same visual language as initTechHeatmap — identical heat formula,
+       identical colour mapping.  Fades to nothing near the compile line.
+    ────────────────────────────────────── */
+    ctx.font         = `${CELL - 4}px "JetBrains Mono", ui-monospace, "Courier New", monospace`;
+    ctx.textBaseline = 'top';
+
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const cell = grid[r][c];
+        const nx   = c / cols;
+        const ny   = r / rows;
+
+        /* Heat value — exact same formula as tech section */
+        const h = (
+          Math.sin(nx * 3.2 + t * 0.38 + Math.sin(ny * 2.5 + t * 0.22)) * 0.5 +
+          Math.cos(ny * 2.8 + t * 0.28 + Math.cos(nx * 4.2 - t * 0.18)) * 0.5 +
+          Math.sin((nx + ny) * 1.9 + t * 0.52) * 0.25
+        ) / 1.25;
+
+        const v = (h + 1) * 0.5;
+        if (v < 0.18) continue;
+
+        const baseY  = r * CELL;
+        const yFrac  = baseY / my;   // 0 at top → 1 at compile line
+
+        /* Opacity envelope: hold full through 70% then rapid fade-out */
+        const envelope = yFrac < 0.7
+          ? 1.0
+          : Math.max(0, 1.0 - (yFrac - 0.7) / 0.3);
+
+        /* "Ingestion glow" — last 15% before compile line glows teal-hot */
+        const hotFactor = Math.max(0, (yFrac - 0.85) / 0.15);
+
+        let rC, gC, bC, alpha;
+        if (v < 0.42) {
+          alpha = (v - 0.18) / 0.24 * 0.13 * envelope + hotFactor * 0.20;
+          rC = 155; gC = 140; bC = 255;
+        } else if (v < 0.68) {
+          const f = (v - 0.42) / 0.26;
+          alpha = (0.13 + f * 0.38) * envelope + hotFactor * 0.32;
+          rC = 155; gC = 140; bC = 255;
+        } else {
+          const f = (v - 0.68) / 0.32;
+          alpha = (0.51 + f * 0.32) * envelope + hotFactor * 0.45;
+          const blend = Math.min(1, f + hotFactor * 0.8);
+          rC = Math.round(155 + (68  - 155) * blend);
+          gC = Math.round(140 + (240 - 140) * blend);
+          bC = Math.round(255 + (177 - 255) * blend);
+        }
+
+        if (alpha < 0.006) continue;
+        ctx.fillStyle = `rgba(${rC},${gC},${bC},${alpha.toFixed(3)})`;
+        ctx.fillText(cell.ch, c * CELL, baseY);
+
+        /* Cycle hotter cells faster */
+        cell.tick += 0.016 * cell.speed;
+        if (v > 0.55 && cell.tick > (2.4 - v * 1.6)) {
+          cell.ch  = CHARS[Math.floor(Math.random() * CHARS.length)];
+          cell.tick = 0;
+        }
+      }
+    }
+
+    /* ──────────────────────────────────────
+       2. Compile scanline at midY
+       A full-width gradient line that pulses
+       in brightness — the "compilation event".
+    ────────────────────────────────────── */
+    const pulse     = 0.5 + 0.5 * Math.sin(t * 2.9);
+    const lineAlpha = 0.28 + pulse * 0.38;
+
+    /* Soft ambient glow band */
+    const gg = ctx.createLinearGradient(0, my - 20, 0, my + 20);
+    gg.addColorStop(0,   'transparent');
+    gg.addColorStop(0.5, `rgba(80, 200, 190, ${(0.03 + pulse * 0.04).toFixed(3)})`);
+    gg.addColorStop(1,   'transparent');
+    ctx.fillStyle = gg;
+    ctx.fillRect(0, my - 20, W, 40);
+
+    /* The 1.5px line — brighter at centre, fades at edges */
+    const lg = ctx.createLinearGradient(0, 0, W, 0);
+    lg.addColorStop(0,    'transparent');
+    lg.addColorStop(0.08, `rgba(75,105,255,${(lineAlpha * 0.40).toFixed(3)})`);
+    lg.addColorStop(0.28, `rgba(100,220,200,${lineAlpha.toFixed(3)})`);
+    lg.addColorStop(0.50, `rgba(148,255,228,${(lineAlpha * 1.18).toFixed(3)})`);
+    lg.addColorStop(0.72, `rgba(100,220,200,${lineAlpha.toFixed(3)})`);
+    lg.addColorStop(0.92, `rgba(75,105,255,${(lineAlpha * 0.40).toFixed(3)})`);
+    lg.addColorStop(1,    'transparent');
+    ctx.fillStyle = lg;
+    ctx.fillRect(0, my - 0.75, W, 1.5);
+
+    /* ──────────────────────────────────────
+       3. Bezier data-streams  (bottom half)
+       Same style as initAskBg bezier curves —
+       teal→blue palette, travelling pulse dots.
+    ────────────────────────────────────── */
+    for (const s of streams) {
+      ctx.beginPath();
+      ctx.moveTo(s.p0.x, s.p0.y);
+      ctx.bezierCurveTo(s.p1.x, s.p1.y, s.p2.x, s.p2.y, s.p3.x, s.p3.y);
+
+      const sg = ctx.createLinearGradient(s.p0.x, s.p0.y, s.p3.x, s.p3.y);
+      sg.addColorStop(0,   `rgba(100,220,200,${(s.baseAlpha * 0.15).toFixed(3)})`);
+      sg.addColorStop(0.38,`rgba(100,220,200,${(s.baseAlpha * 0.85).toFixed(3)})`);
+      sg.addColorStop(1,   `rgba(75,105,255, ${s.baseAlpha.toFixed(3)})`);
+      ctx.strokeStyle = sg;
+      ctx.lineWidth   = 0.75;
+      ctx.stroke();
+
+      /* Travelling pulse dots — fade in as they descend */
+      for (const p of s.pulses) {
+        p.t = (p.t + p.speed) % 1;
+        const pt  = cbPt(s, p.t);
+        const yFr = (pt.y - my) / (H - my);   // 0 at compile line → 1 at bottom
+        const pA  = Math.max(0, yFr * 0.88);
+
+        const dg = ctx.createRadialGradient(pt.x, pt.y, 0, pt.x, pt.y, p.size * 3.5);
+        dg.addColorStop(0, `rgba(148, 235, 255, ${pA.toFixed(3)})`);
+        dg.addColorStop(1, 'transparent');
+        ctx.fillStyle = dg;
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, p.size * 3.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    t += 0.013;
+  }
+
+  function loop() { draw(); rafId = requestAnimationFrame(loop); }
+
+  function start() {
+    if (running) return;
+    running = true;
+    resize();
+    loop();
+  }
+  function stop() {
+    if (!running) return;
+    running = false;
+    cancelAnimationFrame(rafId);
+    rafId = null;
+  }
+
+  /* Start / stop with viewport visibility; also trigger label reveal */
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        start();
+        bridge.classList.add('caib-visible');
+      } else {
+        stop();
+      }
+    });
+  }, { threshold: 0.10 });
+  obs.observe(bridge);
+
+  window.addEventListener('resize', () => { if (running) { stop(); start(); } });
+}
+
 /* ----------------------------------------------------------
    Tech Stack — Heatmap canvas background
    Grid of code glyphs whose brightness flows with sine-wave
@@ -3534,6 +3795,7 @@ function initTechHeatmap() {
 
 // Kick off heatmap immediately (canvas is cheap until visible)
 initTechHeatmap();
+initCodeAiBridge();
 
 /* ----------------------------------------------------------
    Tech Stack — Terminal editor renderer
