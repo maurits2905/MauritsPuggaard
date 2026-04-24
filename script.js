@@ -3401,10 +3401,10 @@ async function getIconMarkup(slug) {
 }
 
 /* ──────────────────────────────────────────────────────────────────────
-   Tech → AI Compile Bridge
-   Narrative:  code glyphs drain into a pulsing scanline (the "compile"
-   moment), then bezier data-streams emerge below — flowing straight
-   into the AI panel.  Visually bridges the two section backgrounds.
+   Tech → AI Compile Bridge  (v2)
+   Narrative:  matrix-rain columns converge toward a compile scanline,
+   then fan-out bezier streams emerge below — flowing into the AI panel.
+   Single focal point: the compile chip HTML element at the scanline.
    ────────────────────────────────────────────────────────────────────── */
 function initCodeAiBridge() {
   const bridge = document.getElementById('codeAiBridge');
@@ -3412,66 +3412,78 @@ function initCodeAiBridge() {
   if (!bridge || !canvas) return;
   const ctx = canvas.getContext('2d');
 
-  const CHARS = "01{}[]<>/\\|;:.#@!$%^&*()=+-_~`";
-  const CELL  = 18;
+  /* ── Config ── */
+  const CHARS     = "01{}[]<>/\\|;:.#@!$%^&*()=+-_~`";
+  const COL_GAP   = 22;    // px between column centers
+  const CHAR_H    = 17;    // vertical step per trail char
+  const TRAIL_MAX = 18;    // trail length in characters
 
   let W = 0, H = 0;
-  let cols, rows, grid = [];
-  let streams = [];
-  let t       = 0;
-  let rafId   = null;
-  let running = false;
+  let columns = [];
+  let streams  = [];
+  let t        = 0;
+  let rafId    = null;
+  let running  = false;
 
-  /* Compile line lives exactly at 50% height */
-  const getCompileY = () => H * 0.50;
+  /* Compile scanline: exactly halfway down */
+  const cy = () => H * 0.50;
 
-  /* ── Build code-glyph grid for the top half ── */
-  function buildGrid() {
-    const topH = Math.round(getCompileY());
-    cols = Math.ceil(W / CELL) + 1;
-    rows = Math.ceil(topH / CELL) + 1;
-    grid = [];
-    for (let r = 0; r < rows; r++) {
-      grid[r] = [];
-      for (let c = 0; c < cols; c++) {
-        grid[r][c] = {
-          ch:    CHARS[Math.floor(Math.random() * CHARS.length)],
-          phase: Math.random() * Math.PI * 2,
-          speed: 0.3 + Math.random() * 0.6,
-          tick:  Math.random() * 3,
-        };
-      }
+  /* ── Matrix-rain columns ── */
+  function buildColumns() {
+    columns = [];
+    const nCols = Math.ceil(W / COL_GAP) + 2;
+    for (let i = 0; i < nCols; i++) {
+      const startX = i * COL_GAP;
+      /* Stagger initial Y so columns arrive at different times */
+      const headY  = -(Math.random() * H * 0.8 + TRAIL_MAX * CHAR_H);
+      const trail  = Array.from({ length: TRAIL_MAX },
+                       () => CHARS[Math.floor(Math.random() * CHARS.length)]);
+      columns.push({
+        startX,
+        headY,
+        speed:        1.2 + Math.random() * 1.8,   // px per frame
+        trail,
+        cycleTimer:   0,
+        cycleEvery:   4 + Math.floor(Math.random() * 7),  // frames between char swap
+        frameIdx:     0,
+      });
     }
   }
 
-  /* ── Build bezier data-streams for the bottom half ── */
+  /* ── Fan-out bezier streams (bottom half) ── */
   function buildStreams() {
     streams = [];
-    const N  = 13;
-    const my = getCompileY();
+    const compY = cy();
+    const N = 18;   /* more streams for visual density */
 
     for (let i = 0; i < N; i++) {
       const frac = i / (N - 1);
-      /* Start: spread full width at the compile line */
-      const sx = W * 0.04 + frac * (W * 0.92);
-      /* End: slightly more centred (converging toward AI panel) */
-      const ex = W * 0.13 + frac * (W * 0.74);
 
-      const nP = 1 + (i % 3 === 0 ? 1 : 0);
+      /* START: narrow band at centre of compile line */
+      const startSpread = W * 0.18;
+      const sx = W / 2 - startSpread / 2 + frac * startSpread;
+
+      /* END: fans out to 72% of width at bottom */
+      const endSpread = W * 0.72;
+      const ex = W / 2 - endSpread / 2 + frac * endSpread;
+
+      const nP = 1 + (i % 4 === 0 ? 1 : 0);
       const pulses = [];
       for (let p = 0; p < nP; p++) {
         pulses.push({
-          t:     (p / nP + Math.random() * 0.4) % 1,
-          speed: 0.0025 + Math.random() * 0.002,
-          size:  1.5 + Math.random() * 1.2,
+          t:     (p / nP + Math.random() * 0.55) % 1,
+          speed: 0.0038 + Math.random() * 0.003,
+          size:  3.0 + Math.random() * 2.5,
         });
       }
+
       streams.push({
-        p0: { x: sx, y: my },
-        p1: { x: sx, y: my + (H - my) * 0.32 },
-        p2: { x: ex, y: my + (H - my) * 0.68 },
-        p3: { x: ex, y: H  },
-        baseAlpha: 0.05 + Math.random() * 0.07,
+        p0: { x: sx, y: compY },
+        p1: { x: sx + (ex - sx) * 0.08, y: compY + (H - compY) * 0.42 },
+        p2: { x: ex - (ex - sx) * 0.08, y: compY + (H - compY) * 0.78 },
+        p3: { x: ex, y: H },
+        alpha:     0.20 + Math.random() * 0.22,   /* 0.20–0.42 — clearly visible */
+        lineWidth: 0.9 + Math.random() * 0.7,     /* stored, not re-randomised */
         pulses,
       });
     }
@@ -3482,13 +3494,12 @@ function initCodeAiBridge() {
     H = bridge.offsetHeight;
     canvas.width  = W;
     canvas.height = H;
-    buildGrid();
+    buildColumns();
     buildStreams();
   }
 
-  /* Evaluate a cubic bezier at parameter u */
   function cbPt(s, u) {
-    const mu = 1 - u, mu2 = mu * mu, mu3 = mu2 * mu, u2 = u * u, u3 = u2 * u;
+    const mu = 1 - u, mu2 = mu*mu, mu3 = mu2*mu, u2 = u*u, u3 = u2*u;
     return {
       x: mu3*s.p0.x + 3*mu2*u*s.p1.x + 3*mu*u2*s.p2.x + u3*s.p3.x,
       y: mu3*s.p0.y + 3*mu2*u*s.p1.y + 3*mu*u2*s.p2.y + u3*s.p3.y,
@@ -3497,137 +3508,143 @@ function initCodeAiBridge() {
 
   function draw() {
     ctx.clearRect(0, 0, W, H);
-    const my = getCompileY();
+    const compY = cy();
 
-    /* ──────────────────────────────────────
-       1. Code-glyph heat map  (top half)
-       Same visual language as initTechHeatmap — identical heat formula,
-       identical colour mapping.  Fades to nothing near the compile line.
-    ────────────────────────────────────── */
-    ctx.font         = `${CELL - 4}px "JetBrains Mono", ui-monospace, "Courier New", monospace`;
+    /* ═══════════════════════════════════════════════
+       1.  MATRIX RAIN  (top half, funnel toward centre)
+       Each column falls independently.  As chars descend
+       they shift X toward W/2 (convergence) and edge
+       columns fade out (funnel silhouette).
+    ═══════════════════════════════════════════════ */
+    ctx.font         = `${CHAR_H - 2}px "JetBrains Mono", ui-monospace, monospace`;
     ctx.textBaseline = 'top';
 
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
-        const cell = grid[r][c];
-        const nx   = c / cols;
-        const ny   = r / rows;
+    for (const col of columns) {
+      /* Advance head */
+      col.headY    += col.speed;
+      col.frameIdx += 1;
 
-        /* Heat value — exact same formula as tech section */
-        const h = (
-          Math.sin(nx * 3.2 + t * 0.38 + Math.sin(ny * 2.5 + t * 0.22)) * 0.5 +
-          Math.cos(ny * 2.8 + t * 0.28 + Math.cos(nx * 4.2 - t * 0.18)) * 0.5 +
-          Math.sin((nx + ny) * 1.9 + t * 0.52) * 0.25
-        ) / 1.25;
+      /* Cycle head character */
+      if (col.frameIdx >= col.cycleEvery) {
+        col.trail[0] = CHARS[Math.floor(Math.random() * CHARS.length)];
+        col.frameIdx = 0;
+      }
 
-        const v = (h + 1) * 0.5;
-        if (v < 0.18) continue;
+      /* Reset column when head clears past compile line */
+      if (col.headY > compY + CHAR_H * 2) {
+        col.headY    = -(TRAIL_MAX * CHAR_H + Math.random() * H * 0.5);
+        col.speed    = 1.2 + Math.random() * 1.8;
+        col.cycleEvery = 4 + Math.floor(Math.random() * 7);
+        for (let j = 0; j < TRAIL_MAX; j++) {
+          col.trail[j] = CHARS[Math.floor(Math.random() * CHARS.length)];
+        }
+      }
 
-        const baseY  = r * CELL;
-        const yFrac  = baseY / my;   // 0 at top → 1 at compile line
+      /* Draw trail (i=0 is head, i=TRAIL_MAX−1 is oldest) */
+      for (let i = 0; i < TRAIL_MAX; i++) {
+        const charY = col.headY - i * CHAR_H;
 
-        /* Opacity envelope: hold full through 70% then rapid fade-out */
-        const envelope = yFrac < 0.7
-          ? 1.0
-          : Math.max(0, 1.0 - (yFrac - 0.7) / 0.3);
+        /* Skip chars outside the top-half zone */
+        if (charY < -CHAR_H || charY > compY + 2) continue;
 
-        /* "Ingestion glow" — last 15% before compile line glows teal-hot */
-        const hotFactor = Math.max(0, (yFrac - 0.85) / 0.15);
+        const yFrac = Math.max(0, Math.min(1, charY / compY));
 
-        let rC, gC, bC, alpha;
-        if (v < 0.42) {
-          alpha = (v - 0.18) / 0.24 * 0.13 * envelope + hotFactor * 0.20;
-          rC = 155; gC = 140; bC = 255;
-        } else if (v < 0.68) {
-          const f = (v - 0.42) / 0.26;
-          alpha = (0.13 + f * 0.38) * envelope + hotFactor * 0.32;
-          rC = 155; gC = 140; bC = 255;
+        /* ─ Convergence ─
+           Ease-in: columns drift toward W/2 as they approach the line.
+           Max shift: 45% of the distance to centre. */
+        const convFrac = yFrac * yFrac;                                // ease-in
+        const displayX = col.startX + (W / 2 - col.startX) * convFrac * 0.45;
+
+        /* ─ Edge fade ─
+           Columns far from centre ghost out as they converge,
+           creating a funnel silhouette. */
+        const xNorm    = Math.abs(col.startX / W - 0.5) * 2;          // 0=centre, 1=edge
+        const edgeFade = Math.max(0, 1 - xNorm * convFrac * 0.90);
+        if (edgeFade < 0.01) continue;
+
+        /* Trail alpha: head is bright, tail fades */
+        const trailAlpha = (1 - i / TRAIL_MAX) * 0.72;
+        const finalAlpha = trailAlpha * edgeFade;
+        if (finalAlpha < 0.015) continue;
+
+        /* Colour: head = bright teal-white, near-head = teal, trail = purple */
+        if (i === 0) {
+          ctx.fillStyle = `rgba(210,255,245,${Math.min(1, finalAlpha * 1.35).toFixed(3)})`;
+        } else if (i < 4) {
+          ctx.fillStyle = `rgba(100,220,200,${finalAlpha.toFixed(3)})`;
         } else {
-          const f = (v - 0.68) / 0.32;
-          alpha = (0.51 + f * 0.32) * envelope + hotFactor * 0.45;
-          const blend = Math.min(1, f + hotFactor * 0.8);
-          rC = Math.round(155 + (68  - 155) * blend);
-          gC = Math.round(140 + (240 - 140) * blend);
-          bC = Math.round(255 + (177 - 255) * blend);
+          ctx.fillStyle = `rgba(155,140,255,${(finalAlpha * 0.85).toFixed(3)})`;
         }
-
-        if (alpha < 0.006) continue;
-        ctx.fillStyle = `rgba(${rC},${gC},${bC},${alpha.toFixed(3)})`;
-        ctx.fillText(cell.ch, c * CELL, baseY);
-
-        /* Cycle hotter cells faster */
-        cell.tick += 0.016 * cell.speed;
-        if (v > 0.55 && cell.tick > (2.4 - v * 1.6)) {
-          cell.ch  = CHARS[Math.floor(Math.random() * CHARS.length)];
-          cell.tick = 0;
-        }
+        ctx.fillText(col.trail[i], displayX, charY);
       }
     }
 
-    /* ──────────────────────────────────────
-       2. Compile scanline at midY
-       A full-width gradient line that pulses
-       in brightness — the "compilation event".
-    ────────────────────────────────────── */
-    const pulse     = 0.5 + 0.5 * Math.sin(t * 2.9);
-    const lineAlpha = 0.28 + pulse * 0.38;
+    /* ═══════════════════════════════════════════════
+       2.  COMPILE SCANLINE  (at compY, pulsing)
+       Bright teal gradient line with soft glow band.
+       Runs behind the HTML chip element.
+    ═══════════════════════════════════════════════ */
+    const pulse     = 0.5 + 0.5 * Math.sin(t * 3.1);
+    const lineAlpha = 0.42 + pulse * 0.44;
 
-    /* Soft ambient glow band */
-    const gg = ctx.createLinearGradient(0, my - 20, 0, my + 20);
-    gg.addColorStop(0,   'transparent');
-    gg.addColorStop(0.5, `rgba(80, 200, 190, ${(0.03 + pulse * 0.04).toFixed(3)})`);
-    gg.addColorStop(1,   'transparent');
-    ctx.fillStyle = gg;
-    ctx.fillRect(0, my - 20, W, 40);
+    /* Glow halo */
+    const glow = ctx.createLinearGradient(0, compY - 30, 0, compY + 30);
+    glow.addColorStop(0,   'transparent');
+    glow.addColorStop(0.5, `rgba(80, 210, 185, ${(0.06 + pulse * 0.07).toFixed(3)})`);
+    glow.addColorStop(1,   'transparent');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, compY - 30, W, 60);
 
-    /* The 1.5px line — brighter at centre, fades at edges */
-    const lg = ctx.createLinearGradient(0, 0, W, 0);
-    lg.addColorStop(0,    'transparent');
-    lg.addColorStop(0.08, `rgba(75,105,255,${(lineAlpha * 0.40).toFixed(3)})`);
-    lg.addColorStop(0.28, `rgba(100,220,200,${lineAlpha.toFixed(3)})`);
-    lg.addColorStop(0.50, `rgba(148,255,228,${(lineAlpha * 1.18).toFixed(3)})`);
-    lg.addColorStop(0.72, `rgba(100,220,200,${lineAlpha.toFixed(3)})`);
-    lg.addColorStop(0.92, `rgba(75,105,255,${(lineAlpha * 0.40).toFixed(3)})`);
-    lg.addColorStop(1,    'transparent');
-    ctx.fillStyle = lg;
-    ctx.fillRect(0, my - 0.75, W, 1.5);
+    /* The line (2.5 px) */
+    const line = ctx.createLinearGradient(0, 0, W, 0);
+    line.addColorStop(0,    'transparent');
+    line.addColorStop(0.04, `rgba(75,105,255,${(lineAlpha * 0.30).toFixed(3)})`);
+    line.addColorStop(0.22, `rgba(100,220,200,${lineAlpha.toFixed(3)})`);
+    line.addColorStop(0.50, `rgba(165,255,238,${(lineAlpha * 1.22).toFixed(3)})`);
+    line.addColorStop(0.78, `rgba(100,220,200,${lineAlpha.toFixed(3)})`);
+    line.addColorStop(0.96, `rgba(75,105,255,${(lineAlpha * 0.30).toFixed(3)})`);
+    line.addColorStop(1,    'transparent');
+    ctx.fillStyle = line;
+    ctx.fillRect(0, compY - 1.25, W, 2.5);
 
-    /* ──────────────────────────────────────
-       3. Bezier data-streams  (bottom half)
-       Same style as initAskBg bezier curves —
-       teal→blue palette, travelling pulse dots.
-    ────────────────────────────────────── */
+    /* ═══════════════════════════════════════════════
+       3.  FAN-OUT BEZIER STREAMS  (bottom half)
+       Start narrow at centre of compile line,
+       fan out to 72 % width at bottom.
+       Clearly visible: alpha 0.20–0.42, lineWidth 0.9–1.6.
+    ═══════════════════════════════════════════════ */
     for (const s of streams) {
       ctx.beginPath();
       ctx.moveTo(s.p0.x, s.p0.y);
       ctx.bezierCurveTo(s.p1.x, s.p1.y, s.p2.x, s.p2.y, s.p3.x, s.p3.y);
 
       const sg = ctx.createLinearGradient(s.p0.x, s.p0.y, s.p3.x, s.p3.y);
-      sg.addColorStop(0,   `rgba(100,220,200,${(s.baseAlpha * 0.15).toFixed(3)})`);
-      sg.addColorStop(0.38,`rgba(100,220,200,${(s.baseAlpha * 0.85).toFixed(3)})`);
-      sg.addColorStop(1,   `rgba(75,105,255, ${s.baseAlpha.toFixed(3)})`);
+      sg.addColorStop(0,   `rgba(100,220,200,${(s.alpha * 0.12).toFixed(3)})`);
+      sg.addColorStop(0.35,`rgba(100,220,200,${(s.alpha * 0.90).toFixed(3)})`);
+      sg.addColorStop(1,   `rgba(75,105,255,${s.alpha.toFixed(3)})`);
       ctx.strokeStyle = sg;
-      ctx.lineWidth   = 0.75;
+      ctx.lineWidth   = s.lineWidth;
       ctx.stroke();
 
-      /* Travelling pulse dots — fade in as they descend */
+      /* Travelling pulse dots */
       for (const p of s.pulses) {
         p.t = (p.t + p.speed) % 1;
         const pt  = cbPt(s, p.t);
-        const yFr = (pt.y - my) / (H - my);   // 0 at compile line → 1 at bottom
-        const pA  = Math.max(0, yFr * 0.88);
+        const yFr = (pt.y - compY) / (H - compY);
+        const pA  = Math.max(0, yFr * 0.80);
+        if (pA < 0.02) continue;
 
-        const dg = ctx.createRadialGradient(pt.x, pt.y, 0, pt.x, pt.y, p.size * 3.5);
-        dg.addColorStop(0, `rgba(148, 235, 255, ${pA.toFixed(3)})`);
+        const dg = ctx.createRadialGradient(pt.x, pt.y, 0, pt.x, pt.y, p.size * 3);
+        dg.addColorStop(0, `rgba(150,235,255,${pA.toFixed(3)})`);
         dg.addColorStop(1, 'transparent');
         ctx.fillStyle = dg;
         ctx.beginPath();
-        ctx.arc(pt.x, pt.y, p.size * 3.5, 0, Math.PI * 2);
+        ctx.arc(pt.x, pt.y, p.size * 3, 0, Math.PI * 2);
         ctx.fill();
       }
     }
 
-    t += 0.013;
+    t += 0.016;
   }
 
   function loop() { draw(); rafId = requestAnimationFrame(loop); }
@@ -3645,7 +3662,7 @@ function initCodeAiBridge() {
     rafId = null;
   }
 
-  /* Start / stop with viewport visibility; also trigger label reveal */
+  /* Pause off-screen; reveal chip on first entry */
   const obs = new IntersectionObserver(entries => {
     entries.forEach(e => {
       if (e.isIntersecting) {
@@ -3655,7 +3672,7 @@ function initCodeAiBridge() {
         stop();
       }
     });
-  }, { threshold: 0.10 });
+  }, { threshold: 0.08 });
   obs.observe(bridge);
 
   window.addEventListener('resize', () => { if (running) { stop(); start(); } });

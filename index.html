@@ -497,30 +497,30 @@
 }
 
 /* ═══════════════════════════════════════════════════
-   TECH → AI COMPILE BRIDGE
+   TECH → AI COMPILE BRIDGE  (v2)
    ═══════════════════════════════════════════════════ */
 
-/* Fade the bottom of the tech section into the bridge */
+/* Fade the bottom of the tech section so glyphs dissolve cleanly */
 .techBottomFade {
   position: absolute;
   bottom: 0; left: 0; right: 0;
-  height: 130px;
+  height: 90px;
   background: linear-gradient(to bottom, transparent 0%, #06070f 100%);
   pointer-events: none;
   z-index: 2;
 }
 
-/* Bridge container */
+/* Bridge container: 360px gives room for the funnel narrative */
 .codeAiBridge {
   position: relative;
   width: 100vw;
   margin-left: calc(50% - 50vw);
-  height: 240px;
+  height: 360px;
   background: #06070f;
   overflow: hidden;
 }
 
-/* Canvas fills the entire bridge */
+/* Canvas fills the bridge */
 #codeAiCanvas {
   position: absolute;
   inset: 0;
@@ -530,69 +530,75 @@
   display: block;
 }
 
-/* Label positioned just above the compile scanline (which is at 50%) */
-.codeAiLabel {
+/* ── Compile chip: the single focal point of the transition ── */
+.compileChip {
   position: absolute;
   top: 50%;
   left: 50%;
-  /* Push up so label bottom sits ~22px above the compile line */
-  transform: translate(-50%, calc(-100% - 22px));
-  display: flex;
-  flex-direction: column;
+  transform: translate(-50%, -50%);
+  display: inline-flex;
   align-items: center;
-  gap: 9px;
-  pointer-events: none;
+  gap: 10px;
+  padding: 10px 24px;
+  border: 1px solid rgba(100, 220, 200, 0.42);
+  border-radius: 100px;
+  background: rgba(6, 7, 15, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow:
+    0 0 0 1px rgba(100, 220, 200, 0.08),
+    0 0 22px rgba(100, 220, 200, 0.14),
+    0 0 55px rgba(100, 220, 200, 0.06),
+    inset 0 0 18px rgba(100, 220, 200, 0.03);
   z-index: 2;
-  /* Soft dark backdrop so text reads over code glyphs */
-  background: radial-gradient(ellipse 130% 180% at 50% 60%,
-    rgba(6, 7, 15, 0.70) 0%,
-    transparent 100%
-  );
-  padding: 10px 32px 16px;
-  white-space: nowrap;
-}
-
-.caibLine {
-  display: block;
-  font-family: 'DM Mono', 'Courier New', monospace;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
+  pointer-events: none;
   opacity: 0;
-  transform: translateY(5px);
-  transition: opacity 0.65s ease, transform 0.65s ease;
+  transform: translate(-50%, -50%) scale(0.90);
+  transition: opacity 0.6s ease, transform 0.6s ease;
 }
-.caibL1 {
-  font-size: 9px;
-  color: rgba(155, 140, 255, 0.50);
-}
-.caibL2 {
-  font-size: 10.5px;
-  color: rgba(100, 220, 200, 0.88);
-  text-shadow:
-    0 0 18px rgba(100, 220, 200, 0.45),
-    0 0 40px rgba(100, 220, 200, 0.18);
-  letter-spacing: 0.17em;
-}
-.caibL3 {
-  font-size: 9px;
-  color: rgba(75, 105, 255, 0.50);
+.codeAiBridge.caib-visible .compileChip {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+  transition-delay: 0.25s;
 }
 
-/* Scroll-triggered reveal */
-.codeAiBridge.caib-visible .caibL1 {
-  opacity: 1; transform: translateY(0);
-  transition-delay: 0.0s;
+/* Pulsing status dot */
+.compileChipDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(100, 220, 200, 1);
+  box-shadow: 0 0 7px 2px rgba(100, 220, 200, 0.75);
+  flex-shrink: 0;
+  animation: chipDotPulse 2s ease-in-out infinite;
 }
-.codeAiBridge.caib-visible .caibL2 {
-  opacity: 1; transform: translateY(0);
-  transition-delay: 0.45s;
-}
-.codeAiBridge.caib-visible .caibL3 {
-  opacity: 1; transform: translateY(0);
-  transition-delay: 0.9s;
+@keyframes chipDotPulse {
+  0%, 100% { opacity: 1;   box-shadow: 0 0  7px 2px rgba(100,220,200,0.75); }
+  50%       { opacity: 0.5; box-shadow: 0 0 12px 4px rgba(100,220,200,0.35); }
 }
 
-/* Slightly reduce top padding on the ask section to compensate for bridge height */
+/* Chip label text */
+.compileChipText {
+  font-family: 'DM Mono', 'Courier New', monospace;
+  font-size: 12.5px;
+  letter-spacing: 0.10em;
+  color: rgba(100, 220, 200, 0.90);
+  white-space: nowrap;
+  text-shadow: 0 0 16px rgba(100, 220, 200, 0.30);
+}
+
+/* Blinking cursor */
+.compileChipCursor {
+  display: inline-block;
+  animation: chipCursorBlink 1.1s step-end infinite;
+  margin-left: 1px;
+}
+@keyframes chipCursorBlink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+/* Compensate for the bridge adding vertical space */
 .ask-reveal {
   padding-top: clamp(48px, 6svh, 80px) !important;
 }
@@ -1024,10 +1030,10 @@
       <!-- BRIDGE: Tech Stack → AI Interface compile transition -->
       <div id="codeAiBridge" class="codeAiBridge" aria-hidden="true">
         <canvas id="codeAiCanvas"></canvas>
-        <div class="codeAiLabel" id="codeAiLabel">
-          <div class="caibLine caibL1">// parsing knowledge base</div>
-          <div class="caibLine caibL2">[ intelligence_engine.compile() ]</div>
-          <div class="caibLine caibL3">// system ready</div>
+        <!-- Single focal point: the compile chip sitting ON the scanline -->
+        <div class="compileChip" id="compileChip">
+          <span class="compileChipDot"></span>
+          <span class="compileChipText">intelligence_engine<span class="compileChipCursor">_</span></span>
         </div>
       </div>
 
