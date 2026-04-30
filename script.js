@@ -1596,12 +1596,16 @@ function initAskBg() {
   let animId = null;
   let curves  = [];
 
+  /* Canvas extends YOFF px above the ask section so streams emerge
+     from inside the tech section — no hard seam at the boundary */
+  const YOFF = 160;
+
   /* ── Measure ── */
   function measure() {
     cancelAnimationFrame(animId);
     const sr = section.getBoundingClientRect();
     W = Math.round(sr.width);
-    H = Math.round(sr.height);
+    H = Math.round(sr.height) + YOFF;   // extra height for the upward bleed
     canvas.width  = W;
     canvas.height = H;
 
@@ -1609,14 +1613,14 @@ function initAskBg() {
     if (panel) {
       const pr = panel.getBoundingClientRect();
       pX = pr.left - sr.left;
-      pY = pr.top  - sr.top;
+      pY = (pr.top  - sr.top) + YOFF;   // shift panel Y into canvas coords
       pW = pr.width;
       pH = pr.height;
     } else {
       pX = Math.max(0, (W - Math.min(960, W - 40)) / 2);
       pW = Math.min(960, W - 40);
-      pY = H * 0.38;
-      pH = H * 0.50;
+      pY = (H - YOFF) * 0.38 + YOFF;
+      pH = (H - YOFF) * 0.50;
     }
 
     buildCurves();
@@ -1728,11 +1732,14 @@ function initAskBg() {
       ctx.beginPath();
       ctx.moveTo(c.p0.x, c.p0.y);
       ctx.bezierCurveTo(c.p1.x, c.p1.y, c.p2.x, c.p2.y, c.p3.x, c.p3.y);
-      /* Gradient: start slightly teal (bridge handoff) → pure blue at panel */
+      /* Gradient: invisible at canvas top (inside tech section) → full teal →
+         blue-purple at the panel. This makes streams appear to grow from
+         the tech section with no hard start line. */
       const sg = ctx.createLinearGradient(c.p0.x, c.p0.y, c.p3.x, c.p3.y);
-      sg.addColorStop(0,   'rgba(80,175,240,'  + (lineA * 0.90).toFixed(3) + ')');
-      sg.addColorStop(0.40,'rgba(75,130,255,'  + lineA.toFixed(3) + ')');
-      sg.addColorStop(1,   'rgba(75,105,255,'  + lineA.toFixed(3) + ')');
+      sg.addColorStop(0,    'rgba(80,175,240,0)');
+      sg.addColorStop(0.18, 'rgba(80,175,240,'  + (lineA * 0.55).toFixed(3) + ')');
+      sg.addColorStop(0.42, 'rgba(75,130,255,'  + lineA.toFixed(3) + ')');
+      sg.addColorStop(1,    'rgba(75,105,255,'  + lineA.toFixed(3) + ')');
       ctx.strokeStyle = sg;
       ctx.shadowBlur = 0;
       ctx.stroke();
