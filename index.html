@@ -500,23 +500,23 @@
    TECH → AI  BLEND BRIDGE
    ═══════════════════════════════════════════════════ */
 
-/* Tech section bottom: smooth fade so bridge heat-map
-   picks up with zero visible gap */
+/* Tech section bottom — keep very short so there's no
+   visible dark stripe between the IDE and the bridge */
 .techBottomFade {
   position: absolute;
   bottom: 0; left: 0; right: 0;
-  height: 120px;
+  height: 50px;
   background: linear-gradient(to bottom, transparent 0%, #06070f 100%);
   pointer-events: none;
   z-index: 2;
 }
 
-/* Bridge: tall enough for a meaningful crossfade arc */
+/* Bridge: tight — no dead space, just enough for the crossfade */
 .codeAiBridge {
   position: relative;
   width: 100vw;
   margin-left: calc(50% - 50vw);
-  height: 380px;
+  height: 200px;
   background: #06070f;
   overflow: hidden;
 }
@@ -530,13 +530,18 @@
   display: block;
 }
 
-/* AI section: extend the blue-purple atmospheric glow deep
-   into the bridge above, pulling the two backgrounds together */
+/* AI section top padding — tight so heading appears quickly after bridge */
+.ask-reveal {
+  padding-top: clamp(24px, 3svh, 40px) !important;
+}
+
+/* Restore the natural subtle glow — DON'T bleed it into the bridge or
+   it creates a visible blue-tinted band that looks like a layering seam */
 #ask::before {
-  top: -320px !important;
-  background: radial-gradient(ellipse 90% 60% at 50% 35%,
-    rgba(75, 105, 255, 0.12) 0%,
-    transparent               60%
+  top: -80px !important;
+  background: radial-gradient(ellipse 80% 45% at 50% 42%,
+    rgba(75, 105, 255, 0.07) 0%,
+    transparent               65%
   ) !important;
 }
 

@@ -3492,7 +3492,7 @@ function initCodeAiBridge() {
       streams.push({
         p0: { x: sx, y: 0   }, p1: { x: sx, y: H * 0.30 },
         p2: { x: ex, y: H * 0.75 }, p3: { x: ex, y: H   },
-        baseAlpha: (0.09 + Math.random() * 0.08) * cBoost,
+        baseAlpha: (0.12 + Math.random() * 0.10) * cBoost,
         pulses,
       });
     }
@@ -3525,7 +3525,7 @@ function initCodeAiBridge() {
 
     for (let r = 0; r < heatRows; r++) {
       const yFrac   = r / heatRows;
-      const fadeOut = Math.pow(1 - yFrac, 1.5);   // lingers at top, drops fast below
+      const fadeOut = Math.pow(1 - yFrac, 2.5);   // aggressive drop — gone by ~60% of height
       if (fadeOut < 0.008) continue;
 
       for (let c = 0; c < heatCols; c++) {
@@ -3581,8 +3581,8 @@ function initCodeAiBridge() {
 
       const sg = ctx.createLinearGradient(s.p0.x, 0, s.p3.x, H);
       sg.addColorStop(0,    `rgba(80,175,240,0)`);
-      sg.addColorStop(0.28, `rgba(80,175,240,${(s.baseAlpha * 0.50).toFixed(3)})`);
-      sg.addColorStop(0.65, `rgba(75,130,255,${s.baseAlpha.toFixed(3)})`);
+      sg.addColorStop(0.15, `rgba(80,175,240,${(s.baseAlpha * 0.40).toFixed(3)})`);
+      sg.addColorStop(0.55, `rgba(75,130,255,${s.baseAlpha.toFixed(3)})`);
       sg.addColorStop(1,    `rgba(75,105,255,${s.baseAlpha.toFixed(3)})`);
       ctx.strokeStyle = sg;
       ctx.lineWidth   = 1;
