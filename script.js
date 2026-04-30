@@ -3711,7 +3711,19 @@ function initTechHeatmap() {
     ctx.font = `${CELL - 4}px "JetBrains Mono", ui-monospace, "Courier New", monospace`;
     ctx.textBaseline = "top";
 
+    // Bottom 40 % of section: glyphs fade smoothly to transparent so there's
+    // no hard colour boundary at the section edge.
+    const FADE_START = 0.60;
+
     for (let r = 0; r < rows; r++) {
+      const yFrac  = r / Math.max(rows - 1, 1);
+      const rowFade = yFrac > FADE_START
+        ? Math.pow(1 - (yFrac - FADE_START) / (1 - FADE_START), 2)
+        : 1;
+
+      if (rowFade <= 0) continue;          // fully transparent row — skip
+      ctx.globalAlpha = rowFade;
+
       for (let c = 0; c < cols; c++) {
         const cell = grid[r][c];
         const h    = heat(c, r, t + cell.phase * 0.25);
@@ -3731,6 +3743,7 @@ function initTechHeatmap() {
       }
     }
 
+    ctx.globalAlpha = 1;   // always restore
     t += 0.013;
   }
 

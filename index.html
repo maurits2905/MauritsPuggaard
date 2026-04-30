@@ -502,11 +502,12 @@
    upward so streams emerge from inside the tech section.
    ═══════════════════════════════════════════════════ */
 
-/* Very short fade so the last heat glyphs dissolve softly */
+/* Tall overlay so the last heat glyphs dissolve completely before the
+   section edge — no glyph texture bleeds into the ask section */
 .techBottomFade {
   position: absolute;
   bottom: 0; left: 0; right: 0;
-  height: 20px;
+  height: 120px;
   background: linear-gradient(to bottom, transparent 0%, #06070f 100%);
   pointer-events: none;
   z-index: 2;
