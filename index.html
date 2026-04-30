@@ -605,6 +605,16 @@
   padding-top: clamp(32px, 4svh, 52px) !important;
 }
 
+/* Boost the AI section's atmospheric bleed — lets the blue-purple
+   glow bleed higher into the bridge above, stitching the two together */
+#ask::before {
+  top: -260px !important;
+  background: radial-gradient(ellipse 85% 55% at 50% 38%,
+    rgba(75, 105, 255, 0.10) 0%,
+    transparent               62%
+  ) !important;
+}
+
     </style>
   </head>
 

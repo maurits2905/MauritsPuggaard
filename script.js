@@ -1633,8 +1633,13 @@ function initAskBg() {
     for (let i = 0; i < N; i++) {
       const frac = i / (N - 1);
 
-      // Start spread across full section width
-      const sx = W * 0.03 + frac * (W * 0.94);
+      /* Start: blend between the bridge's convergence band (35-65 %) for
+         inner streams and wider spread for outer streams.
+         This creates a visual handoff from the bridge's converging streams. */
+      const distFromMid  = Math.abs(frac - 0.5) * 2;   // 0=centre, 1=edge
+      const innerSx      = W * 0.35 + frac * (W * 0.30);  // 35–65 % — matches bridge end
+      const outerSx      = W * 0.06 + frac * (W * 0.88);  // 6–94 % — full-width fallback
+      const sx           = innerSx + (outerSx - innerSx) * (distFromMid * 0.62);
 
       // End distributed along panel top edge
       const ex = entryL + frac * (entryR - entryL);
@@ -1653,12 +1658,16 @@ function initAskBg() {
         });
       }
 
+      /* Alpha boost: centre streams more visible (continuing bridge density) */
+      const centreBoost  = 1 - distFromMid * 0.45;
+      const baseAlpha    = (0.10 + Math.random() * 0.07) * centreBoost;
+
       curves.push({
         p0: { x: sx, y: 0 },
         p1: cp1,
         p2: cp2,
         p3: { x: ex, y: pY },
-        baseAlpha: 0.07 + Math.random() * 0.06,
+        baseAlpha,
         pulses,
       });
     }
@@ -1712,14 +1721,19 @@ function initAskBg() {
     ctx.fillStyle = cg;
     ctx.fillRect(0, 0, W, H);
 
-    /* Bezier stream lines */
+    /* Bezier stream lines — teal at top (matching bridge bottom) → blue-purple */
     ctx.lineWidth = 1;
     curves.forEach(c => {
       const lineA = c.baseAlpha + hb * 0.07;
       ctx.beginPath();
       ctx.moveTo(c.p0.x, c.p0.y);
       ctx.bezierCurveTo(c.p1.x, c.p1.y, c.p2.x, c.p2.y, c.p3.x, c.p3.y);
-      ctx.strokeStyle = 'rgba(75,105,255,' + lineA.toFixed(3) + ')';
+      /* Gradient: start slightly teal (bridge handoff) → pure blue at panel */
+      const sg = ctx.createLinearGradient(c.p0.x, c.p0.y, c.p3.x, c.p3.y);
+      sg.addColorStop(0,   'rgba(80,175,240,'  + (lineA * 0.90).toFixed(3) + ')');
+      sg.addColorStop(0.40,'rgba(75,130,255,'  + lineA.toFixed(3) + ')');
+      sg.addColorStop(1,   'rgba(75,105,255,'  + lineA.toFixed(3) + ')');
+      ctx.strokeStyle = sg;
       ctx.shadowBlur = 0;
       ctx.stroke();
 
@@ -3479,21 +3493,21 @@ function initCodeAiBridge() {
     }
   }
 
-  /* ── Fan-out bezier streams (bottom half) ── */
+  /* ── Converging bezier streams: compile focal point → AI panel entry ── */
   function buildStreams() {
     streams = [];
     const compY = cy();
-    const N = 18;   /* more streams for visual density */
+    const N = 16;  // streams funnelling from compile line into AI panel
 
     for (let i = 0; i < N; i++) {
       const frac = i / (N - 1);
 
-      /* START: narrow band at centre of compile line */
-      const startSpread = W * 0.18;
+      /* START: wide spread at compile line — code emanates from the focal point */
+      const startSpread = W * 0.76;
       const sx = W / 2 - startSpread / 2 + frac * startSpread;
 
-      /* END: fans out to 72% of width at bottom */
-      const endSpread = W * 0.72;
+      /* END: converge to AI-panel-width band at bridge bottom (≈ 30 % of W) */
+      const endSpread = W * 0.30;
       const ex = W / 2 - endSpread / 2 + frac * endSpread;
 
       const nP = 1 + (i % 4 === 0 ? 1 : 0);
@@ -3501,18 +3515,19 @@ function initCodeAiBridge() {
       for (let p = 0; p < nP; p++) {
         pulses.push({
           t:     (p / nP + Math.random() * 0.55) % 1,
-          speed: 0.0038 + Math.random() * 0.003,
-          size:  3.0 + Math.random() * 2.5,
+          speed: 0.0042 + Math.random() * 0.003,
+          size:  2.5 + Math.random() * 2.5,
         });
       }
 
       streams.push({
         p0: { x: sx, y: compY },
-        p1: { x: sx + (ex - sx) * 0.08, y: compY + (H - compY) * 0.42 },
-        p2: { x: ex - (ex - sx) * 0.08, y: compY + (H - compY) * 0.78 },
+        /* Hold x initially, then sweep laterally toward end x */
+        p1: { x: sx + (ex - sx) * 0.04, y: compY + (H - compY) * 0.36 },
+        p2: { x: ex + (sx - ex) * 0.04, y: compY + (H - compY) * 0.74 },
         p3: { x: ex, y: H },
-        alpha:     0.20 + Math.random() * 0.22,   /* 0.20–0.42 — clearly visible */
-        lineWidth: 0.9 + Math.random() * 0.7,     /* stored, not re-randomised */
+        alpha:     0.22 + Math.random() * 0.24,
+        lineWidth: 0.9 + Math.random() * 0.8,
         pulses,
       });
     }
@@ -3695,10 +3710,57 @@ function initCodeAiBridge() {
     ctx.fillRect(0, compY - 1.25, W, 2.5);
 
     /* ═══════════════════════════════════════════════
-       3.  FAN-OUT BEZIER STREAMS  (bottom half)
-       Start narrow at centre of compile line,
-       fan out to 72 % width at bottom.
-       Clearly visible: alpha 0.20–0.42, lineWidth 0.9–1.6.
+       2b. CODE CONTINUATION  (below compile line)
+       Matrix rain characters continue falling with
+       strong lateral convergence toward panel centre.
+       Colour shifts teal → blue-purple (AI palette).
+       Visualises code being drawn INTO the AI window.
+    ═══════════════════════════════════════════════ */
+    const rainBelowDepth = (H - compY) * 0.52;
+    ctx.font = `${CHAR_H - 2}px "JetBrains Mono", ui-monospace, monospace`;
+
+    for (const col of columns) {
+      for (let i = 0; i < TRAIL_MAX; i++) {
+        const charY = col.headY - i * CHAR_H;
+        if (charY <= compY || charY > compY + rainBelowDepth) continue;
+
+        const bF = (charY - compY) / rainBelowDepth;  // 0→1 from compile → rain end
+
+        /* Strong convergence: squeeze laterally as characters descend */
+        const convX = col.startX + (W / 2 - col.startX) * (0.38 + bF * 0.58);
+
+        /* Edge columns fade out first; centre survives longest */
+        const xNorm    = Math.abs(col.startX / W - 0.5) * 2;
+        const edgeFade = Math.max(0, 1 - xNorm * (0.42 + bF * 1.28));
+        if (edgeFade < 0.01) continue;
+
+        const trailAlpha = (1 - i / TRAIL_MAX) * 0.56;
+        const depthFade  = Math.max(0, 1 - bF * 1.55);
+        const alpha      = trailAlpha * depthFade * edgeFade;
+        if (alpha < 0.012) continue;
+
+        /* Colour shift: teal at compile → blue-purple at bottom */
+        if (i === 0) {
+          ctx.fillStyle = `rgba(215,255,248,${Math.min(1, alpha * 1.3).toFixed(3)})`;
+        } else if (i < 4) {
+          const r = Math.round(100 - 25 * bF);
+          const g = Math.round(220 - 115 * bF);
+          const b = Math.round(200 + 55 * bF);
+          ctx.fillStyle = `rgba(${r},${g},${b},${alpha.toFixed(3)})`;
+        } else {
+          const r = Math.round(155 - 80 * bF);
+          const g = Math.round(140 - 35 * bF);
+          ctx.fillStyle = `rgba(${r},${g},255,${(alpha * 0.82).toFixed(3)})`;
+        }
+        ctx.fillText(col.trail[i], convX, charY);
+      }
+    }
+
+    /* ═══════════════════════════════════════════════
+       3.  CONVERGING BEZIER STREAMS  (below compile)
+       Start wide at compile line, narrow to panel
+       width at bridge bottom — code flows INTO AI.
+       Teal → blue-purple matches the AI section.
     ═══════════════════════════════════════════════ */
     for (const s of streams) {
       ctx.beginPath();
@@ -3706,23 +3768,26 @@ function initCodeAiBridge() {
       ctx.bezierCurveTo(s.p1.x, s.p1.y, s.p2.x, s.p2.y, s.p3.x, s.p3.y);
 
       const sg = ctx.createLinearGradient(s.p0.x, s.p0.y, s.p3.x, s.p3.y);
-      sg.addColorStop(0,   `rgba(100,220,200,${(s.alpha * 0.12).toFixed(3)})`);
-      sg.addColorStop(0.35,`rgba(100,220,200,${(s.alpha * 0.90).toFixed(3)})`);
-      sg.addColorStop(1,   `rgba(75,105,255,${s.alpha.toFixed(3)})`);
+      sg.addColorStop(0,    `rgba(100,220,200,${(s.alpha * 0.05).toFixed(3)})`);
+      sg.addColorStop(0.20, `rgba(100,220,200,${(s.alpha * 0.90).toFixed(3)})`);
+      sg.addColorStop(0.62, `rgba(80,150,240,${(s.alpha * 0.82).toFixed(3)})`);
+      sg.addColorStop(1,    `rgba(75,105,255,${(s.alpha * 1.05).toFixed(3)})`);
       ctx.strokeStyle = sg;
       ctx.lineWidth   = s.lineWidth;
       ctx.stroke();
 
-      /* Travelling pulse dots */
+      /* Travelling pulse dots — colour shifts teal → blue with depth */
       for (const p of s.pulses) {
         p.t = (p.t + p.speed) % 1;
         const pt  = cbPt(s, p.t);
         const yFr = (pt.y - compY) / (H - compY);
-        const pA  = Math.max(0, yFr * 0.80);
+        const pA  = Math.max(0, yFr * 0.82);
         if (pA < 0.02) continue;
 
+        const r  = Math.round(150 - 75 * yFr);
+        const g  = Math.round(235 - 130 * yFr);
         const dg = ctx.createRadialGradient(pt.x, pt.y, 0, pt.x, pt.y, p.size * 3);
-        dg.addColorStop(0, `rgba(150,235,255,${pA.toFixed(3)})`);
+        dg.addColorStop(0, `rgba(${r},${g},255,${pA.toFixed(3)})`);
         dg.addColorStop(1, 'transparent');
         ctx.fillStyle = dg;
         ctx.beginPath();
@@ -3730,6 +3795,13 @@ function initCodeAiBridge() {
         ctx.fill();
       }
     }
+
+    /* ── Atmospheric bleed: bridge colour bleeds into AI section ── */
+    const edgeGlow = ctx.createLinearGradient(0, H * 0.72, 0, H);
+    edgeGlow.addColorStop(0, 'rgba(75,105,255,0)');
+    edgeGlow.addColorStop(1, 'rgba(75,105,255,0.058)');
+    ctx.fillStyle = edgeGlow;
+    ctx.fillRect(0, H * 0.72, W, H * 0.28);
 
     t += 0.016;
   }
