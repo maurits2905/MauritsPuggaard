@@ -497,32 +497,30 @@
 }
 
 /* ═══════════════════════════════════════════════════
-   TECH → AI COMPILE BRIDGE  (v2)
+   TECH → AI  BLEND BRIDGE
    ═══════════════════════════════════════════════════ */
 
-/* Fade the VERY bottom of the tech section — keep it short so the
-   bridge heat-map picks up with minimal dark gap */
+/* Tech section bottom: smooth fade so bridge heat-map
+   picks up with zero visible gap */
 .techBottomFade {
   position: absolute;
   bottom: 0; left: 0; right: 0;
-  height: 60px;
+  height: 120px;
   background: linear-gradient(to bottom, transparent 0%, #06070f 100%);
   pointer-events: none;
   z-index: 2;
 }
 
-/* Bridge container: 310px — tight enough to feel intentional,
-   tall enough for the heat-map → rain → compile → streams sequence */
+/* Bridge: tall enough for a meaningful crossfade arc */
 .codeAiBridge {
   position: relative;
   width: 100vw;
   margin-left: calc(50% - 50vw);
-  height: 310px;
+  height: 380px;
   background: #06070f;
   overflow: hidden;
 }
 
-/* Canvas fills the bridge */
 #codeAiCanvas {
   position: absolute;
   inset: 0;
@@ -532,86 +530,13 @@
   display: block;
 }
 
-/* ── Compile chip: the single focal point of the transition ── */
-.compileChip {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 24px;
-  border: 1px solid rgba(100, 220, 200, 0.42);
-  border-radius: 100px;
-  background: rgba(6, 7, 15, 0.88);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  box-shadow:
-    0 0 0 1px rgba(100, 220, 200, 0.08),
-    0 0 22px rgba(100, 220, 200, 0.14),
-    0 0 55px rgba(100, 220, 200, 0.06),
-    inset 0 0 18px rgba(100, 220, 200, 0.03);
-  z-index: 2;
-  pointer-events: none;
-  opacity: 0;
-  transform: translate(-50%, -50%) scale(0.90);
-  transition: opacity 0.6s ease, transform 0.6s ease;
-}
-.codeAiBridge.caib-visible .compileChip {
-  opacity: 1;
-  transform: translate(-50%, -50%) scale(1);
-  transition-delay: 0.25s;
-}
-
-/* Pulsing status dot */
-.compileChipDot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: rgba(100, 220, 200, 1);
-  box-shadow: 0 0 7px 2px rgba(100, 220, 200, 0.75);
-  flex-shrink: 0;
-  animation: chipDotPulse 2s ease-in-out infinite;
-}
-@keyframes chipDotPulse {
-  0%, 100% { opacity: 1;   box-shadow: 0 0  7px 2px rgba(100,220,200,0.75); }
-  50%       { opacity: 0.5; box-shadow: 0 0 12px 4px rgba(100,220,200,0.35); }
-}
-
-/* Chip label text */
-.compileChipText {
-  font-family: 'DM Mono', 'Courier New', monospace;
-  font-size: 12.5px;
-  letter-spacing: 0.10em;
-  color: rgba(100, 220, 200, 0.90);
-  white-space: nowrap;
-  text-shadow: 0 0 16px rgba(100, 220, 200, 0.30);
-}
-
-/* Blinking cursor */
-.compileChipCursor {
-  display: inline-block;
-  animation: chipCursorBlink 1.1s step-end infinite;
-  margin-left: 1px;
-}
-@keyframes chipCursorBlink {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0; }
-}
-
-/* Compensate for the bridge adding vertical space */
-.ask-reveal {
-  padding-top: clamp(32px, 4svh, 52px) !important;
-}
-
-/* Boost the AI section's atmospheric bleed — lets the blue-purple
-   glow bleed higher into the bridge above, stitching the two together */
+/* AI section: extend the blue-purple atmospheric glow deep
+   into the bridge above, pulling the two backgrounds together */
 #ask::before {
-  top: -260px !important;
-  background: radial-gradient(ellipse 85% 55% at 50% 38%,
-    rgba(75, 105, 255, 0.10) 0%,
-    transparent               62%
+  top: -320px !important;
+  background: radial-gradient(ellipse 90% 60% at 50% 35%,
+    rgba(75, 105, 255, 0.12) 0%,
+    transparent               60%
   ) !important;
 }
 
@@ -1039,14 +964,9 @@
         <div class="techBottomFade" aria-hidden="true"></div>
       </section>
 
-      <!-- BRIDGE: Tech Stack → AI Interface compile transition -->
+      <!-- BRIDGE: organic crossfade between tech and AI backgrounds -->
       <div id="codeAiBridge" class="codeAiBridge" aria-hidden="true">
         <canvas id="codeAiCanvas"></canvas>
-        <!-- Single focal point: the compile chip sitting ON the scanline -->
-        <div class="compileChip" id="compileChip">
-          <span class="compileChipDot"></span>
-          <span class="compileChipText">intelligence_engine<span class="compileChipCursor">_</span></span>
-        </div>
       </div>
 
       <!-- 5) ASK ME -->

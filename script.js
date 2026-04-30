@@ -3414,45 +3414,30 @@ async function getIconMarkup(slug) {
   `;
 }
 
-/* ──────────────────────────────────────────────────────────────────────
-   Tech → AI Compile Bridge  (v2)
-   Narrative:  matrix-rain columns converge toward a compile scanline,
-   then fan-out bezier streams emerge below — flowing into the AI panel.
-   Single focal point: the compile chip HTML element at the scanline.
-   ────────────────────────────────────────────────────────────────────── */
+/* ────────────────────────────────────────────────────────────────────────
+   Tech → AI  Blend Bridge
+   Two section backgrounds cross-fade organically:
+   code glyphs fade OUT (tech aesthetic dissolves),
+   bezier streams fade IN (AI aesthetic materialises).
+   No dividers, no labels — pure organic flow.
+   ──────────────────────────────────────────────────────────────────────── */
 function initCodeAiBridge() {
   const bridge = document.getElementById('codeAiBridge');
   const canvas = document.getElementById('codeAiCanvas');
   if (!bridge || !canvas) return;
   const ctx = canvas.getContext('2d');
 
-  /* ── Config ── */
-  const CHARS     = "01{}[]<>/\\|;:.#@!$%^&*()=+-_~`";
-  const HC        = 18;    // heat-map cell size (matches tech section exactly)
-  const COL_GAP   = 22;    // matrix-rain column spacing
-  const CHAR_H    = 17;    // vertical step per rain char
-  const TRAIL_MAX = 18;    // trail length in characters
-
+  const CHARS = "01{}[]<>/\\|;:.#@!$%^&*()=+-_~`";
+  const HC    = 18;
   let W = 0, H = 0;
-  let heatGrid = [];        // ambient heat-map (top zone — matches tech section)
-  let heatCols = 0, heatRows = 0;
-  let columns  = [];        // matrix-rain columns (blend zone + lower top)
-  let streams  = [];        // fan-out bezier streams (bottom half)
-  let t        = 0;
-  let rafId    = null;
-  let running  = false;
-
-  /* Compile scanline: exactly halfway down */
-  const cy = () => H * 0.50;
-  /* Heat map covers the top 48 % — matrix rain blends in from 0 % to 42 % */
-  const HEAT_ZONE     = 0.50;   // heat-map covers top 50% of bridge
-  const RAIN_FADE_END = 0.48;   // matrix rain only reaches full alpha just before compile line
+  let heatGrid = [], heatCols = 0, heatRows = 0;
+  let streams  = [];
+  let t = 0, rafId = null, running = false;
 
   /* ── Heat-map grid (identical formula to initTechHeatmap) ── */
   function buildHeatGrid() {
-    const topH = Math.round(H * HEAT_ZONE);
     heatCols = Math.ceil(W / HC) + 1;
-    heatRows = Math.ceil(topH / HC) + 1;
+    heatRows = Math.ceil(H / HC) + 1;
     heatGrid = [];
     for (let r = 0; r < heatRows; r++) {
       heatGrid[r] = [];
@@ -3467,111 +3452,87 @@ function initCodeAiBridge() {
     }
   }
 
-  /* ── Matrix-rain columns ── */
-  function buildColumns() {
-    columns = [];
-    const compY = cy();
-    const nCols = Math.ceil(W / COL_GAP) + 2;
-    for (let i = 0; i < nCols; i++) {
-      const startX = i * COL_GAP;
-      /* FIX: distribute heads throughout the visible zone so bridge is
-         populated immediately when scrolled into view.
-         Range: -(TRAIL_MAX*CHAR_H) to +compY — covers from "all-trail-above-canvas"
-         to "head already halfway down".                                        */
-      const headY  = -TRAIL_MAX * CHAR_H + Math.random() * (TRAIL_MAX * CHAR_H + compY);
-      const trail  = Array.from({ length: TRAIL_MAX },
-                       () => CHARS[Math.floor(Math.random() * CHARS.length)]);
-      columns.push({
-        startX,
-        headY,
-        speed:        0.9 + Math.random() * 1.4,   // px per frame — slower = more ambient
-        trail,
-        cycleTimer:   0,
-        cycleEvery:   4 + Math.floor(Math.random() * 7),  // frames between char swap
-        frameIdx:     0,
-      });
-    }
-  }
-
-  /* ── Converging bezier streams: compile focal point → AI panel entry ── */
+  /* ── Bezier streams — identical geometry to initAskBg ── */
   function buildStreams() {
     streams = [];
-    const compY = cy();
-    const N = 16;  // streams funnelling from compile line into AI panel
-
+    const N = 13;
+    const ask   = document.getElementById('ask');
+    const panel = ask ? ask.querySelector('.askPanel') : null;
+    let entryL, entryR;
+    if (ask && panel) {
+      const ar = ask.getBoundingClientRect();
+      const pr = panel.getBoundingClientRect();
+      const pX = pr.left - ar.left;
+      entryL   = pX + 16;
+      entryR   = pX + pr.width - 16;
+    } else {
+      const pW = Math.min(960, W - 40);
+      const pX = (W - pW) / 2;
+      entryL   = pX + 16;
+      entryR   = pX + pW - 16;
+    }
     for (let i = 0; i < N; i++) {
-      const frac = i / (N - 1);
-
-      /* START: wide spread at compile line — code emanates from the focal point */
-      const startSpread = W * 0.76;
-      const sx = W / 2 - startSpread / 2 + frac * startSpread;
-
-      /* END: converge to AI-panel-width band at bridge bottom (≈ 30 % of W) */
-      const endSpread = W * 0.30;
-      const ex = W / 2 - endSpread / 2 + frac * endSpread;
-
+      const frac    = i / (N - 1);
+      const distMid = Math.abs(frac - 0.5) * 2;
+      /* Same start-x formula as initAskBg — streams look continuous */
+      const innerSx = W * 0.35 + frac * (W * 0.30);
+      const outerSx = W * 0.06 + frac * (W * 0.88);
+      const sx      = innerSx + (outerSx - innerSx) * (distMid * 0.62);
+      const ex      = entryL + frac * (entryR - entryL);
+      const cBoost  = 1 - distMid * 0.38;
       const nP = 1 + (i % 4 === 0 ? 1 : 0);
       const pulses = [];
       for (let p = 0; p < nP; p++) {
         pulses.push({
-          t:     (p / nP + Math.random() * 0.55) % 1,
-          speed: 0.0042 + Math.random() * 0.003,
-          size:  2.5 + Math.random() * 2.5,
+          t:     (p / nP + Math.random() * 0.4) % 1,
+          speed: 0.0026 + Math.random() * 0.0022,
+          size:  1.5  + Math.random() * 1.3,
         });
       }
-
       streams.push({
-        p0: { x: sx, y: compY },
-        /* Hold x initially, then sweep laterally toward end x */
-        p1: { x: sx + (ex - sx) * 0.04, y: compY + (H - compY) * 0.36 },
-        p2: { x: ex + (sx - ex) * 0.04, y: compY + (H - compY) * 0.74 },
-        p3: { x: ex, y: H },
-        alpha:     0.22 + Math.random() * 0.24,
-        lineWidth: 0.9 + Math.random() * 0.8,
+        p0: { x: sx, y: 0   }, p1: { x: sx, y: H * 0.30 },
+        p2: { x: ex, y: H * 0.75 }, p3: { x: ex, y: H   },
+        baseAlpha: (0.09 + Math.random() * 0.08) * cBoost,
         pulses,
       });
     }
   }
 
-  function resize() {
-    W = bridge.offsetWidth;
-    H = bridge.offsetHeight;
-    canvas.width  = W;
-    canvas.height = H;
-    buildHeatGrid();
-    buildColumns();
-    buildStreams();
+  function cbPt(c, u) {
+    const mt=1-u, mt2=mt*mt, mt3=mt2*mt, u2=u*u, u3=u2*u;
+    return {
+      x: mt3*c.p0.x + 3*mt2*u*c.p1.x + 3*mt*u2*c.p2.x + u3*c.p3.x,
+      y: mt3*c.p0.y + 3*mt2*u*c.p1.y + 3*mt*u2*c.p2.y + u3*c.p3.y,
+    };
   }
 
-  function cbPt(s, u) {
-    const mu = 1 - u, mu2 = mu*mu, mu3 = mu2*mu, u2 = u*u, u3 = u2*u;
-    return {
-      x: mu3*s.p0.x + 3*mu2*u*s.p1.x + 3*mu*u2*s.p2.x + u3*s.p3.x,
-      y: mu3*s.p0.y + 3*mu2*u*s.p1.y + 3*mu*u2*s.p2.y + u3*s.p3.y,
-    };
+  function resize() {
+    W = bridge.offsetWidth; H = bridge.offsetHeight;
+    canvas.width = W; canvas.height = H;
+    buildHeatGrid(); buildStreams();
   }
 
   function draw() {
     ctx.clearRect(0, 0, W, H);
-    const compY = cy();
 
-    /* ═══════════════════════════════════════════════
-       1.  AMBIENT HEAT-MAP  (top zone, 0 → HEAT_ZONE)
-       Identical formula and colour-map to initTechHeatmap().
-       Starts at full alpha at y=0 (matching tech section),
-       fades to zero by y = HEAT_ZONE * H.
-       Creates visual continuity with the section above.
-    ═══════════════════════════════════════════════ */
-    ctx.font         = `${HC - 4}px "JetBrains Mono", ui-monospace, monospace`;
+    /* ═══════════════════════════════════════════════════════════
+       LAYER 1 — HEAT-MAP GLYPHS  (fades OUT — top → bottom)
+       Full brightness at y=0, dissolves to zero at y=H.
+       Seamless visual continuation of the tech section above.
+    ═══════════════════════════════════════════════════════════ */
+    ctx.font         = `${HC-4}px "JetBrains Mono", ui-monospace, monospace`;
     ctx.textBaseline = 'top';
 
     for (let r = 0; r < heatRows; r++) {
+      const yFrac   = r / heatRows;
+      const fadeOut = Math.pow(1 - yFrac, 1.5);   // lingers at top, drops fast below
+      if (fadeOut < 0.008) continue;
+
       for (let c = 0; c < heatCols; c++) {
         const cell = heatGrid[r][c];
         const nx   = c / heatCols;
-        const ny   = r / heatRows;
+        const ny   = yFrac;
 
-        /* Same heat formula as tech section */
         const h = (
           Math.sin(nx * 3.2 + t * 0.38 + Math.sin(ny * 2.5 + t * 0.22)) * 0.5 +
           Math.cos(ny * 2.8 + t * 0.28 + Math.cos(nx * 4.2 - t * 0.18)) * 0.5 +
@@ -3581,36 +3542,24 @@ function initCodeAiBridge() {
         const v = (h + 1) * 0.5;
         if (v < 0.18) continue;
 
-        const baseY  = r * HC;
-        const yFrac  = baseY / (H * HEAT_ZONE);  // 0 at top → 1 at HEAT_ZONE*H
-
-        /* Fade out toward the bottom of the heat zone */
-        const heatFade = Math.max(0, 1 - yFrac * yFrac);   // ease-out
-        if (heatFade < 0.01) continue;
-
-        /* Boost alphas ~25% vs raw tech-section values so the bridge
-           heat map matches the perceived brightness of the tech canvas
-           (which sits on a slightly lighter rendered background). */
-        let rC, gC, bC, baseAlpha;
+        let rC, gC, bC, base;
         if (v < 0.42) {
-          baseAlpha = (v - 0.18) / 0.24 * 0.17;
-          rC = 155; gC = 140; bC = 255;
+          base = (v - 0.18) / 0.24 * 0.17; rC = 155; gC = 140; bC = 255;
         } else if (v < 0.68) {
           const f = (v - 0.42) / 0.26;
-          baseAlpha = 0.17 + f * 0.44;
-          rC = 155; gC = 140; bC = 255;
+          base = 0.17 + f * 0.44; rC = 155; gC = 140; bC = 255;
         } else {
-          const f  = (v - 0.68) / 0.32;
-          baseAlpha = 0.61 + f * 0.35;
+          const f = (v - 0.68) / 0.32;
+          base = 0.61 + f * 0.35;
           rC = Math.round(155 + (68  - 155) * f);
           gC = Math.round(140 + (240 - 140) * f);
           bC = Math.round(255 + (177 - 255) * f);
         }
 
-        const alpha = baseAlpha * heatFade;
-        if (alpha < 0.005) continue;
-        ctx.fillStyle = `rgba(${rC},${gC},${bC},${alpha.toFixed(3)})`;
-        ctx.fillText(cell.ch, c * HC, baseY);
+        const a = base * fadeOut;
+        if (a < 0.005) continue;
+        ctx.fillStyle = `rgba(${rC},${gC},${bC},${a.toFixed(3)})`;
+        ctx.fillText(cell.ch, c * HC, r * HC);
 
         cell.tick += 0.016 * cell.speed;
         if (v > 0.55 && cell.tick > (2.4 - v * 1.6)) {
@@ -3620,222 +3569,56 @@ function initCodeAiBridge() {
       }
     }
 
-    /* ═══════════════════════════════════════════════
-       2.  MATRIX RAIN  (blends in over top zone, then full)
-       Columns are always moving; alpha ramps from 0 at y=0
-       to full at y = RAIN_FADE_END * H, then convergence
-       funnel takes effect in the last stretch to compY.
-    ═══════════════════════════════════════════════ */
-    ctx.font = `${CHAR_H - 2}px "JetBrains Mono", ui-monospace, monospace`;
-
-    for (const col of columns) {
-      col.headY    += col.speed;
-      col.frameIdx += 1;
-
-      if (col.frameIdx >= col.cycleEvery) {
-        col.trail[0] = CHARS[Math.floor(Math.random() * CHARS.length)];
-        col.frameIdx = 0;
-      }
-
-      /* Reset: spread new head over a wide range so density is maintained */
-      if (col.headY > compY + CHAR_H * 2) {
-        col.headY    = -(TRAIL_MAX * CHAR_H + Math.random() * H * 0.3);
-        col.speed    = 0.9 + Math.random() * 1.4;
-        col.cycleEvery = 4 + Math.floor(Math.random() * 7);
-        for (let j = 0; j < TRAIL_MAX; j++) {
-          col.trail[j] = CHARS[Math.floor(Math.random() * CHARS.length)];
-        }
-      }
-
-      for (let i = 0; i < TRAIL_MAX; i++) {
-        const charY = col.headY - i * CHAR_H;
-        if (charY < -CHAR_H || charY > compY + 2) continue;
-
-        const yFrac = Math.max(0, Math.min(1, charY / compY));
-
-        /* Rain fades IN over the top zone (blending with heat map) */
-        const rainFadeIn = Math.min(1, yFrac / RAIN_FADE_END);
-
-        /* Convergence toward compile line */
-        const convFrac = yFrac * yFrac;
-        const displayX = col.startX + (W / 2 - col.startX) * convFrac * 0.45;
-
-        /* Edge fade creates funnel silhouette */
-        const xNorm    = Math.abs(col.startX / W - 0.5) * 2;
-        const edgeFade = Math.max(0, 1 - xNorm * convFrac * 0.88);
-        if (edgeFade < 0.01) continue;
-
-        /* Slightly softer trail so rain doesn't overpower heat map in the blend zone */
-        const trailAlpha = (1 - i / TRAIL_MAX) * 0.62;
-        const finalAlpha = trailAlpha * edgeFade * rainFadeIn;
-        if (finalAlpha < 0.015) continue;
-
-        if (i === 0) {
-          ctx.fillStyle = `rgba(215,255,248,${Math.min(1, finalAlpha * 1.4).toFixed(3)})`;
-        } else if (i < 4) {
-          ctx.fillStyle = `rgba(100,220,200,${finalAlpha.toFixed(3)})`;
-        } else {
-          ctx.fillStyle = `rgba(155,140,255,${(finalAlpha * 0.85).toFixed(3)})`;
-        }
-        ctx.fillText(col.trail[i], displayX, charY);
-      }
-    }
-
-    /* ═══════════════════════════════════════════════
-       2.  COMPILE SCANLINE  (at compY, pulsing)
-       Bright teal gradient line with soft glow band.
-       Runs behind the HTML chip element.
-    ═══════════════════════════════════════════════ */
-    const pulse     = 0.5 + 0.5 * Math.sin(t * 3.1);
-    const lineAlpha = 0.42 + pulse * 0.44;
-
-    /* Glow halo */
-    const glow = ctx.createLinearGradient(0, compY - 30, 0, compY + 30);
-    glow.addColorStop(0,   'transparent');
-    glow.addColorStop(0.5, `rgba(80, 210, 185, ${(0.06 + pulse * 0.07).toFixed(3)})`);
-    glow.addColorStop(1,   'transparent');
-    ctx.fillStyle = glow;
-    ctx.fillRect(0, compY - 30, W, 60);
-
-    /* The line (2.5 px) */
-    const line = ctx.createLinearGradient(0, 0, W, 0);
-    line.addColorStop(0,    'transparent');
-    line.addColorStop(0.04, `rgba(75,105,255,${(lineAlpha * 0.30).toFixed(3)})`);
-    line.addColorStop(0.22, `rgba(100,220,200,${lineAlpha.toFixed(3)})`);
-    line.addColorStop(0.50, `rgba(165,255,238,${(lineAlpha * 1.22).toFixed(3)})`);
-    line.addColorStop(0.78, `rgba(100,220,200,${lineAlpha.toFixed(3)})`);
-    line.addColorStop(0.96, `rgba(75,105,255,${(lineAlpha * 0.30).toFixed(3)})`);
-    line.addColorStop(1,    'transparent');
-    ctx.fillStyle = line;
-    ctx.fillRect(0, compY - 1.25, W, 2.5);
-
-    /* ═══════════════════════════════════════════════
-       2b. CODE CONTINUATION  (below compile line)
-       Matrix rain characters continue falling with
-       strong lateral convergence toward panel centre.
-       Colour shifts teal → blue-purple (AI palette).
-       Visualises code being drawn INTO the AI window.
-    ═══════════════════════════════════════════════ */
-    const rainBelowDepth = (H - compY) * 0.52;
-    ctx.font = `${CHAR_H - 2}px "JetBrains Mono", ui-monospace, monospace`;
-
-    for (const col of columns) {
-      for (let i = 0; i < TRAIL_MAX; i++) {
-        const charY = col.headY - i * CHAR_H;
-        if (charY <= compY || charY > compY + rainBelowDepth) continue;
-
-        const bF = (charY - compY) / rainBelowDepth;  // 0→1 from compile → rain end
-
-        /* Strong convergence: squeeze laterally as characters descend */
-        const convX = col.startX + (W / 2 - col.startX) * (0.38 + bF * 0.58);
-
-        /* Edge columns fade out first; centre survives longest */
-        const xNorm    = Math.abs(col.startX / W - 0.5) * 2;
-        const edgeFade = Math.max(0, 1 - xNorm * (0.42 + bF * 1.28));
-        if (edgeFade < 0.01) continue;
-
-        const trailAlpha = (1 - i / TRAIL_MAX) * 0.56;
-        const depthFade  = Math.max(0, 1 - bF * 1.55);
-        const alpha      = trailAlpha * depthFade * edgeFade;
-        if (alpha < 0.012) continue;
-
-        /* Colour shift: teal at compile → blue-purple at bottom */
-        if (i === 0) {
-          ctx.fillStyle = `rgba(215,255,248,${Math.min(1, alpha * 1.3).toFixed(3)})`;
-        } else if (i < 4) {
-          const r = Math.round(100 - 25 * bF);
-          const g = Math.round(220 - 115 * bF);
-          const b = Math.round(200 + 55 * bF);
-          ctx.fillStyle = `rgba(${r},${g},${b},${alpha.toFixed(3)})`;
-        } else {
-          const r = Math.round(155 - 80 * bF);
-          const g = Math.round(140 - 35 * bF);
-          ctx.fillStyle = `rgba(${r},${g},255,${(alpha * 0.82).toFixed(3)})`;
-        }
-        ctx.fillText(col.trail[i], convX, charY);
-      }
-    }
-
-    /* ═══════════════════════════════════════════════
-       3.  CONVERGING BEZIER STREAMS  (below compile)
-       Start wide at compile line, narrow to panel
-       width at bridge bottom — code flows INTO AI.
-       Teal → blue-purple matches the AI section.
-    ═══════════════════════════════════════════════ */
-    for (const s of streams) {
+    /* ═══════════════════════════════════════════════════════════
+       LAYER 2 — BEZIER STREAMS  (fades IN — top → bottom)
+       Invisible at y=0, full intensity at y=H.
+       Identical geometry to initAskBg — no seam at the boundary.
+    ═══════════════════════════════════════════════════════════ */
+    streams.forEach(s => {
       ctx.beginPath();
       ctx.moveTo(s.p0.x, s.p0.y);
       ctx.bezierCurveTo(s.p1.x, s.p1.y, s.p2.x, s.p2.y, s.p3.x, s.p3.y);
 
-      const sg = ctx.createLinearGradient(s.p0.x, s.p0.y, s.p3.x, s.p3.y);
-      sg.addColorStop(0,    `rgba(100,220,200,${(s.alpha * 0.05).toFixed(3)})`);
-      sg.addColorStop(0.20, `rgba(100,220,200,${(s.alpha * 0.90).toFixed(3)})`);
-      sg.addColorStop(0.62, `rgba(80,150,240,${(s.alpha * 0.82).toFixed(3)})`);
-      sg.addColorStop(1,    `rgba(75,105,255,${(s.alpha * 1.05).toFixed(3)})`);
+      const sg = ctx.createLinearGradient(s.p0.x, 0, s.p3.x, H);
+      sg.addColorStop(0,    `rgba(80,175,240,0)`);
+      sg.addColorStop(0.28, `rgba(80,175,240,${(s.baseAlpha * 0.50).toFixed(3)})`);
+      sg.addColorStop(0.65, `rgba(75,130,255,${s.baseAlpha.toFixed(3)})`);
+      sg.addColorStop(1,    `rgba(75,105,255,${s.baseAlpha.toFixed(3)})`);
       ctx.strokeStyle = sg;
-      ctx.lineWidth   = s.lineWidth;
+      ctx.lineWidth   = 1;
       ctx.stroke();
 
-      /* Travelling pulse dots — colour shifts teal → blue with depth */
-      for (const p of s.pulses) {
-        p.t = (p.t + p.speed) % 1;
-        const pt  = cbPt(s, p.t);
-        const yFr = (pt.y - compY) / (H - compY);
-        const pA  = Math.max(0, yFr * 0.82);
-        if (pA < 0.02) continue;
-
-        const r  = Math.round(150 - 75 * yFr);
-        const g  = Math.round(235 - 130 * yFr);
-        const dg = ctx.createRadialGradient(pt.x, pt.y, 0, pt.x, pt.y, p.size * 3);
-        dg.addColorStop(0, `rgba(${r},${g},255,${pA.toFixed(3)})`);
-        dg.addColorStop(1, 'transparent');
-        ctx.fillStyle = dg;
+      s.pulses.forEach(p => {
+        p.t += p.speed; if (p.t > 1) p.t -= 1;
+        const pt = cbPt(s, p.t);
+        const pA = Math.pow(pt.y / H, 1.6) * 0.82;
+        if (pA < 0.02) return;
+        ctx.save();
+        ctx.shadowColor = 'rgba(160,200,255,0.90)';
+        ctx.shadowBlur  = 12;
         ctx.beginPath();
-        ctx.arc(pt.x, pt.y, p.size * 3, 0, Math.PI * 2);
+        ctx.arc(pt.x, pt.y, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(160,200,255,${pA.toFixed(3)})`;
         ctx.fill();
-      }
-    }
-
-    /* ── Atmospheric bleed: bridge colour bleeds into AI section ── */
-    const edgeGlow = ctx.createLinearGradient(0, H * 0.72, 0, H);
-    edgeGlow.addColorStop(0, 'rgba(75,105,255,0)');
-    edgeGlow.addColorStop(1, 'rgba(75,105,255,0.058)');
-    ctx.fillStyle = edgeGlow;
-    ctx.fillRect(0, H * 0.72, W, H * 0.28);
+        ctx.restore();
+      });
+    });
 
     t += 0.016;
   }
 
-  function loop() { draw(); rafId = requestAnimationFrame(loop); }
+  function loop()  { draw(); rafId = requestAnimationFrame(loop); }
+  function start() { if (running) return; running = true;  resize(); loop(); }
+  function stop()  { if (!running) return; running = false; cancelAnimationFrame(rafId); rafId = null; }
 
-  function start() {
-    if (running) return;
-    running = true;
-    resize();
-    loop();
-  }
-  function stop() {
-    if (!running) return;
-    running = false;
-    cancelAnimationFrame(rafId);
-    rafId = null;
-  }
-
-  /* Pause off-screen; reveal chip on first entry */
   const obs = new IntersectionObserver(entries => {
-    entries.forEach(e => {
-      if (e.isIntersecting) {
-        start();
-        bridge.classList.add('caib-visible');
-      } else {
-        stop();
-      }
-    });
-  }, { threshold: 0.08 });
+    entries.forEach(e => { e.isIntersecting ? start() : stop(); });
+  }, { rootMargin: '150px' });
   obs.observe(bridge);
 
   window.addEventListener('resize', () => { if (running) { stop(); start(); } });
 }
+
 
 /* ----------------------------------------------------------
    Tech Stack — Heatmap canvas background
