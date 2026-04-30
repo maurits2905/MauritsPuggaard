@@ -497,27 +497,26 @@
 }
 
 /* ═══════════════════════════════════════════════════
-   TECH → AI  SEAMLESS BLEND
-   No separate bridge element — the ask canvas bleeds
-   upward so streams emerge from inside the tech section.
+   TECH → AI  SHARED BACKGROUND
+   The ask canvas IS the background for both sections.
+   Tech section is transparent — glyphs float above it.
    ═══════════════════════════════════════════════════ */
 
-/* Tall overlay so the last heat glyphs dissolve completely before the
-   section edge — no glyph texture bleeds into the ask section */
-.techBottomFade {
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  height: 120px;
-  background: linear-gradient(to bottom, transparent 0%, #06070f 100%);
-  pointer-events: none;
+/* Tech section: no fill of its own — ask canvas provides the dark base.
+   z-index:2 makes tech content paint above the ask canvas's upward bleed. */
+.section.tech {
+  background: transparent !important;
   z-index: 2;
 }
 
-/* Canvas bleeds 160 px above the ask section so bezier streams
-   fade in from within the tech section — zero hard seam */
-#askBgCanvas {
-  top: -160px !important;
-  height: calc(100% + 160px) !important;
+/* Ask section behind tech so its canvas bleeds up behind the glyph overlay */
+.ask-reveal {
+  z-index: 1;
+}
+
+/* Bottom fade no longer needed — glyph dissolve handled by JS globalAlpha */
+.techBottomFade {
+  display: none;
 }
 
     </style>

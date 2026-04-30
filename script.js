@@ -1596,16 +1596,23 @@ function initAskBg() {
   let animId = null;
   let curves  = [];
 
-  /* Canvas extends YOFF px above the ask section so streams emerge
-     from inside the tech section — no hard seam at the boundary */
-  const YOFF = 160;
+  /* YOFF = how far the canvas extends above the ask section (= tech section height).
+     Updated dynamically in measure() so it works at any viewport size. */
+  let YOFF = 0;
 
   /* ── Measure ── */
   function measure() {
     cancelAnimationFrame(animId);
+
+    // Extend canvas to cover the full tech section above
+    const techSection = document.getElementById('tech');
+    YOFF = techSection ? techSection.offsetHeight : 200;
+    canvas.style.top    = `-${YOFF}px`;
+    canvas.style.height = `calc(100% + ${YOFF}px)`;
+
     const sr = section.getBoundingClientRect();
     W = Math.round(sr.width);
-    H = Math.round(sr.height) + YOFF;   // extra height for the upward bleed
+    H = Math.round(sr.height) + YOFF;
     canvas.width  = W;
     canvas.height = H;
 
@@ -1613,7 +1620,7 @@ function initAskBg() {
     if (panel) {
       const pr = panel.getBoundingClientRect();
       pX = pr.left - sr.left;
-      pY = (pr.top  - sr.top) + YOFF;   // shift panel Y into canvas coords
+      pY = (pr.top  - sr.top) + YOFF;   // panel Y in canvas coords
       pW = pr.width;
       pH = pr.height;
     } else {
@@ -1648,9 +1655,11 @@ function initAskBg() {
       // End distributed along panel top edge
       const ex = entryL + frac * (entryR - entryL);
 
-      // Cubic bezier: first CP drops straight down, second CP approaches panel x
-      const cp1 = { x: sx,       y: pY * 0.28 };
-      const cp2 = { x: ex,       y: pY * 0.72 };
+      // Streams start at YOFF (ask section top) and flow to the panel.
+      // CPs are relative to the ask section span so curves don't loop.
+      const askSpan = pY - YOFF;
+      const cp1 = { x: sx,       y: YOFF + askSpan * 0.28 };
+      const cp2 = { x: ex,       y: YOFF + askSpan * 0.72 };
 
       const nPulse = 1 + (i % 4 === 0 ? 1 : 0);
       const pulses = [];
@@ -1667,7 +1676,7 @@ function initAskBg() {
       const baseAlpha    = (0.10 + Math.random() * 0.07) * centreBoost;
 
       curves.push({
-        p0: { x: sx, y: 0 },
+        p0: { x: sx, y: YOFF },   // streams start at ask section boundary
         p1: cp1,
         p2: cp2,
         p3: { x: ex, y: pY },
@@ -1700,7 +1709,10 @@ function initAskBg() {
   /* ── Render ── */
   function draw() {
     if (!W || !H) { animId = requestAnimationFrame(draw); return; }
-    ctx.clearRect(0, 0, W, H);
+
+    /* Solid dark base — canvas is now the shared background for BOTH sections */
+    ctx.fillStyle = '#06070f';
+    ctx.fillRect(0, 0, W, H);
 
     const now = performance.now() * 0.001;
     const hb  = heartbeat(now);          // 0..1 pulse value
@@ -1708,14 +1720,23 @@ function initAskBg() {
     const cx = pX + pW * 0.5;
     const cy = pY + pH * 0.5;
 
-    /* Wide atmospheric bleed upward into Tech section */
+    /* Subtle ambient glow drifting up into the tech section — gives it
+       the same atmospheric quality as the ask section background */
+    const techA = 0.022 + 0.008 * Math.sin(now * 0.29) + hb * 0.012;
+    const tg = ctx.createLinearGradient(0, 0, 0, YOFF);
+    tg.addColorStop(0,   'rgba(75,105,255,0)');
+    tg.addColorStop(1,   'rgba(75,105,255,' + techA.toFixed(3) + ')');
+    ctx.fillStyle = tg;
+    ctx.fillRect(0, 0, W, YOFF);
+
+    /* Wide atmospheric glow centred on the panel — fills ask section */
     const bleedA = 0.038 + 0.012 * Math.sin(now * 0.38) + hb * 0.07;
     const bg = ctx.createRadialGradient(cx, pY, 0, cx, pY, Math.max(W, H) * 0.85);
     bg.addColorStop(0,   'rgba(75,105,255,' + bleedA.toFixed(3) + ')');
     bg.addColorStop(0.55,'rgba(75,105,255,' + (bleedA * 0.28).toFixed(3) + ')');
     bg.addColorStop(1,   'rgba(75,105,255,0)');
     ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, W, H);
+    ctx.fillRect(0, YOFF, W, H - YOFF);
 
     /* Panel core heartbeat flash */
     const coreA = 0.10 + hb * 0.28;
