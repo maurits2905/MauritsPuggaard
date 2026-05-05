@@ -804,49 +804,53 @@
       <!-- COMPANIES & COLLABORATIONS -->
       <section id="companies" aria-label="Companies and collaborations">
 
-        <p class="companiesEyebrow">Companies &amp; Collaborations</p>
+        <span class="companiesLabel" aria-hidden="true">Companies &amp; Collaborations</span>
 
-        <!-- Drag hint -->
-        <p class="companiesDragHint" aria-hidden="true">← drag →</p>
+        <div class="companiesStrip" id="companiesStrip">
+          <div class="companiesTrack" id="companiesTrack">
 
-        <div class="companiesTrack" id="companiesTrack">
-          <div class="companiesInner" id="companiesInner">
+            <!-- Set A — visible, with links -->
+            <div class="companiesSet" id="companiesSetA">
+              <a class="companyLogo" href="https://www.2bm.dk/" target="_blank" rel="noopener" aria-label="2BM Software"><img src="assets/logos/2bm_software.png" alt="2BM Software" draggable="false"></a>
+              <span class="companySep" aria-hidden="true"></span>
+              <a class="companyLogo" href="https://www.naviair.dk/" target="_blank" rel="noopener" aria-label="Naviair"><img src="assets/logos/naviair.png" alt="Naviair" draggable="false"></a>
+              <span class="companySep" aria-hidden="true"></span>
+              <a class="companyLogo" href="https://www.ey.com/" target="_blank" rel="noopener" aria-label="EY"><img src="assets/logos/ey.png" alt="EY" draggable="false"></a>
+              <span class="companySep" aria-hidden="true"></span>
+              <a class="companyLogo" href="https://www.bestseller.com/" target="_blank" rel="noopener" aria-label="Bestseller"><img src="assets/logos/bestseller.png" alt="Bestseller" draggable="false"></a>
+              <span class="companySep" aria-hidden="true"></span>
+              <a class="companyLogo" href="https://www.banedanmark.dk/" target="_blank" rel="noopener" aria-label="Banedanmark"><img src="assets/logos/banedanmark.png" alt="Banedanmark" draggable="false"></a>
+              <span class="companySep" aria-hidden="true"></span>
+              <a class="companyLogo" href="https://www.beaulieu-international.com/" target="_blank" rel="noopener" aria-label="Beaulieu"><img src="assets/logos/beaulieu.png" alt="Beaulieu" draggable="false"></a>
+              <span class="companySep" aria-hidden="true"></span>
+              <a class="companyLogo" href="https://www.pollensense.com/" target="_blank" rel="noopener" aria-label="Pollen Sense"><img src="assets/logos/pollensense.png" alt="Pollen Sense" draggable="false"></a>
+              <span class="companySep" aria-hidden="true"></span>
+              <a class="companyLogo" href="https://www.cph.dk/" target="_blank" rel="noopener" aria-label="Copenhagen Airports"><img src="assets/logos/cph_airports.png" alt="Copenhagen Airports" draggable="false"></a>
+              <span class="companySep" aria-hidden="true"></span>
+              <span class="companyLogo companyLogoText" aria-label="SEAVIS">SEAVIS</span>
+              <span class="companySep" aria-hidden="true"></span>
+            </div>
 
-            <a class="companyCard" href="https://www.2bm.dk/" target="_blank" rel="noopener noreferrer" aria-label="2BM Software">
-              <img src="assets/logos/2bm_software.png" alt="2BM Software" draggable="false">
-            </a>
-
-            <a class="companyCard" href="https://www.naviair.dk/" target="_blank" rel="noopener noreferrer" aria-label="Naviair">
-              <img src="assets/logos/naviair.png" alt="Naviair" draggable="false">
-            </a>
-
-            <a class="companyCard" href="https://www.ey.com/" target="_blank" rel="noopener noreferrer" aria-label="EY">
-              <img src="assets/logos/ey.png" alt="EY" draggable="false">
-            </a>
-
-            <a class="companyCard" href="https://www.bestseller.com/" target="_blank" rel="noopener noreferrer" aria-label="Bestseller">
-              <img src="assets/logos/bestseller.png" alt="Bestseller" draggable="false">
-            </a>
-
-            <a class="companyCard" href="https://www.banedanmark.dk/" target="_blank" rel="noopener noreferrer" aria-label="Banedanmark">
-              <img src="assets/logos/banedanmark.png" alt="Banedanmark" draggable="false">
-            </a>
-
-            <a class="companyCard" href="https://www.beaulieu-international.com/" target="_blank" rel="noopener noreferrer" aria-label="Beaulieu">
-              <img src="assets/logos/beaulieu.png" alt="Beaulieu" draggable="false">
-            </a>
-
-            <a class="companyCard" href="https://www.pollensense.com/" target="_blank" rel="noopener noreferrer" aria-label="Pollen Sense">
-              <img src="assets/logos/pollensense.png" alt="Pollen Sense" draggable="false">
-            </a>
-
-            <a class="companyCard" href="https://www.cph.dk/" target="_blank" rel="noopener noreferrer" aria-label="Copenhagen Airports">
-              <img src="assets/logos/cph_airports.png" alt="Copenhagen Airports" draggable="false">
-            </a>
-
-            <!-- SEAVIS — no public website, not a link -->
-            <div class="companyCard companyCard--text" aria-label="SEAVIS">
-              <span>SEAVIS</span>
+            <!-- Set B — aria-hidden duplicate for seamless loop -->
+            <div class="companiesSet" aria-hidden="true">
+              <span class="companyLogo"><img src="assets/logos/2bm_software.png" alt="" draggable="false"></span>
+              <span class="companySep"></span>
+              <span class="companyLogo"><img src="assets/logos/naviair.png" alt="" draggable="false"></span>
+              <span class="companySep"></span>
+              <span class="companyLogo"><img src="assets/logos/ey.png" alt="" draggable="false"></span>
+              <span class="companySep"></span>
+              <span class="companyLogo"><img src="assets/logos/bestseller.png" alt="" draggable="false"></span>
+              <span class="companySep"></span>
+              <span class="companyLogo"><img src="assets/logos/banedanmark.png" alt="" draggable="false"></span>
+              <span class="companySep"></span>
+              <span class="companyLogo"><img src="assets/logos/beaulieu.png" alt="" draggable="false"></span>
+              <span class="companySep"></span>
+              <span class="companyLogo"><img src="assets/logos/pollensense.png" alt="" draggable="false"></span>
+              <span class="companySep"></span>
+              <span class="companyLogo"><img src="assets/logos/cph_airports.png" alt="" draggable="false"></span>
+              <span class="companySep"></span>
+              <span class="companyLogo companyLogoText">SEAVIS</span>
+              <span class="companySep"></span>
             </div>
 
           </div>

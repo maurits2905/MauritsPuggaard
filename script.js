@@ -1584,101 +1584,88 @@ function initDeckBg() {
 /* renderProjGrid removed — compact grid replaced by card deck */
 
 /* ──────────────────────────────────────────────────────
-   COMPANIES — Draggable logo strip
+   COMPANIES — Auto-scroll + drag-to-scrub strip
 ────────────────────────────────────────────────────── */
-function initCompanyDrag() {
+function initCompanyStrip() {
+  const strip = document.getElementById("companiesStrip");
   const track = document.getElementById("companiesTrack");
-  if (!track) return;
+  const setA  = document.getElementById("companiesSetA");
+  if (!strip || !track || !setA) return;
 
-  let isDown   = false;
-  let startX   = 0;
-  let scrollL  = 0;
-  let dragDist = 0;
-  let velX     = 0;
-  let lastX    = 0;
-  let lastT    = 0;
-  let rafId    = null;
+  const AUTO = 0.55;   // px per frame auto-scroll speed
+  let setW   = 1;      // width of one logo set (measured after layout)
+  let pos    = 0;      // how many px we've scrolled (grows = moves left)
+  let vel    = AUTO;   // current velocity
+  let dragging  = false;
+  let pointerX  = 0;
+  let dragTotal = 0;   // total px moved during this drag (for click suppression)
 
-  function cancelMomentum() { cancelAnimationFrame(rafId); rafId = null; }
+  function measure() {
+    // setW = width of setA including trailing separator gap
+    const sepW = strip.querySelector(".companySep")
+      ? strip.querySelector(".companySep").offsetWidth +
+        parseFloat(getComputedStyle(strip.querySelector(".companySep")).marginLeft) +
+        parseFloat(getComputedStyle(strip.querySelector(".companySep")).marginRight)
+      : 108;
+    setW = setA.offsetWidth + sepW;
+  }
 
-  // ── Mouse ──
-  track.addEventListener("mousedown", (e) => {
-    if (e.button !== 0) return;
-    isDown   = true;
-    startX   = e.pageX;
-    scrollL  = track.scrollLeft;
-    dragDist = 0;
-    velX     = 0;
-    lastX    = e.pageX;
-    lastT    = Date.now();
-    track.classList.add("is-dragging");
-    cancelMomentum();
-  });
+  function wrap(p) {
+    return ((p % setW) + setW) % setW;
+  }
 
-  window.addEventListener("mousemove", (e) => {
-    if (!isDown) return;
-    const dx  = e.pageX - startX;
-    dragDist  = Math.abs(dx);
-    const now = Date.now();
-    const dt  = now - lastT || 1;
-    velX      = ((e.pageX - lastX) / dt) * 16;   // ~px per frame at 60fps
-    lastX     = e.pageX;
-    lastT     = now;
-    track.scrollLeft = scrollL - dx;
-  });
-
-  window.addEventListener("mouseup", () => {
-    if (!isDown) return;
-    isDown = false;
-    track.classList.remove("is-dragging");
-    // Momentum coast
-    let v = velX;
-    function coast() {
-      if (Math.abs(v) < 0.4) return;
-      track.scrollLeft -= v;
-      v *= 0.92;
-      rafId = requestAnimationFrame(coast);
+  // Single RAF loop — smooth, GPU-composited
+  (function loop() {
+    if (!dragging) {
+      // Ease velocity back to AUTO after drag
+      vel += (AUTO - vel) * 0.035;
+      pos  = wrap(pos + vel);
     }
-    coast();
+    track.style.transform = `translateX(${-pos}px)`;
+    requestAnimationFrame(loop);
+  })();
+
+  // ── Pointer events (unified mouse + touch) ──
+  strip.addEventListener("pointerdown", (e) => {
+    if (e.button !== 0 && e.pointerType === "mouse") return;
+    dragging  = true;
+    dragTotal = 0;
+    pointerX  = e.clientX;
+    strip.classList.add("is-grabbing");
+    strip.setPointerCapture(e.pointerId);
   });
 
-  // Suppress link navigation when card was dragged
-  track.addEventListener("click", (e) => {
-    if (dragDist > 6) e.preventDefault();
+  strip.addEventListener("pointermove", (e) => {
+    if (!dragging) return;
+    const dx = pointerX - e.clientX;   // positive = move strip left
+    dragTotal += Math.abs(dx);
+    vel  = dx * 0.7;                   // carry velocity for easing on release
+    pos  = wrap(pos + dx);
+    track.style.transform = `translateX(${-pos}px)`;
+    pointerX = e.clientX;
+  });
+
+  strip.addEventListener("pointerup", () => {
+    dragging = false;
+    strip.classList.remove("is-grabbing");
+    // vel will ease back to AUTO in the loop
+  });
+
+  // Suppress <a> click if the pointer travelled > 5 px
+  strip.addEventListener("click", (e) => {
+    if (dragTotal > 5) e.preventDefault();
   }, true);
 
-  // ── Touch ──
-  let touchX = 0, touchScroll = 0, touchVel = 0, touchLast = 0, touchLastX = 0;
-
-  track.addEventListener("touchstart", (e) => {
-    touchX      = e.touches[0].pageX;
-    touchScroll = track.scrollLeft;
-    touchVel    = 0;
-    touchLast   = Date.now();
-    touchLastX  = touchX;
-    cancelMomentum();
-  }, { passive: true });
-
-  track.addEventListener("touchmove", (e) => {
-    const dx  = e.touches[0].pageX - touchX;
-    const now = Date.now();
-    const dt  = now - touchLast || 1;
-    touchVel  = ((e.touches[0].pageX - touchLastX) / dt) * 16;
-    touchLastX = e.touches[0].pageX;
-    touchLast  = now;
-    track.scrollLeft = touchScroll - dx;
-  }, { passive: true });
-
-  track.addEventListener("touchend", () => {
-    let v = touchVel;
-    function coast() {
-      if (Math.abs(v) < 0.4) return;
-      track.scrollLeft -= v;
-      v *= 0.92;
-      rafId = requestAnimationFrame(coast);
-    }
-    coast();
-  });
+  // Measure after fonts/layout settle
+  if (document.readyState === "complete") {
+    measure();
+    window.addEventListener("resize", measure, { passive: true });
+  } else {
+    window.addEventListener("load", () => {
+      measure();
+      window.addEventListener("resize", measure, { passive: true });
+    });
+  }
 }
 
 /* ──────────────────────────────────────────────────────
@@ -3404,8 +3391,8 @@ async function init() {
     // Init particle background (needs deck rendered first)
     initDeckBg();
 
-    // Init draggable company logo strip
-    initCompanyDrag();
+    // Init auto-scroll + drag company strip
+    initCompanyStrip();
 
     // Init command palette
     initProjSearch();
