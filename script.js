@@ -388,6 +388,7 @@ const state = {
   // deck state
   deckProjects: [],   // rotating array; index 0 = active
   deckInited: false,
+  deckIntroPlayed: false,
 };
 
 function prefersReducedMotion() {
@@ -1113,7 +1114,6 @@ function renderWork() {
   if (tags) tags.textContent = String(Math.max(0, state.tags.length - 1));
 
   initDeck();
-  renderProjGrid();
 }
 
 /* ──────────────────────────────────────────────────────
@@ -1393,14 +1393,54 @@ function initDeck() {
   // Initial render
   renderDeckCards();
 
-  // Add swipe hint on first card (after 1s)
-  setTimeout(() => {
-    const card = wrap.querySelector('.deckCard[data-pos="0"]');
-    if (card && !prefersReducedMotion()) {
-      card.style.animation = "deckSwipeHint 0.9s ease-in-out";
-      card.addEventListener("animationend", () => { card.style.animation = ""; }, { once: true });
+  // ── Intro animation: cards fly up into stack when section enters view ──
+  function playDeckIntro() {
+    if (prefersReducedMotion()) return;
+    const cards = wrap.querySelectorAll('.deckCard');
+    if (!cards.length) return;
+
+    // Sort descending by pos so pos=3 (bottom) enters first, pos=0 (top) last
+    const sorted = Array.from(cards).sort(
+      (a, b) => Number(b.getAttribute('data-pos')) - Number(a.getAttribute('data-pos'))
+    );
+
+    // Snap all cards to starting (below) position with no transition
+    sorted.forEach(card => { card.classList.add('deck-intro-hidden'); });
+
+    // Force reflow so the browser registers the "from" state
+    void wrap.offsetHeight;
+
+    // Stagger each card into its final CSS [data-pos] position
+    sorted.forEach((card, i) => {
+      setTimeout(() => {
+        card.classList.remove('deck-intro-hidden');
+      }, 60 + i * 100);
+    });
+
+    // Swipe hint fires after intro completes (~60 + 3*100 + 450ms transition ≈ 870ms)
+    setTimeout(() => {
+      const topCard = wrap.querySelector('.deckCard[data-pos="0"]');
+      if (topCard && !prefersReducedMotion()) {
+        topCard.style.animation = "deckSwipeHint 0.9s ease-in-out";
+        topCard.addEventListener("animationend", () => { topCard.style.animation = ""; }, { once: true });
+      }
+    }, 1100);
+  }
+
+  if (!state.deckIntroPlayed) {
+    const workSection = document.getElementById('work');
+    if (workSection) {
+      const introObs = new IntersectionObserver((entries, ob) => {
+        if (entries[0].isIntersecting) {
+          state.deckIntroPlayed = true;
+          ob.disconnect();
+          // Small delay so layout has settled
+          setTimeout(playDeckIntro, 80);
+        }
+      }, { threshold: 0.08 });
+      introObs.observe(workSection);
     }
-  }, 1200);
+  }
 }
 
 /* ──────────────────────────────────────────────────────
@@ -1541,56 +1581,7 @@ function initDeckBg() {
   initParticles();
 }
 
-/* ──────────────────────────────────────────────────────
-   COMPACT ALL-PROJECTS GRID
-────────────────────────────────────────────────────── */
-function renderProjGrid() {
-  const grid = document.getElementById("projGrid");
-  if (!grid || !state.projects.length) return;
-
-  const sorted = [...state.projects].sort(
-    (a, b) =>
-      (b.featured === true) - (a.featured === true) ||
-      (b.date || "").localeCompare(a.date || ""),
-  );
-
-  grid.innerHTML = "";
-
-  sorted.forEach((p) => {
-    const cell = document.createElement("div");
-    cell.className = "projGridCell";
-    cell.tabIndex = 0;
-    cell.setAttribute("role", "button");
-    cell.setAttribute("aria-label", `Jump to ${p.name}`);
-
-    const tags = (p.tags || []).slice(0, 3)
-      .map(t => `<span class="projGridTag">${escapeHtml(t)}</span>`).join("");
-
-    cell.innerHTML = `
-      ${p.imageUrl ? `<img class="projGridImg" src="${escapeHtml(p.imageUrl)}" alt="${escapeHtml(p.name)}" loading="lazy">` : ""}
-      <div class="projGridOverlay">
-        <div class="projGridName">${escapeHtml(p.name)}</div>
-        <div class="projGridTags">${tags}</div>
-      </div>
-    `;
-
-    const jumpTo = () => {
-      const wrap = document.getElementById("deckWrap");
-      if (wrap && wrap._jumpToDeck) {
-        wrap._jumpToDeck(p.id || p.name);
-        // Scroll to deck section
-        document.getElementById("work")?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
-    };
-
-    cell.addEventListener("click", jumpTo);
-    cell.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); jumpTo(); }
-    });
-
-    grid.appendChild(cell);
-  });
-}
+/* renderProjGrid removed — compact grid replaced by card deck */
 
 /* ──────────────────────────────────────────────────────
    COMMAND PALETTE SEARCH
