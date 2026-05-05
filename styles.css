@@ -4063,6 +4063,142 @@ html.noReveal .r,
 }
 
 /* ══════════════════════════════════════════════════════════
+   COMPANIES & COLLABORATIONS — Logo Marquee
+   ══════════════════════════════════════════════════════════ */
+
+#companies {
+  padding: 52px 0 56px;
+  overflow: hidden;
+  border-top: 1px solid rgba(255,255,255,0.055);
+  border-bottom: 1px solid rgba(255,255,255,0.055);
+}
+
+.companiesEyebrow {
+  text-align: center;
+  font-size: 10.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(240,239,248,0.24);
+  margin: 0 0 28px;
+  font-family: 'DM Mono', 'Courier New', monospace;
+}
+
+/* Two-row marquee container */
+.companiesMarquee {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* Left & right edge fade */
+.companiesMarquee::before,
+.companiesMarquee::after {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0;
+  width: clamp(60px, 8vw, 160px);
+  z-index: 2;
+  pointer-events: none;
+}
+.companiesMarquee::before {
+  left: 0;
+  background: linear-gradient(to right, #06070f 0%, transparent 100%);
+}
+.companiesMarquee::after {
+  right: 0;
+  background: linear-gradient(to left, #06070f 0%, transparent 100%);
+}
+
+/* Single scrolling row */
+.marqueeRow {
+  overflow: hidden;
+  width: 100%;
+}
+
+/* The duplicated inner track */
+.marqueeInner {
+  display: flex;
+  align-items: center;
+  gap: 72px;
+  width: max-content;
+  animation: marqueeScroll var(--dur, 40s) linear infinite;
+  animation-direction: var(--dir, normal);
+}
+
+/* Pause the whole marquee on hover */
+.companiesMarquee:hover .marqueeInner {
+  animation-play-state: paused;
+}
+
+@keyframes marqueeScroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* Individual logo item */
+.marqueeItem {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.marqueeItem img {
+  height: 38px;
+  width: auto;
+  max-width: 180px;
+  filter: brightness(0) invert(1);
+  opacity: 0.38;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.marqueeItem:hover img {
+  opacity: 0.82;
+}
+
+/* SEAVIS — text wordmark badge (no logo available) */
+.marqueeSeavis {
+  display: inline-flex;
+  align-items: center;
+  height: 34px;
+  padding: 0 16px;
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 5px;
+  font-family: 'DM Mono', 'Courier New', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  color: rgba(255,255,255,0.38);
+  transition: color 0.35s, border-color 0.35s;
+  white-space: nowrap;
+}
+
+.marqueeItem:hover .marqueeSeavis {
+  color: rgba(255,255,255,0.82);
+  border-color: rgba(255,255,255,0.42);
+}
+
+/* Respect reduced-motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .marqueeInner {
+    animation: none;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 40px;
+  }
+}
+
+/* Mobile — smaller logos, tighter gap */
+@media (max-width: 640px) {
+  .marqueeInner { gap: 48px; }
+  .marqueeItem img { height: 28px; max-width: 130px; }
+  .marqueeSeavis { height: 28px; font-size: 10px; padding: 0 12px; }
+}
+
+/* ══════════════════════════════════════════════════════════
    PROJECTS — Stacked Card Deck
    ══════════════════════════════════════════════════════════ */
 
