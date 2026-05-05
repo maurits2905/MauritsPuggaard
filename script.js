@@ -376,7 +376,7 @@ function initStory() {
 /* ------------------------------
    Projects rendering
 ------------------------------ */
-const WORK_PREVIEW = 3; // cards shown before "Show more"
+const WORK_PREVIEW = 3; // legacy — kept for compat
 
 const state = {
   projects: [],
@@ -385,6 +385,9 @@ const state = {
   workEntered: false,
   workExpanded: false,
   activeTag: "All",
+  // deck state
+  deckProjects: [],   // rotating array; index 0 = active
+  deckInited: false,
 };
 
 function prefersReducedMotion() {
@@ -1025,30 +1028,7 @@ function initShowcase() {
 }
 
 function animateWorkCards() {
-  if (!window.gsap || prefersReducedMotion()) return;
-
-  const cards = Array.from(document.querySelectorAll("#workGrid .projectCard"));
-  if (!cards.length) return;
-
-  gsap.killTweensOf(cards);
-
-  gsap.fromTo(
-    cards,
-    {
-      opacity: 0,
-      x: 72,
-      y: 6,
-    },
-    {
-      opacity: 1,
-      x: 0,
-      y: 0,
-      duration: 0.85, // ⬅ slower entrance
-      ease: "power3.out", // ⬅ smoother, less snappy
-      stagger: 0.12, // ⬅ cards arrive one-by-one
-      clearProps: "transform",
-    },
-  );
+  // Legacy stub — deck handles its own animations
 }
 
 function escapeHtml(str) {
@@ -1072,245 +1052,708 @@ function formatDate(iso) {
   return d.toLocaleDateString(undefined, { year: "numeric", month: "short" });
 }
 
+/* ──────────────────────────────────────────────────────
+   PERSONALITY PALETTES
+────────────────────────────────────────────────────── */
+const DECK_PALETTES = {
+  "DailyHub":              { primary:"#f59e0b", secondary:"#10b981", bgL:"#1a0f02", bgR:"#0a1a0f" },
+  "AntLab":                { primary:"#4ade80", secondary:"#fb923c", bgL:"#0a1a05", bgR:"#1a0a02" },
+  "SAP Navigator":         { primary:"#60a5fa", secondary:"#a78bfa", bgL:"#020c1a", bgR:"#08021a" },
+  "Excel Merger":          { primary:"#34d399", secondary:"#6ee7b7", bgL:"#021409", bgR:"#02100a" },
+  "Work Time Calculator":  { primary:"#f472b6", secondary:"#c084fc", bgL:"#180210", bgR:"#100218" },
+  "AI Answer and Transcript": { primary:"#c084fc", secondary:"#818cf8", bgL:"#0e0220", bgR:"#060420" },
+  "Polen Dashboard":       { primary:"#86efac", secondary:"#67e8f9", bgL:"#031208", bgR:"#021214" },
+  "SAP-Multiagent":        { primary:"#38bdf8", secondary:"#818cf8", bgL:"#020e18", bgR:"#040418" },
+  "Compare code program":  { primary:"#f87171", secondary:"#fb923c", bgL:"#180404", bgR:"#180a02" },
+  "MoneyCounter":          { primary:"#facc15", secondary:"#fb923c", bgL:"#181202", bgR:"#180a02" },
+  "Data Hub":              { primary:"#67e8f9", secondary:"#86efac", bgL:"#021418", bgR:"#031208" },
+  "Heat Map":              { primary:"#f97316", secondary:"#facc15", bgL:"#180802", bgR:"#181202" },
+};
+const DECK_PALETTE_DEFAULT = { primary:"#9b8cff", secondary:"#4b69ff", bgL:"#080218", bgR:"#02081a" };
+
+function getDeckPalette(projectName) {
+  return DECK_PALETTES[projectName] || DECK_PALETTE_DEFAULT;
+}
+
+function hexToRgb(hex) {
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  return [r,g,b];
+}
+
+/* ──────────────────────────────────────────────────────
+   filteredProjects  (legacy — kept for stats compat)
+────────────────────────────────────────────────────── */
 function filteredProjects() {
   let list = [...state.projects];
-
-  if (state.activeTag !== "All") {
-    list = list.filter((p) => (p.tags || []).includes(state.activeTag));
-  }
-
-  const q = state.query.trim().toLowerCase();
-  if (q) {
-    list = list.filter((p) => {
-      const hay = `${p.name} ${p.description} ${(p.tags || []).join(" ")} ${(
-        p.highlights || []
-      ).join(" ")}`.toLowerCase();
-      return hay.includes(q);
-    });
-  }
-
   list.sort(
     (a, b) =>
       (b.featured === true) - (a.featured === true) ||
       (b.date || "").localeCompare(a.date || ""),
   );
-
   return list;
 }
 
-function renderTags() {
-  const bar = document.getElementById("tagsBar");
-  if (!bar) return;
-  bar.innerHTML = "";
+function renderTags() { /* no-op — deck search replaces tag drawer */ }
 
-  state.tags.forEach((t) => {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.textContent = t;
-    if (t === state.activeTag) btn.classList.add("active");
-    btn.addEventListener("click", () => {
-      state.activeTag = t;
-      renderWork();
-    });
-    bar.appendChild(btn);
-  });
-}
-
-function makeProjectCard(p, index) {
-  const el = document.createElement("article");
-  el.className = "projectCard r" + (p.featured ? " featured" : "");
-  el.tabIndex = 0;
-
-  // Per-card accent palette — cycles through a set of dark-toned backgrounds
-  const palettes = [
-    { bg: "linear-gradient(135deg,#1a0406 0%,#2d0810 100%)", accent: "#ff3352" },
-    { bg: "linear-gradient(135deg,#03081e 0%,#081028 100%)", accent: "#3a80ff" },
-    { bg: "linear-gradient(135deg,#0a0318 0%,#130528 100%)", accent: "#9b5cf6" },
-    { bg: "linear-gradient(135deg,#021808 0%,#032010 100%)", accent: "#22c55e" },
-    { bg: "linear-gradient(135deg,#1a0c02 0%,#241404 100%)", accent: "#f97316" },
-    { bg: "linear-gradient(135deg,#001a18 0%,#022420 100%)", accent: "#2dd4bf" },
-    { bg: "linear-gradient(135deg,#1a1002 0%,#241802 100%)", accent: "#facc15" },
-    { bg: "linear-gradient(135deg,#02101a 0%,#041824 100%)", accent: "#38bdf8" },
-    { bg: "linear-gradient(135deg,#180204 0%,#200408 100%)", accent: "#e11d48" },
-  ];
-  const pal = palettes[index % palettes.length];
-
-  const imgHtml = p.imageUrl
-    ? `<img class="cardImg" src="${p.imageUrl}" alt="${escapeHtml(p.name)}" onerror="this.style.display='none'">`
-    : "";
-
-  // Circular spinning badge
-  const circleId = `cp${index}`;
-  const visitBadge =
-    p.demoUrl && p.demoUrl !== "x"
-      ? `<a class="visitBadge" href="${p.demoUrl}" target="_blank" rel="noopener" aria-label="Visit project">
-           <svg class="visitRing" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-             <path id="${circleId}" fill="none" d="M50,50 m-32,0 a32,32 0 1,1 64,0 a32,32 0 1,1 -64,0"/>
-             <text class="visitText"><textPath href="#${circleId}">VISIT PROJECT · VISIT PROJECT · </textPath></text>
-           </svg>
-           <span class="visitArrow" style="color:${pal.accent}">↗</span>
-         </a>`
-      : "";
-
-  // Highlights bullet list (max 3)
-  const highlights = (p.highlights || [])
-    .filter((h) => h && h !== "x")
-    .slice(0, 3)
-    .map(
-      (h) =>
-        `<li class="cardHighlightItem"><span class="highlightPlus" style="color:${pal.accent}">+</span>${escapeHtml(h)}</li>`,
-    )
-    .join("");
-
-  const tags = (p.tags || [])
-    .slice(0, 5)
-    .map((t) => `<span class="tag">${escapeHtml(t)}</span>`)
-    .join("");
-
-  el.innerHTML = `
-    <div class="cardLeft" style="background:${pal.bg}">
-      <div class="cardImgWrap">${imgHtml}</div>
-      <div class="cardOverlay"><span class="overlayLabel">View Project</span></div>
-      ${visitBadge}
-    </div>
-
-    <div class="cardRight">
-      <div class="cardRightTop">
-        <div class="cardNumRow">
-          <span class="cardNum" style="color:${pal.accent}">${String(index + 1).padStart(2, "0")}</span>
-          ${p.featured ? `<span class="pBadge">Featured</span>` : ""}
-        </div>
-        <div class="cardAccentLine" style="background:${pal.accent}"></div>
-      </div>
-
-      <h3 class="cardTitle">${escapeHtml(p.name)}</h3>
-      <p class="cardDesc">${escapeHtml(p.description || "")}</p>
-
-      ${highlights ? `<ul class="cardHighlights">${highlights}</ul>` : ""}
-
-      <div class="cardBottom">
-        <div class="tagRow">${tags}</div>
-        <div class="cardLinks">
-          ${p.demoUrl && p.demoUrl !== "x" ? `<a class="cardLink live" href="${p.demoUrl}" target="_blank" rel="noopener">↗ Live</a>` : ""}
-          ${p.repoUrl && p.repoUrl !== "x" ? `<a class="cardLink" href="${p.repoUrl}" target="_blank" rel="noopener">{ } Code</a>` : ""}
-        </div>
-      </div>
-    </div>
-  `;
-
-  // Subtle lift on hover (no tilt — horizontal card doesn't benefit from tilt)
-  if (window.matchMedia("(hover: hover)").matches) {
-    el.addEventListener("mouseleave", () => {
-      el.style.transform = "";
-    });
-  }
-
-  el.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      if (p.demoUrl && p.demoUrl !== "x")
-        window.open(p.demoUrl, "_blank", "noopener");
-      else if (p.repoUrl && p.repoUrl !== "x")
-        window.open(p.repoUrl, "_blank", "noopener");
-    }
-  });
-
-  return el;
-}
-
-function renderFeatured() {
-  const featured = state.projects.find((p) => p.featured) || state.projects[0];
-  if (!featured) return;
-
-  const meta = document.getElementById("featuredMeta");
-  const title = document.getElementById("featuredTitle");
-  const desc = document.getElementById("featuredDesc");
-  const tags = document.getElementById("featuredTags");
-  const btns = document.getElementById("featuredBtns");
-
-  if (!meta || !title || !desc || !tags || !btns) return;
-
-  title.textContent = featured.name;
-  desc.textContent = featured.description || "";
-  meta.textContent = `Updated ${formatDate(featured.date)}`;
-
-  tags.innerHTML = (featured.tags || [])
-    .slice(0, 5)
-    .map((t) => `<span class="tag">${escapeHtml(t)}</span>`)
-    .join("");
-
-  const out = [];
-  if (featured.demoUrl)
-    out.push(
-      `<a class="btn primary" href="${featured.demoUrl}" target="_blank" rel="noopener">Live demo</a>`,
-    );
-  if (featured.repoUrl)
-    out.push(
-      `<a class="btn" href="${featured.repoUrl}" target="_blank" rel="noopener">Code</a>`,
-    );
-  btns.innerHTML = out.join("");
-}
+function renderFeatured() { /* no-op */ }
 
 function renderWork() {
-  renderTags();
-
-  const list = filteredProjects();
-  const grid = document.getElementById("workGrid");
-  const empty = document.getElementById("emptyState");
-  const showMoreWrap = document.getElementById("workShowMoreWrap");
-  const showMoreLabel = document.getElementById("workShowMoreLabel");
+  // Update total badge
   const totalBadge = document.getElementById("workTotalCount");
-  if (!grid || !empty) return;
-
-  // When search/tag filter is active show everything; otherwise respect preview
-  const isFiltered =
-    state.activeTag !== "All" || state.query.trim() !== "";
-  const visibleList =
-    isFiltered || state.workExpanded ? list : list.slice(0, WORK_PREVIEW);
-
-  grid.innerHTML = "";
-  visibleList.forEach((p, i) => grid.appendChild(makeProjectCard(p, i)));
-  empty.hidden = list.length !== 0;
-
-  // Total count badge in subtitle
   if (totalBadge) {
     totalBadge.textContent =
       state.projects.length > 0 ? `${state.projects.length} projects` : "";
   }
-
-  // Show More / Show Less button
-  const hasHidden = !isFiltered && list.length > WORK_PREVIEW;
-  if (showMoreWrap) {
-    showMoreWrap.hidden = !hasHidden;
-  }
-  if (showMoreLabel && hasHidden) {
-    if (state.workExpanded) {
-      showMoreLabel.textContent = "Show less";
-      const svg = showMoreLabel.nextElementSibling;
-      if (svg) svg.style.transform = "rotate(180deg)";
-    } else {
-      showMoreLabel.textContent = `Show all ${list.length} projects`;
-      const svg = showMoreLabel.nextElementSibling;
-      if (svg) svg.style.transform = "";
-    }
-  }
-
-  // Always update pinned story stats
+  // Update stats
   const proj = document.getElementById("statProjects");
   const tags = document.getElementById("statTags");
   if (proj) proj.textContent = String(state.projects.length);
   if (tags) tags.textContent = String(Math.max(0, state.tags.length - 1));
 
-  // Hide rail arrows (not needed)
-  const prev = document.getElementById("railPrev");
-  const next = document.getElementById("railNext");
-  if (prev) prev.hidden = true;
-  if (next) next.hidden = true;
+  initDeck();
+  renderProjGrid();
+}
 
-  if (list.length === 0) return;
+/* ──────────────────────────────────────────────────────
+   DECK CARD BUILDER
+────────────────────────────────────────────────────── */
+function makeDeckCard(p, deckIndex, pos) {
+  const pal = getDeckPalette(p.name);
+  const el = document.createElement("div");
+  el.className = "deckCard";
+  el.setAttribute("data-pos", pos);
+  el.setAttribute("data-deck-index", deckIndex);
+  el.setAttribute("role", "article");
+  el.setAttribute("aria-label", p.name);
 
-  // Animate cards only when section has been entered
-  if (state.workEntered) {
-    requestAnimationFrame(() => animateWorkCards());
+  // Apply CSS custom properties for palette
+  el.style.setProperty("--dk-primary",   pal.primary);
+  el.style.setProperty("--dk-secondary", pal.secondary);
+  el.style.setProperty("--dk-bg-l",      pal.bgL);
+  el.style.setProperty("--dk-bg-r",      pal.bgR);
+
+  const numStr = String(deckIndex + 1).padStart(2, "0");
+
+  const highlights = (p.highlights || [])
+    .filter((h) => h && h !== "x")
+    .slice(0, 3)
+    .map((h) => `<li class="deckCardHighlightItem">
+      <span class="deckCardHighlightPlus">+</span>${escapeHtml(h)}
+    </li>`)
+    .join("");
+
+  const tags = (p.tags || [])
+    .slice(0, 4)
+    .map((t) => `<span class="deckCardTag">${escapeHtml(t)}</span>`)
+    .join("");
+
+  const liveLink = p.demoUrl && p.demoUrl !== "x"
+    ? `<a class="deckCardLink live" href="${escapeHtml(p.demoUrl)}" target="_blank" rel="noopener">↗ Live</a>`
+    : "";
+  const codeLink = p.repoUrl && p.repoUrl !== "x"
+    ? `<a class="deckCardLink code" href="${escapeHtml(p.repoUrl)}" target="_blank" rel="noopener">{ } Code</a>`
+    : "";
+
+  const imgHtml = p.imageUrl
+    ? `<img class="deckCardMockupImg" src="${escapeHtml(p.imageUrl)}" alt="${escapeHtml(p.name)}" loading="lazy" onerror="this.parentElement.style.background='#0d0d0d'">`
+    : "";
+
+  el.innerHTML = `
+    <div class="deckCardLeft">
+      <div class="deckCardTop">
+        <div class="deckCardNum">${numStr}</div>
+        <div class="deckCardAccentLine"></div>
+        <h3 class="deckCardTitle">${escapeHtml(p.name)}</h3>
+        <p class="deckCardDesc">${escapeHtml(p.description || "")}</p>
+        ${highlights ? `<ul class="deckCardHighlights">${highlights}</ul>` : ""}
+      </div>
+      <div class="deckCardBottom">
+        <div class="deckCardTags">${tags}</div>
+        <div class="deckCardLinks">${liveLink}${codeLink}</div>
+      </div>
+    </div>
+    <div class="deckCardRight">
+      <div class="deckCardMockup">
+        <div class="deckCardMockupBar">
+          <span class="deckCardMockupDot"></span>
+          <span class="deckCardMockupDot"></span>
+          <span class="deckCardMockupDot"></span>
+        </div>
+        ${imgHtml}
+      </div>
+    </div>
+    <div class="deckSwipeLeft">← SKIP</div>
+    <div class="deckSwipeRight">NEXT →</div>
+  `;
+
+  return el;
+}
+
+/* ──────────────────────────────────────────────────────
+   DECK INIT — manages the 4-card visible stack
+────────────────────────────────────────────────────── */
+function initDeck() {
+  const wrap = document.getElementById("deckWrap");
+  if (!wrap || !state.projects.length) return;
+  if (state.deckInited) return;
+  state.deckInited = true;
+
+  // Build rotating deck array — sorted featured-first then by date
+  state.deckProjects = [...state.projects].sort(
+    (a, b) =>
+      (b.featured === true) - (a.featured === true) ||
+      (b.date || "").localeCompare(a.date || ""),
+  );
+
+  const total = state.deckProjects.length;
+  let deckRotationIndex = 0;
+
+  function renderDeckCards() {
+    wrap.innerHTML = "";
+    const count = Math.min(4, state.deckProjects.length);
+    for (let pos = 0; pos < count; pos++) {
+      const p = state.deckProjects[pos];
+      // Compute visual deck index (for display number)
+      const realIdx = (deckRotationIndex + pos) % total;
+      const card = makeDeckCard(p, realIdx, pos);
+      wrap.appendChild(card);
+    }
+
+    // Update counter
+    const counterEl = document.getElementById("deckCounter");
+    if (counterEl) {
+      counterEl.textContent = `${String(deckRotationIndex + 1).padStart(2,"0")} / ${String(total).padStart(2,"0")}`;
+    }
+
+    // Update deck bg color with primary color of active project
+    const pal = getDeckPalette(state.deckProjects[0].name);
+    const rgb = hexToRgb(pal.primary);
+    if (window._deckBgSetColor) window._deckBgSetColor(rgb[0], rgb[1], rgb[2]);
+
+    // Attach drag/swipe to the new top card
+    attachDragToActiveCard();
+  }
+
+  function advanceDeck(direction) {
+    // Rotate deck: push front to back
+    state.deckProjects.push(state.deckProjects.shift());
+    deckRotationIndex = (deckRotationIndex + 1) % total;
+    renderDeckCards();
+  }
+
+  function jumpToDeck(projectId) {
+    // Rotate deck until project with given id is at index 0
+    let found = state.deckProjects.findIndex(p => p.id === projectId);
+    if (found < 0) found = state.deckProjects.findIndex(p => p.name === projectId);
+    if (found < 0) return;
+    for (let i = 0; i < found; i++) {
+      state.deckProjects.push(state.deckProjects.shift());
+      deckRotationIndex = (deckRotationIndex + 1) % total;
+    }
+    renderDeckCards();
+  }
+
+  // Expose jump for grid clicks and search
+  wrap._jumpToDeck = jumpToDeck;
+
+  function attachDragToActiveCard() {
+    const card = wrap.querySelector('.deckCard[data-pos="0"]');
+    if (!card) return;
+
+    let startX = 0, startY = 0;
+    let lastX = 0;
+    let lastTime = 0;
+    let isDragging = false;
+    let dx = 0, dy = 0;
+
+    function onPointerDown(e) {
+      if (e.target.closest('a')) return; // don't intercept link clicks
+      isDragging = true;
+      startX = e.clientX;
+      startY = e.clientY;
+      lastX = e.clientX;
+      lastTime = Date.now();
+      card.classList.add("is-dragging");
+      card.style.transition = "none";
+      wrap.classList.add("deck-dragging");
+      dx = 0; dy = 0;
+      card.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    }
+
+    function onPointerMove(e) {
+      if (!isDragging) return;
+      dx = e.clientX - startX;
+      dy = e.clientY - startY;
+      const rot = dx * 0.06;
+      const vy = dy * 0.3;
+      card.style.transform = `translateX(calc(-50% + ${dx}px)) translateY(${vy}px) rotate(${rot}deg)`;
+
+      // Show hint labels
+      const leftHint = card.querySelector('.deckSwipeLeft');
+      const rightHint = card.querySelector('.deckSwipeRight');
+      if (leftHint)  leftHint.style.opacity  = dx < -30 ? Math.min(1, (-dx - 30) / 80) : 0;
+      if (rightHint) rightHint.style.opacity = dx > 30  ? Math.min(1, (dx  - 30) / 80) : 0;
+
+      // Track velocity
+      const now = Date.now();
+      const elapsed = now - lastTime;
+      if (elapsed > 0) {
+        lastX = e.clientX;
+        lastTime = now;
+      }
+    }
+
+    function onPointerUp(e) {
+      if (!isDragging) return;
+      isDragging = false;
+      card.classList.remove("is-dragging");
+      wrap.classList.remove("deck-dragging");
+
+      const now = Date.now();
+      const elapsed = Math.max(1, now - lastTime);
+      const vel = Math.abs(e.clientX - lastX) / elapsed;
+      const absDx = Math.abs(dx);
+
+      if (absDx > 110 || vel > 0.45) {
+        // Dismiss
+        card.style.transition = "none";
+        card.classList.add(dx > 0 ? "fly-right" : "fly-left");
+        card.addEventListener("animationend", () => {
+          advanceDeck(dx > 0 ? 1 : -1);
+        }, { once: true });
+      } else {
+        // Spring back
+        card.style.transition = "transform 0.5s cubic-bezier(0.34,1.56,0.64,1)";
+        card.style.transform = `translateX(-50%) translateY(0) scale(1)`;
+        const leftHint = card.querySelector('.deckSwipeLeft');
+        const rightHint = card.querySelector('.deckSwipeRight');
+        if (leftHint)  leftHint.style.opacity = 0;
+        if (rightHint) rightHint.style.opacity = 0;
+      }
+    }
+
+    card.addEventListener("pointerdown", onPointerDown, { passive: false });
+    card.addEventListener("pointermove", onPointerMove, { passive: true });
+    card.addEventListener("pointerup",   onPointerUp);
+    card.addEventListener("pointercancel", onPointerUp);
+  }
+
+  // Keyboard navigation
+  document.addEventListener("keydown", (e) => {
+    const work = document.getElementById("work");
+    if (!work) return;
+    const rect = work.getBoundingClientRect();
+    // Only respond when work section is in view
+    if (rect.bottom < 0 || rect.top > window.innerHeight) return;
+    if (document.activeElement && (document.activeElement.tagName === "INPUT" || document.activeElement.tagName === "TEXTAREA")) return;
+
+    if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+      e.preventDefault();
+      // Animate current top card flying right, then advance
+      const card = wrap.querySelector('.deckCard[data-pos="0"]');
+      if (card) {
+        card.classList.add("fly-right");
+        card.addEventListener("animationend", () => advanceDeck(1), { once: true });
+      }
+    } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+      e.preventDefault();
+      const card = wrap.querySelector('.deckCard[data-pos="0"]');
+      if (card) {
+        card.classList.add("fly-left");
+        card.addEventListener("animationend", () => advanceDeck(-1), { once: true });
+      }
+    }
+  });
+
+  // Arrow button navigation
+  const prevBtn = document.getElementById("deckPrev");
+  const nextBtn = document.getElementById("deckNext");
+
+  if (prevBtn) {
+    prevBtn.addEventListener("click", () => {
+      // Go backwards — rotate from back to front
+      state.deckProjects.unshift(state.deckProjects.pop());
+      deckRotationIndex = (deckRotationIndex - 1 + total) % total;
+      renderDeckCards();
+    });
+  }
+  if (nextBtn) {
+    nextBtn.addEventListener("click", () => {
+      const card = wrap.querySelector('.deckCard[data-pos="0"]');
+      if (card) {
+        card.classList.add("fly-right");
+        card.addEventListener("animationend", () => advanceDeck(1), { once: true });
+      }
+    });
+  }
+
+  // Initial render
+  renderDeckCards();
+
+  // Add swipe hint on first card (after 1s)
+  setTimeout(() => {
+    const card = wrap.querySelector('.deckCard[data-pos="0"]');
+    if (card && !prefersReducedMotion()) {
+      card.style.animation = "deckSwipeHint 0.9s ease-in-out";
+      card.addEventListener("animationend", () => { card.style.animation = ""; }, { once: true });
+    }
+  }, 1200);
+}
+
+/* ──────────────────────────────────────────────────────
+   DECK BACKGROUND — Particle Constellation
+────────────────────────────────────────────────────── */
+function initDeckBg() {
+  const canvas = document.getElementById("deckBgCanvas");
+  if (!canvas) return;
+
+  const ctx = canvas.getContext("2d");
+  const N = 65;
+  const CONNECT_DIST = 160;
+  const SPEED = 0.25;
+  const LERP_SPEED = 0.018;
+
+  let targetColor = [75, 105, 255];
+  let currentColor = [75, 105, 255];
+  let W = 0, H = 0;
+  let raf = null;
+  let paused = false;
+
+  const particles = [];
+
+  function resize() {
+    const section = document.getElementById("work");
+    W = section ? section.offsetWidth : window.innerWidth;
+    H = section ? section.offsetHeight : window.innerHeight;
+    canvas.width  = W;
+    canvas.height = H;
+    canvas.style.width  = W + "px";
+    canvas.style.height = H + "px";
+  }
+
+  function initParticles() {
+    particles.length = 0;
+    for (let i = 0; i < N; i++) {
+      particles.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        vx: (Math.random() - 0.5) * SPEED * 2,
+        vy: (Math.random() - 0.5) * SPEED * 2,
+        size: 1 + Math.random() * 1.5,
+      });
+    }
+  }
+
+  function lerp(a, b, t) { return a + (b - a) * t; }
+
+  function frame() {
+    if (paused) { raf = null; return; }
+    raf = requestAnimationFrame(frame);
+
+    // Lerp color
+    for (let i = 0; i < 3; i++) {
+      currentColor[i] = lerp(currentColor[i], targetColor[i], LERP_SPEED);
+    }
+
+    ctx.clearRect(0, 0, W, H);
+
+    const cr = Math.round(currentColor[0]);
+    const cg = Math.round(currentColor[1]);
+    const cb = Math.round(currentColor[2]);
+
+    // Update + draw particles
+    for (let i = 0; i < N; i++) {
+      const p = particles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+
+      // Bounce off edges
+      if (p.x < 0)  { p.x = 0;  p.vx *= -1; }
+      if (p.x > W)  { p.x = W;  p.vx *= -1; }
+      if (p.y < 0)  { p.y = 0;  p.vy *= -1; }
+      if (p.y > H)  { p.y = H;  p.vy *= -1; }
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${cr},${cg},${cb},0.35)`;
+      ctx.fill();
+    }
+
+    // Connect nearby particles
+    for (let i = 0; i < N; i++) {
+      for (let j = i + 1; j < N; j++) {
+        const pi = particles[i], pj = particles[j];
+        const ddx = pi.x - pj.x;
+        const ddy = pi.y - pj.y;
+        const dist = Math.sqrt(ddx * ddx + ddy * ddy);
+        if (dist < CONNECT_DIST) {
+          const alpha = (1 - dist / CONNECT_DIST) * 0.12;
+          ctx.beginPath();
+          ctx.moveTo(pi.x, pi.y);
+          ctx.lineTo(pj.x, pj.y);
+          ctx.strokeStyle = `rgba(${cr},${cg},${cb},${alpha.toFixed(3)})`;
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+    }
+  }
+
+  // Public color setter
+  window._deckBgSetColor = function(r, g, b) {
+    targetColor = [r, g, b];
+  };
+
+  // IntersectionObserver to pause off-screen
+  const work = document.getElementById("work");
+  if (work && "IntersectionObserver" in window) {
+    const io = new IntersectionObserver((entries) => {
+      const ent = entries[0];
+      if (ent.isIntersecting) {
+        paused = false;
+        if (!raf) { raf = requestAnimationFrame(frame); }
+      } else {
+        paused = true;
+      }
+    }, { threshold: 0 });
+    io.observe(work);
+  } else {
+    // Just start
+    raf = requestAnimationFrame(frame);
+  }
+
+  window.addEventListener("resize", () => {
+    // Capture old dimensions, resize, then reposition proportionally
+    const oldW = W, oldH = H;
+    resize();
+    if (oldW > 0 && oldH > 0) {
+      particles.forEach(p => {
+        p.x = (p.x / oldW) * W;
+        p.y = (p.y / oldH) * H;
+      });
+    }
+  }, { passive: true });
+
+  resize();
+  initParticles();
+}
+
+/* ──────────────────────────────────────────────────────
+   COMPACT ALL-PROJECTS GRID
+────────────────────────────────────────────────────── */
+function renderProjGrid() {
+  const grid = document.getElementById("projGrid");
+  if (!grid || !state.projects.length) return;
+
+  const sorted = [...state.projects].sort(
+    (a, b) =>
+      (b.featured === true) - (a.featured === true) ||
+      (b.date || "").localeCompare(a.date || ""),
+  );
+
+  grid.innerHTML = "";
+
+  sorted.forEach((p) => {
+    const cell = document.createElement("div");
+    cell.className = "projGridCell";
+    cell.tabIndex = 0;
+    cell.setAttribute("role", "button");
+    cell.setAttribute("aria-label", `Jump to ${p.name}`);
+
+    const tags = (p.tags || []).slice(0, 3)
+      .map(t => `<span class="projGridTag">${escapeHtml(t)}</span>`).join("");
+
+    cell.innerHTML = `
+      ${p.imageUrl ? `<img class="projGridImg" src="${escapeHtml(p.imageUrl)}" alt="${escapeHtml(p.name)}" loading="lazy">` : ""}
+      <div class="projGridOverlay">
+        <div class="projGridName">${escapeHtml(p.name)}</div>
+        <div class="projGridTags">${tags}</div>
+      </div>
+    `;
+
+    const jumpTo = () => {
+      const wrap = document.getElementById("deckWrap");
+      if (wrap && wrap._jumpToDeck) {
+        wrap._jumpToDeck(p.id || p.name);
+        // Scroll to deck section
+        document.getElementById("work")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    };
+
+    cell.addEventListener("click", jumpTo);
+    cell.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); jumpTo(); }
+    });
+
+    grid.appendChild(cell);
+  });
+}
+
+/* ──────────────────────────────────────────────────────
+   COMMAND PALETTE SEARCH
+────────────────────────────────────────────────────── */
+function initProjSearch() {
+  const palette = document.getElementById("projSearch");
+  const backdrop = document.getElementById("projSearchBackdrop");
+  const input = document.getElementById("projSearchInput");
+  const results = document.getElementById("projSearchResults");
+
+  if (!palette || !input || !results) return;
+
+  let selectedIdx = -1;
+
+  function fuzzyMatch(query, project) {
+    if (!query) return true;
+    const q = query.toLowerCase().trim();
+    const hay = `${project.name} ${project.description || ""} ${(project.tags||[]).join(" ")} ${(project.highlights||[]).join(" ")}`.toLowerCase();
+    // For short queries (≤2 chars) require substring match; for longer, split by space and require all tokens
+    if (q.length <= 2) return hay.includes(q);
+    // Split into tokens — all must appear as substrings
+    const tokens = q.split(/\s+/);
+    return tokens.every(tok => hay.includes(tok));
+  }
+
+  function openPalette() {
+    palette.classList.add("is-open");
+    palette.setAttribute("aria-hidden", "false");
+    input.value = "";
+    input.focus();
+    renderResults("");
+    document.body.style.overflow = "hidden";
+  }
+
+  function closePalette() {
+    palette.classList.remove("is-open");
+    palette.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+    input.blur();
+  }
+
+  function renderResults(query) {
+    results.innerHTML = "";
+    selectedIdx = -1;
+
+    const matched = state.projects.filter(p => fuzzyMatch(query, p));
+
+    if (!matched.length) {
+      const noRes = document.createElement("div");
+      noRes.className = "projSearchNoResult";
+      noRes.innerHTML = `
+        <div class="projSearchNoResultTitle">No results for "${escapeHtml(query)}"</div>
+        <div class="projSearchNoResultSub">Try a different search term</div>
+      `;
+      results.appendChild(noRes);
+      return;
+    }
+
+    matched.forEach((p, i) => {
+      const item = document.createElement("button");
+      item.className = "projSearchItem";
+      item.setAttribute("role", "option");
+      item.setAttribute("data-idx", i);
+
+      const tags = (p.tags || []).slice(0, 3)
+        .map(t => `<span class="projSearchItemTag">${escapeHtml(t)}</span>`).join("");
+
+      item.innerHTML = `
+        <div class="projSearchThumb">
+          ${p.imageUrl ? `<img src="${escapeHtml(p.imageUrl)}" alt="${escapeHtml(p.name)}" loading="lazy">` : ""}
+        </div>
+        <div class="projSearchItemText">
+          <div class="projSearchItemName">${escapeHtml(p.name)}</div>
+          <div class="projSearchItemTags">${tags}</div>
+        </div>
+      `;
+
+      item.addEventListener("click", () => {
+        selectProject(p);
+      });
+      item.addEventListener("mouseenter", () => {
+        selectedIdx = i;
+        highlightSelected();
+      });
+
+      results.appendChild(item);
+    });
+  }
+
+  function highlightSelected() {
+    const items = results.querySelectorAll(".projSearchItem");
+    items.forEach((el, i) => {
+      el.classList.toggle("is-selected", i === selectedIdx);
+    });
+    // Scroll into view
+    if (selectedIdx >= 0 && items[selectedIdx]) {
+      items[selectedIdx].scrollIntoView({ block: "nearest" });
+    }
+  }
+
+  function selectProject(p) {
+    closePalette();
+    const wrap = document.getElementById("deckWrap");
+    if (wrap && wrap._jumpToDeck) {
+      wrap._jumpToDeck(p.id || p.name);
+      document.getElementById("work")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
+
+  // Input
+  input.addEventListener("input", () => {
+    renderResults(input.value.trim());
+  });
+
+  // Keyboard nav
+  input.addEventListener("keydown", (e) => {
+    const items = results.querySelectorAll(".projSearchItem");
+    const count = items.length;
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      selectedIdx = Math.min(selectedIdx + 1, count - 1);
+      highlightSelected();
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      selectedIdx = Math.max(selectedIdx - 1, 0);
+      highlightSelected();
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (selectedIdx >= 0 && items[selectedIdx]) {
+        items[selectedIdx].click();
+      } else if (count > 0) {
+        items[0].click();
+      }
+    } else if (e.key === "Escape") {
+      closePalette();
+    }
+  });
+
+  // Close on backdrop click
+  if (backdrop) {
+    backdrop.addEventListener("click", closePalette);
+  }
+
+  // Close on Escape (global)
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && palette.classList.contains("is-open")) {
+      closePalette();
+    }
+    // Open on "/" when not in input
+    if (e.key === "/" && !palette.classList.contains("is-open")) {
+      const tag = document.activeElement?.tagName;
+      if (tag !== "INPUT" && tag !== "TEXTAREA" && tag !== "SELECT") {
+        e.preventDefault();
+        openPalette();
+      }
+    }
+  });
+
+  // Search button
+  const searchBtn = document.getElementById("deckSearchBtn");
+  if (searchBtn) {
+    searchBtn.addEventListener("click", openPalette);
   }
 }
 
@@ -2852,11 +3295,12 @@ async function init() {
   initMpCareer();
 
 
-  // Projects
+  // Projects — deck redesign
   try {
     const res = await fetch("projects.json", { cache: "default" });
     state.projects = await res.json();
     state.tags = uniqueTags(state.projects);
+
     // Update pinned story stats
     const proj = document.getElementById("statProjects");
     const tags = document.getElementById("statTags");
@@ -2865,10 +3309,16 @@ async function init() {
 
     state.activeTag = "All";
 
-    // NOTE: featured is now part of the rail (no separate featured card)
+    // Render deck, grid, and update counter
     renderWork();
 
-    // Warm up a few project images so the projects section feels instant
+    // Init particle background (needs deck rendered first)
+    initDeckBg();
+
+    // Init command palette
+    initProjSearch();
+
+    // Warm up images for first 8 projects
     try {
       const imgs = state.projects
         .filter((p) => p && p.imageUrl)
@@ -2878,158 +3328,22 @@ async function init() {
             (b.date || "").localeCompare(a.date || ""),
         )
         .map((p) => p.imageUrl);
-
       await preloadImages(imgs, 8);
     } catch {
       // ignore
     }
-    } catch (e) {
+  } catch (e) {
     console.warn("projects.json not found or invalid", e);
   }
 
   renderStack();
 
   // Projects expanded the layout — recalculate all ScrollTrigger positions
-  // so the reveal curtains on #tech and #ask fire at the correct scroll position.
   requestAnimationFrame(() => {
     if (window.ScrollTrigger) ScrollTrigger.refresh();
   });
 
-  // Search
-  const searchInput = document.getElementById("searchInput");
-  const clearBtn = document.getElementById("clearSearch");
-
-  const syncClearBtn = () => {
-    if (!clearBtn || !searchInput) return;
-    clearBtn.hidden = !(searchInput.value || "").trim().length;
-  };
-
-  if (searchInput) {
-    searchInput.addEventListener("input", (e) => {
-      state.query = e.target.value || "";
-      syncClearBtn();
-      renderWork();
-    });
-  }
-
-  if (clearBtn && searchInput) {
-    clearBtn.addEventListener("click", () => {
-      searchInput.value = "";
-      state.query = "";
-      syncClearBtn();
-      renderWork();
-      searchInput.focus();
-    });
-  }
-
-  // set initial state (important so it doesn't show on load)
-  syncClearBtn();
-
-  // Filters (tags) drawer
-  const tagsToggle = document.getElementById("tagsToggle");
-  const tagsDrawer = document.getElementById("tagsDrawer");
-  if (tagsToggle && tagsDrawer) {
-    tagsToggle.addEventListener("click", () => {
-      const isOpen = !tagsDrawer.hasAttribute("hidden");
-      if (isOpen) {
-        tagsDrawer.setAttribute("hidden", "");
-        tagsToggle.setAttribute("aria-expanded", "false");
-      } else {
-        tagsDrawer.removeAttribute("hidden");
-        tagsToggle.setAttribute("aria-expanded", "true");
-      }
-    });
-  }
-
-  // Show More / Show Less
-  const showMoreBtn = document.getElementById("workShowMore");
-  if (showMoreBtn) {
-    showMoreBtn.addEventListener("click", () => {
-      state.workExpanded = !state.workExpanded;
-      renderWork();
-      // Scroll back to section top when collapsing
-      if (!state.workExpanded) {
-        document
-          .getElementById("work")
-          ?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
-    });
-  }
-
-  // Rail arrows + initial no-flash
-  const rail = document.querySelector(".railViewport");
-  const next = document.getElementById("railNext");
-  const prev = document.getElementById("railPrev");
-
-  if (prev) prev.hidden = true;
-  if (next) next.hidden = true;
-
-  const updateRailArrows = () => {
-    if (!rail || !next || !prev) return;
-
-    const empty = document.getElementById("emptyState");
-    const grid = document.getElementById("workGrid");
-    const hasCards = grid && grid.children && grid.children.length > 0;
-
-    // If no results are visible, hide both arrows no matter what
-    if ((empty && !empty.hidden) || !hasCards) {
-      prev.hidden = true;
-      next.hidden = true;
-      return;
-    }
-
-    const max = rail.scrollWidth - rail.clientWidth;
-    const x = rail.scrollLeft;
-
-    prev.hidden = x < 10;
-    next.hidden = max - x < 10;
-  };
-
-  if (rail && next) {
-    next.addEventListener("click", () => {
-      rail.scrollBy({ left: rail.clientWidth * 0.9, behavior: "smooth" });
-    });
-  }
-  if (rail && prev) {
-    prev.addEventListener("click", () => {
-      rail.scrollBy({ left: -rail.clientWidth * 0.9, behavior: "smooth" });
-    });
-  }
-  if (rail) {
-    rail.addEventListener("scroll", () =>
-      requestAnimationFrame(updateRailArrows),
-    );
-    window.addEventListener("resize", () =>
-      requestAnimationFrame(updateRailArrows),
-    );
-
-    // Two RAFs helps ensure layout/fonts have settled before measuring widths
-    requestAnimationFrame(() => requestAnimationFrame(updateRailArrows));
-  }
-
-  // Animate projects on first enter
-  const workSection = document.getElementById("work");
-  if (workSection && "IntersectionObserver" in window) {
-    const io = new IntersectionObserver(
-      (entries) => {
-        const ent = entries[0];
-        if (!ent || !ent.isIntersecting) return;
-
-        // ✅ first time only
-        if (!state.workEntered) {
-          state.workEntered = true;
-          animateWorkCards();
-        }
-
-        io.disconnect();
-      },
-      { threshold: 0.2 },
-    );
-
-    io.observe(workSection);
-  } else {
-    state.workEntered = true;
-  }
+  state.workEntered = true;
 
   initAskMe();
   initAskBg();

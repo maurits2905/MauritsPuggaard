@@ -803,8 +803,22 @@
 
       <!-- 3) PROJECTS -->
       <section id="work" class="section">
-        <div class="workHead">
-          <div class="workHeadText r">
+
+        <!-- Particle constellation background -->
+        <canvas id="deckBgCanvas" class="deckBgCanvas" aria-hidden="true"></canvas>
+
+        <!-- Hidden legacy search (backward compat) -->
+        <input id="searchInput" type="text" style="display:none" autocomplete="off" aria-hidden="true" tabindex="-1" />
+        <button id="clearSearch" type="button" style="display:none" aria-hidden="true" tabindex="-1"></button>
+        <div id="tagsBar" style="display:none" aria-hidden="true"></div>
+        <div id="tagsDrawer" style="display:none" aria-hidden="true" hidden></div>
+        <div id="workGrid" style="display:none" aria-hidden="true"></div>
+        <div id="emptyState" style="display:none" aria-hidden="true" hidden></div>
+        <div id="workShowMoreWrap" style="display:none" aria-hidden="true" hidden></div>
+
+        <!-- Section header -->
+        <div class="deckHead r">
+          <div class="deckHeadLeft">
             <div class="secLabel">
               <div class="secEyebrow">
                 <span class="secNum">02</span>
@@ -812,115 +826,34 @@
               </div>
               <span class="secCategory">Selected Work</span>
             </div>
-            <p class="p">Live demos &nbsp;·&nbsp; Code &nbsp;·&nbsp; Tools &nbsp;<span id="workTotalCount" class="workTotalBadge"></span></p>
+            <p class="deckHeadSub">
+              Live demos &nbsp;·&nbsp; Code &nbsp;·&nbsp; Tools
+              &nbsp;<span id="workTotalCount" class="workTotalBadge"></span>
+            </p>
           </div>
-
-          <!-- Narrative bridge: story before utility.
-               Frames the projects as proof of the path before the search appears. -->
-          <div class="workNarrBridge" aria-hidden="true">
-            <span class="workNarrLine"></span>
-            <span class="workNarrPhrase">// built across that path</span>
-            <span class="workNarrLine"></span>
-          </div>
-
-          <div class="workControls r">
-            <div class="searchBar searchNeo" role="search">
-              <span class="searchIcon" aria-hidden="true">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                  <path
-                    d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z"
-                    stroke="currentColor"
-                    stroke-width="1.8"
-                  />
-                  <path
-                    d="M16.5 16.5 21 21"
-                    stroke="currentColor"
-                    stroke-width="1.8"
-                    stroke-linecap="round"
-                  />
-                </svg>
-              </span>
-
-              <input
-                id="searchInput"
-                type="text"
-                placeholder="Search projects…"
-                autocomplete="off"
-              />
-
-              <button
-                class="iconBtn"
-                id="clearSearch"
-                type="button"
-                aria-label="Clear search"
-                hidden
-              >
-                ×
-              </button>
-
-              <button
-                class="iconBtn iconBtn--ghost"
-                id="tagsToggle"
-                type="button"
-                aria-label="Filters"
-                aria-expanded="false"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                  <path
-                    d="M4 7h16M4 12h16M4 17h16"
-                    stroke="currentColor"
-                    stroke-width="1.8"
-                    stroke-linecap="round"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            <div class="tagsDrawer" id="tagsDrawer" hidden>
-              <div class="tagsBar" id="tagsBar"></div>
-            </div>
+          <div class="deckHeadRight">
+            <button class="deckSearchBtn" id="deckSearchBtn" type="button" aria-label="Search projects">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="currentColor" stroke-width="1.8"/>
+                <path d="M16.5 16.5 21 21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+              <span>Search</span>
+              <kbd>/</kbd>
+            </button>
+            <div class="deckCounter" id="deckCounter" aria-live="polite">01 / 12</div>
+            <button class="deckArrowBtn" id="deckPrev" type="button" aria-label="Previous project">&#8592;</button>
+            <button class="deckArrowBtn" id="deckNext" type="button" aria-label="Next project">&#8594;</button>
           </div>
         </div>
 
-        <!-- rail wrapper -->
-        <div class="railWrap r">
-          <div class="railViewport">
-            <div class="workGrid rail" id="workGrid" aria-live="polite"></div>
-          </div>
-
-          <button
-            class="railArrow railArrow--left"
-            id="railPrev"
-            type="button"
-            aria-label="Previous projects"
-            hidden
-          >
-            ‹
-          </button>
-          <button
-            class="railArrow railArrow--right"
-            id="railNext"
-            type="button"
-            aria-label="More projects"
-            hidden
-          >
-            ›
-          </button>
+        <!-- Card deck -->
+        <div class="deckWrap r" id="deckWrap" aria-label="Project showcase">
+          <!-- Cards injected by JS -->
         </div>
 
-        <div class="empty" id="emptyState" hidden>
-          <div class="emptyTitle">No matches</div>
-          <div class="emptyText">Try clearing search or changing tags.</div>
-        </div>
+        <!-- All-projects compact grid -->
+        <div class="projGrid r" id="projGrid" aria-label="All projects"></div>
 
-        <div class="workShowMoreWrap" id="workShowMoreWrap" hidden>
-          <button class="workShowMoreBtn" id="workShowMore" type="button">
-            <span id="workShowMoreLabel">Show all projects</span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
-        </div>
       </section>
 
 
@@ -1201,6 +1134,32 @@
       </section>
     </main>
 
+
+    <!-- Command palette search -->
+    <div id="projSearch" class="projSearch" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Search projects">
+      <div class="projSearchBackdrop" id="projSearchBackdrop"></div>
+      <div class="projSearchPanel">
+        <div class="projSearchBar">
+          <svg class="projSearchIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M16.5 16.5 21 21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+          <input
+            id="projSearchInput"
+            class="projSearchInput"
+            type="text"
+            placeholder="Search projects…"
+            autocomplete="off"
+            spellcheck="false"
+            aria-label="Search projects"
+          />
+          <kbd class="projSearchEsc" aria-label="Press Escape to close">Esc</kbd>
+        </div>
+        <div class="projSearchResults" id="projSearchResults" role="listbox" aria-label="Project results">
+          <!-- Results injected by JS -->
+        </div>
+      </div>
+    </div>
 
     <!-- Contact bottom sheet -->
     <div class="contactOverlay" id="contactOverlay" hidden></div>
