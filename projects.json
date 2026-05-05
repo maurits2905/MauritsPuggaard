@@ -1,18 +1,52 @@
 [
   {
+    "id": "DailyHub",
+    "name": "DailyHub",
+    "description": "Personal dashboard for your daily puzzle ritual. Pick your games, log results with one paste, track streaks, and review every run in a calendar history view.",
+    "tags": ["Web", "Productivity", "Gamification"],
+    "date": "2026-04-20",
+    "featured": true,
+    "imageUrl": "assets/projects/DailyHub.png",
+    "highlights": [
+      "Tracks Wordle, NYT, LinkedIn Games and more",
+      "Streak system, progress stats, and calendar history",
+      "Fully local — no account, no backend"
+    ],
+    "demoUrl": "https://maurits2905.github.io/DailyHub/",
+    "repoUrl": "https://github.com/maurits2905/DailyHub"
+  },
+
+  {
+    "id": "AntLab",
+    "name": "AntLab",
+    "description": "Browser sandbox for emergent simulations. Runs pheromone-driven ant colonies, multi-species Physarum slime mold, and generative art modes — all in real time with live parameter controls.",
+    "tags": ["Simulation", "Canvas", "Experiment"],
+    "date": "2026-04-10",
+    "featured": true,
+    "imageUrl": "assets/projects/AntLab.png",
+    "highlights": [
+      "Ant colony foraging, Physarum slime mold, and generative art",
+      "Up to 6 000 agents with live behaviour controls",
+      "Runs entirely in the browser with no backend"
+    ],
+    "demoUrl": "https://maurits2905.github.io/AntLab/",
+    "repoUrl": "https://github.com/maurits2905/AntLab"
+  },
+
+  {
     "id": "SAP Navigator",
     "name": "SAP Navigator",
-    "description": "Lightweight SAP helper for finding the right transaction, decoding common issues, and following structured troubleshooting flows. Built to make SAP navigation faster and more practical across technical and business scenarios.",
+    "description": "The search engine built for SAP professionals. Find any T-code by plain language, decode errors into actionable next steps, look up standard tables, and follow guided process flows — all offline, no login needed.",
     "tags": ["Tool", "SAP", "Productivity"],
     "date": "2026-04-07",
     "featured": true,
     "imageUrl": "assets/projects/SAP_Navigator.png",
     "highlights": [
-      "Find the right SAP transaction faster",
-      "Decode common issues into useful next steps",
-      "Browse practical troubleshooting flows"
+      "16 500+ transactions searchable by keyword or plain language",
+      "Error decoder with likely cause and numbered next steps",
+      "PWA — installs on any device, works fully offline"
     ],
-    "demoUrl": "https://maurits2905.github.io/sap-navigator/",
+    "demoUrl": "https://sapnav.dk/",
     "repoUrl": "https://github.com/maurits2905/sap-navigator"
   },
 
