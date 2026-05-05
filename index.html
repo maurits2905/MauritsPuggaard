@@ -806,30 +806,49 @@
 
         <p class="companiesEyebrow">Companies &amp; Collaborations</p>
 
-        <div class="companiesMarquee">
-          <div class="marqueeRow">
-            <div class="marqueeInner">
-              <!-- set A -->
-              <div class="marqueeItem"><img src="assets/logos/2bm_software.png"  alt="2BM Software"        loading="lazy" draggable="false"></div>
-              <div class="marqueeItem"><img src="assets/logos/naviair.png"        alt="Naviair"             loading="lazy" draggable="false"></div>
-              <div class="marqueeItem"><img src="assets/logos/ey.png"             alt="EY"                  loading="lazy" draggable="false"></div>
-              <div class="marqueeItem"><img src="assets/logos/bestseller.png"     alt="Bestseller"          loading="lazy" draggable="false"></div>
-              <div class="marqueeItem"><img src="assets/logos/banedanmark.png"    alt="Banedanmark"         loading="lazy" draggable="false"></div>
-              <div class="marqueeItem"><img src="assets/logos/beaulieu.png"       alt="Beaulieu"            loading="lazy" draggable="false"></div>
-              <div class="marqueeItem"><img src="assets/logos/pollensense.png"    alt="Pollen Sense"        loading="lazy" draggable="false"></div>
-              <div class="marqueeItem"><span class="marqueeTextBadge">CPH</span></div>
-              <div class="marqueeItem"><span class="marqueeTextBadge">SEAVIS</span></div>
-              <!-- set B — duplicate for seamless loop -->
-              <div class="marqueeItem" aria-hidden="true"><img src="assets/logos/2bm_software.png"  alt="" loading="lazy" draggable="false"></div>
-              <div class="marqueeItem" aria-hidden="true"><img src="assets/logos/naviair.png"        alt="" loading="lazy" draggable="false"></div>
-              <div class="marqueeItem" aria-hidden="true"><img src="assets/logos/ey.png"             alt="" loading="lazy" draggable="false"></div>
-              <div class="marqueeItem" aria-hidden="true"><img src="assets/logos/bestseller.png"     alt="" loading="lazy" draggable="false"></div>
-              <div class="marqueeItem" aria-hidden="true"><img src="assets/logos/banedanmark.png"    alt="" loading="lazy" draggable="false"></div>
-              <div class="marqueeItem" aria-hidden="true"><img src="assets/logos/beaulieu.png"       alt="" loading="lazy" draggable="false"></div>
-              <div class="marqueeItem" aria-hidden="true"><img src="assets/logos/pollensense.png"    alt="" loading="lazy" draggable="false"></div>
-              <div class="marqueeItem" aria-hidden="true"><span class="marqueeTextBadge" aria-hidden="true">CPH</span></div>
-              <div class="marqueeItem" aria-hidden="true"><span class="marqueeTextBadge" aria-hidden="true">SEAVIS</span></div>
+        <!-- Drag hint -->
+        <p class="companiesDragHint" aria-hidden="true">← drag →</p>
+
+        <div class="companiesTrack" id="companiesTrack">
+          <div class="companiesInner" id="companiesInner">
+
+            <a class="companyCard" href="https://www.2bm.dk/" target="_blank" rel="noopener noreferrer" aria-label="2BM Software">
+              <img src="assets/logos/2bm_software.png" alt="2BM Software" draggable="false">
+            </a>
+
+            <a class="companyCard" href="https://www.naviair.dk/" target="_blank" rel="noopener noreferrer" aria-label="Naviair">
+              <img src="assets/logos/naviair.png" alt="Naviair" draggable="false">
+            </a>
+
+            <a class="companyCard" href="https://www.ey.com/" target="_blank" rel="noopener noreferrer" aria-label="EY">
+              <img src="assets/logos/ey.png" alt="EY" draggable="false">
+            </a>
+
+            <a class="companyCard" href="https://www.bestseller.com/" target="_blank" rel="noopener noreferrer" aria-label="Bestseller">
+              <img src="assets/logos/bestseller.png" alt="Bestseller" draggable="false">
+            </a>
+
+            <a class="companyCard" href="https://www.banedanmark.dk/" target="_blank" rel="noopener noreferrer" aria-label="Banedanmark">
+              <img src="assets/logos/banedanmark.png" alt="Banedanmark" draggable="false">
+            </a>
+
+            <a class="companyCard" href="https://www.beaulieu-international.com/" target="_blank" rel="noopener noreferrer" aria-label="Beaulieu">
+              <img src="assets/logos/beaulieu.png" alt="Beaulieu" draggable="false">
+            </a>
+
+            <a class="companyCard" href="https://www.pollensense.com/" target="_blank" rel="noopener noreferrer" aria-label="Pollen Sense">
+              <img src="assets/logos/pollensense.png" alt="Pollen Sense" draggable="false">
+            </a>
+
+            <a class="companyCard" href="https://www.cph.dk/" target="_blank" rel="noopener noreferrer" aria-label="Copenhagen Airports">
+              <img src="assets/logos/cph_airports.png" alt="Copenhagen Airports" draggable="false">
+            </a>
+
+            <!-- SEAVIS — no public website, not a link -->
+            <div class="companyCard companyCard--text" aria-label="SEAVIS">
+              <span>SEAVIS</span>
             </div>
+
           </div>
         </div>
 

@@ -4063,12 +4063,11 @@ html.noReveal .r,
 }
 
 /* ══════════════════════════════════════════════════════════
-   COMPANIES & COLLABORATIONS — Logo Marquee
+   COMPANIES & COLLABORATIONS — Draggable Logo Strip
    ══════════════════════════════════════════════════════════ */
 
 #companies {
   padding: 52px 0 56px;
-  overflow: hidden;
   border-top: 1px solid rgba(255,255,255,0.055);
   border-bottom: 1px solid rgba(255,255,255,0.055);
 }
@@ -4079,114 +4078,98 @@ html.noReveal .r,
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: rgba(240,239,248,0.24);
-  margin: 0 0 28px;
+  margin: 0 0 6px;
   font-family: 'DM Mono', 'Courier New', monospace;
 }
 
-/* Single-row marquee container */
-.companiesMarquee {
-  position: relative;
-}
-
-/* Left & right edge fade */
-.companiesMarquee::before,
-.companiesMarquee::after {
-  content: '';
-  position: absolute;
-  top: 0; bottom: 0;
-  width: clamp(60px, 8vw, 160px);
-  z-index: 2;
+.companiesDragHint {
+  text-align: center;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: rgba(240,239,248,0.14);
+  font-family: 'DM Mono', 'Courier New', monospace;
+  margin: 0 0 24px;
   pointer-events: none;
 }
-.companiesMarquee::before {
-  left: 0;
-  background: linear-gradient(to right, #06070f 0%, transparent 100%);
-}
-.companiesMarquee::after {
-  right: 0;
-  background: linear-gradient(to left, #06070f 0%, transparent 100%);
-}
 
-/* Single scrolling row */
-.marqueeRow {
-  overflow: hidden;
-  width: 100%;
+/* Scrollable track */
+.companiesTrack {
+  position: relative;
+  overflow-x: auto;
+  overflow-y: visible;
+  cursor: grab;
+  /* hide scrollbar */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  /* Edge fade via mask */
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 5%, #000 95%, transparent 100%);
+          mask-image: linear-gradient(to right, transparent 0%, #000 5%, #000 95%, transparent 100%);
 }
+.companiesTrack::-webkit-scrollbar { display: none; }
+.companiesTrack.is-dragging { cursor: grabbing; }
 
-/* The duplicated inner track — no hover pause */
-.marqueeInner {
-  display: flex;
+/* Inner flex row */
+.companiesInner {
+  display: inline-flex;
   align-items: center;
-  gap: 80px;
-  width: max-content;
-  animation: marqueeScroll 55s linear infinite;
+  gap: 16px;
+  padding: 8px clamp(40px, 6vw, 100px);
+  min-width: 100%;
+  user-select: none;
 }
 
-@keyframes marqueeScroll {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
-}
-
-/* Individual logo item — fixed height, auto width, max-width cap */
-.marqueeItem {
+/* Each company card */
+.companyCard {
   flex-shrink: 0;
   display: flex;
   align-items: center;
+  justify-content: center;
+  width: 180px;
+  height: 80px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 14px 18px;
+  text-decoration: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+  cursor: grab;
 }
+.companyCard[href]:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.45);
+}
+.companiesTrack.is-dragging .companyCard { cursor: grabbing; }
 
-.marqueeItem img {
-  height: 40px;
+/* Logo image inside card — fills card, maintains ratio */
+.companyCard img {
+  max-width: 100%;
+  max-height: 100%;
   width: auto;
-  max-width: 170px;
-  filter: brightness(0) invert(1);
-  opacity: 0.58;
-  transition: opacity 0.3s ease;
+  height: auto;
+  object-fit: contain;
   pointer-events: none;
   user-select: none;
   -webkit-user-drag: none;
 }
 
-.marqueeItem:hover img {
-  opacity: 0.9;
+/* SEAVIS text-only card */
+.companyCard--text {
+  cursor: default;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.14);
 }
-
-/* CPH & SEAVIS — text wordmark badges (no usable logo image) */
-.marqueeTextBadge {
-  display: inline-flex;
-  align-items: center;
-  height: 36px;
-  padding: 0 15px;
-  border: 1px solid rgba(255,255,255,0.22);
-  border-radius: 5px;
+.companyCard--text span {
   font-family: 'DM Mono', 'Courier New', monospace;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.2em;
-  color: rgba(255,255,255,0.58);
-  transition: color 0.3s, border-color 0.3s;
-  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: rgba(255,255,255,0.55);
 }
 
-.marqueeItem:hover .marqueeTextBadge {
-  color: rgba(255,255,255,0.9);
-  border-color: rgba(255,255,255,0.45);
-}
-
-/* Respect reduced-motion preference */
-@media (prefers-reduced-motion: reduce) {
-  .marqueeInner {
-    animation: none;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 40px;
-  }
-}
-
-/* Mobile */
+/* Mobile — tighter cards */
 @media (max-width: 640px) {
-  .marqueeInner { gap: 52px; }
-  .marqueeItem img { height: 30px; max-width: 130px; }
-  .marqueeTextBadge { height: 28px; font-size: 10px; padding: 0 11px; }
+  .companyCard { width: 140px; height: 64px; padding: 10px 12px; border-radius: 10px; }
+  .companiesInner { gap: 12px; }
 }
 
 /* ══════════════════════════════════════════════════════════
