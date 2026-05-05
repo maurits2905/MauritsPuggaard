@@ -4083,12 +4083,9 @@ html.noReveal .r,
   font-family: 'DM Mono', 'Courier New', monospace;
 }
 
-/* Two-row marquee container */
+/* Single-row marquee container */
 .companiesMarquee {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 22px;
 }
 
 /* Left & right edge fade */
@@ -4116,19 +4113,13 @@ html.noReveal .r,
   width: 100%;
 }
 
-/* The duplicated inner track */
+/* The duplicated inner track — no hover pause */
 .marqueeInner {
   display: flex;
   align-items: center;
-  gap: 72px;
+  gap: 80px;
   width: max-content;
-  animation: marqueeScroll var(--dur, 40s) linear infinite;
-  animation-direction: var(--dir, normal);
-}
-
-/* Pause the whole marquee on hover */
-.companiesMarquee:hover .marqueeInner {
-  animation-play-state: paused;
+  animation: marqueeScroll 55s linear infinite;
 }
 
 @keyframes marqueeScroll {
@@ -4136,7 +4127,7 @@ html.noReveal .r,
   to   { transform: translateX(-50%); }
 }
 
-/* Individual logo item */
+/* Individual logo item — fixed height, auto width, max-width cap */
 .marqueeItem {
   flex-shrink: 0;
   display: flex;
@@ -4144,41 +4135,41 @@ html.noReveal .r,
 }
 
 .marqueeItem img {
-  height: 38px;
+  height: 40px;
   width: auto;
-  max-width: 180px;
+  max-width: 170px;
   filter: brightness(0) invert(1);
-  opacity: 0.38;
-  transition: opacity 0.35s ease;
+  opacity: 0.58;
+  transition: opacity 0.3s ease;
   pointer-events: none;
   user-select: none;
   -webkit-user-drag: none;
 }
 
 .marqueeItem:hover img {
-  opacity: 0.82;
+  opacity: 0.9;
 }
 
-/* SEAVIS — text wordmark badge (no logo available) */
-.marqueeSeavis {
+/* CPH & SEAVIS — text wordmark badges (no usable logo image) */
+.marqueeTextBadge {
   display: inline-flex;
   align-items: center;
-  height: 34px;
-  padding: 0 16px;
-  border: 1px solid rgba(255,255,255,0.18);
+  height: 36px;
+  padding: 0 15px;
+  border: 1px solid rgba(255,255,255,0.22);
   border-radius: 5px;
   font-family: 'DM Mono', 'Courier New', monospace;
   font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.22em;
-  color: rgba(255,255,255,0.38);
-  transition: color 0.35s, border-color 0.35s;
+  letter-spacing: 0.2em;
+  color: rgba(255,255,255,0.58);
+  transition: color 0.3s, border-color 0.3s;
   white-space: nowrap;
 }
 
-.marqueeItem:hover .marqueeSeavis {
-  color: rgba(255,255,255,0.82);
-  border-color: rgba(255,255,255,0.42);
+.marqueeItem:hover .marqueeTextBadge {
+  color: rgba(255,255,255,0.9);
+  border-color: rgba(255,255,255,0.45);
 }
 
 /* Respect reduced-motion preference */
@@ -4191,11 +4182,11 @@ html.noReveal .r,
   }
 }
 
-/* Mobile — smaller logos, tighter gap */
+/* Mobile */
 @media (max-width: 640px) {
-  .marqueeInner { gap: 48px; }
-  .marqueeItem img { height: 28px; max-width: 130px; }
-  .marqueeSeavis { height: 28px; font-size: 10px; padding: 0 12px; }
+  .marqueeInner { gap: 52px; }
+  .marqueeItem img { height: 30px; max-width: 130px; }
+  .marqueeTextBadge { height: 28px; font-size: 10px; padding: 0 11px; }
 }
 
 /* ══════════════════════════════════════════════════════════
