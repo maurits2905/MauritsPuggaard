@@ -1,5 +1,22 @@
 [
   {
+    "id": "EcoPulse",
+    "name": "EcoPulse",
+    "description": "Browser-based ecosystem simulator where simple rules create emergent life. Grass grows, prey feed and herd, predators hunt in packs, traits evolve through natural selection, seasons shift, and optional human civilization builds roads and bridges that reshape the whole world.",
+    "tags": ["Simulation", "Canvas", "React"],
+    "date": "2026-05-06",
+    "featured": true,
+    "imageUrl": "assets/projects/EcoPulse.png",
+    "highlights": [
+      "Full predator–prey ecosystem with inherited traits and natural selection",
+      "Seasons, migration, terrain biomes and environmental disturbances",
+      "Optional human civilisation — hunting, huts, roads and bridges"
+    ],
+    "demoUrl": "https://maurits2905.github.io/ecopulse/",
+    "repoUrl": "https://github.com/maurits2905/ecopulse"
+  },
+
+  {
     "id": "DailyHub",
     "name": "DailyHub",
     "description": "Personal dashboard for your daily puzzle ritual. Pick your games, log results with one paste, track streaks, and review every run in a calendar history view.",
