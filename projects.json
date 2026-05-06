@@ -120,19 +120,6 @@
   },
 
   {
-    "id": "SAP Multiagent",
-    "name": "SAP-Multiagent",
-    "description": "Experimental multi-agent AI system designed to support SAP consulting workflows. Focused on task assistance, analysis, and internal knowledge support.",
-    "tags": ["AI", "SAP", "Automation"],
-    "date": "2026-01-20",
-    "featured": false,
-    "imageUrl": "assets/projects/SAP_Multi-agent_PoC.png",
-    "highlights": ["Multi-agent architecture", "Designed for consulting use cases", "Focus on practical internal tooling"],
-    "demoUrl": "https://maurits2905.github.io/SAP-Multiagent/",
-    "repoUrl": "https://github.com/maurits2905/SAP-Multiagent"
-  },
-
-  {
     "id": "Compare code program",
     "name": "Compare code program",
     "description": "Local web-based tool for comparing code and structured text files side by side. Built to support review, validation, and change tracking workflows.",
@@ -171,16 +158,4 @@
     "repoUrl": "https://github.com/pollen-project/Pollen_Website"
   },
 
-  {
-    "id": "Heat Map",
-    "name": "Heat Map",
-    "description": "x",
-    "tags": ["Data", "Visualization", "Math"],
-    "date": "2015-07-20",
-    "featured": false,
-    "imageUrl": "assets/projects/heatmap.png",
-    "highlights": ["x", "x", "x"],
-    "demoUrl": "x",
-    "repoUrl": "x"
-  }
 ]
