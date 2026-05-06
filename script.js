@@ -1626,12 +1626,21 @@ function initCompanyStrip() {
   })();
 
   // ── Pointer events (unified mouse + touch) ──
+  function endDrag() {
+    if (!dragging) return;
+    dragging = false;
+    strip.classList.remove("is-grabbing");
+    document.body.style.cursor = "";
+  }
+
   strip.addEventListener("pointerdown", (e) => {
     if (e.button !== 0 && e.pointerType === "mouse") return;
+    e.preventDefault();
     dragging  = true;
     dragTotal = 0;
     pointerX  = e.clientX;
     strip.classList.add("is-grabbing");
+    document.body.style.cursor = "grabbing";
     strip.setPointerCapture(e.pointerId);
   });
 
@@ -1645,11 +1654,10 @@ function initCompanyStrip() {
     pointerX = e.clientX;
   });
 
-  strip.addEventListener("pointerup", () => {
-    dragging = false;
-    strip.classList.remove("is-grabbing");
-    // vel will ease back to AUTO in the loop
-  });
+  strip.addEventListener("pointerup",     endDrag);
+  strip.addEventListener("pointercancel", endDrag);
+  // Belt-and-braces: release drag if pointer goes up anywhere in the document
+  document.addEventListener("pointerup", endDrag, { passive: true });
 
   // Suppress <a> click if the pointer travelled > 5 px
   strip.addEventListener("click", (e) => {

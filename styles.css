@@ -4066,45 +4066,24 @@ html.noReveal .r,
    COMPANIES & COLLABORATIONS — Full-bleed auto-scroll strip
    ══════════════════════════════════════════════════════════ */
 
-/* Break out of the .wrap max-width container.
-   Overflow NOT hidden so the glow bleeds into adjacent sections. */
+/* Break out of the .wrap max-width container */
 #companies {
   width: 100vw;
   margin-left: calc(50% - 50vw);
+  overflow: hidden;
   position: relative;
-  /* Subtle accent tint — distinguishes the strip from page bg */
-  background:
-    linear-gradient(
-      to bottom,
-      color-mix(in srgb, var(--accent2) 3%,  transparent) 0%,
-      color-mix(in srgb, var(--accent)  6%,  transparent) 50%,
-      color-mix(in srgb, var(--accent2) 3%,  transparent) 100%
-    );
-}
-
-/* Glowing gradient border — top */
-#companies::before,
-#companies::after {
-  content: '';
-  position: absolute;
-  left: 0; right: 0;
-  height: 1px;
+  /* Coloured background — clearly distinguishes the strip as a section divider */
   background: linear-gradient(
-    to right,
-    transparent 0%,
-    color-mix(in srgb, var(--accent2) 55%, transparent) 15%,
-    var(--accent)  40%,
-    var(--accent2) 60%,
-    color-mix(in srgb, var(--accent2) 55%, transparent) 85%,
-    transparent 100%
+    90deg,
+    transparent                                              0%,
+    color-mix(in srgb, var(--accent2) 10%, transparent)    20%,
+    color-mix(in srgb, var(--accent)  14%, transparent)    50%,
+    color-mix(in srgb, var(--accent2) 10%, transparent)    80%,
+    transparent                                             100%
   );
-  /* Aura that bleeds into the adjacent sections */
-  box-shadow:
-    0 0 18px 4px color-mix(in srgb, var(--accent2) 20%, transparent),
-    0 0 6px  2px color-mix(in srgb, var(--accent)  30%, transparent);
+  border-top:    1px solid color-mix(in srgb, var(--accent2) 45%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--accent2) 45%, transparent);
 }
-#companies::before { top: 0; }
-#companies::after  { bottom: 0; }
 
 /* Small centred label above the strip */
 .companiesLabel {
@@ -4182,6 +4161,15 @@ html.noReveal .r,
   transition: opacity 0.25s ease;
 }
 a.companyLogo:hover img { opacity: 0.95; }
+
+/* Copenhagen Airports — keep original brand colours (navy box + yellow CPH).
+   filter: invert(1) without brightness(0) turns navy→warm cream, yellow→dark-blue,
+   which is readable and colourful on the dark strip. */
+.logo-cph img {
+  filter: invert(1) !important;
+  opacity: 0.82 !important;
+}
+a.logo-cph:hover img { opacity: 1 !important; }
 
 /* SEAVIS — text badge in place of logo */
 .companyLogoText {
