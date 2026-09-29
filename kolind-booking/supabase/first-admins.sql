@@ -1,0 +1,24 @@
+-- =====================================================================
+--  De første invitationer (kør EFTER setup.sql)
+--
+--  1. Ret navne og emails nedenfor.
+--  2. Ret adressen i select'en til jeres GitHub Pages-adresse.
+--  3. Kør filen i Supabase → SQL Editor.
+--  4. Resultatet viser et link pr. person. Send linket til personen
+--     (SMS, mail, Messenger). De vælger selv en adgangskode.
+--
+--  Resten af familien inviteres bagefter inde i appen:
+--  Administration → Familie → Inviter.
+-- =====================================================================
+
+insert into public.invitations (email, full_name, role) values
+  ('janne@example.com',   'Janne',   'admin'),
+  ('henrik@example.com',  'Henrik',  'admin'),
+  ('maurits@example.com', 'Maurits', 'member');
+
+select full_name, role, email,
+       'https://maurits2905.github.io/kolind-booking/#/invitation/' || token as link,
+       expires_at
+from public.invitations
+where used_at is null
+order by created_at;
